@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Central PostgreSQL Database (Design Doc Section 11 & 13)
+  # Central PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     container_name: ds-postgres
@@ -19,37 +19,93 @@ services:
       timeout: 5s
       retries: 5
 
-  # Central Spring Boot Aggregator (gRPC: 9090, REST/WebSocket/Dashboard: 8080)
-  aggregator:
+  # Central Server Process (:8000)
+  central-server:
     build:
       context: .
-      dockerfile: docker/Dockerfile.aggregator
-    container_name: ds-aggregator
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: sensordb
-      DB_USER: postgres
-      DB_PASSWORD: postgrespassword
-      SPRING_PROFILES_ACTIVE: postgres
+      dockerfile: docker/Dockerfile.central
+    container_name: ds-central-server
     ports:
-      - "8080:8080"
-      - "9090:9090"
+      - "8000:8000"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sensordb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgrespassword
     depends_on:
       postgres:
         condition: service_healthy
 
-  # Distributed Sensor Network Simulation (3 Clusters x 4 Nodes = 12 Nodes)
-  sensor-network:
+  # Sensor Node 1 (:8101) - Cluster 1
+  sensor-1:
     build:
       context: .
-      dockerfile: docker/Dockerfile.sensors
-    container_name: ds-sensor-network
+      dockerfile: docker/Dockerfile.sensor
+    container_name: ds-sensor-1
+    ports:
+      - "8101:8101"
     environment:
-      GRPC_SERVER: aggregator:9090
-      WS_SERVER: ws://aggregator:8080/ws
+      SERVER_PORT: 8101
+      NODE_ID: S1
+      NODE_CLUSTER: C1
+      NODE_PEERS: http://sensor-2:8102
+      NODE_CENTRAL_URL: http://central-server:8000
+      NODE_IS_INITIAL_LEADER: "false"
     depends_on:
-      - aggregator
+      - central-server
+
+  # Sensor Node 2 (:8102) - Cluster 1 Initial Head
+  sensor-2:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.sensor
+    container_name: ds-sensor-2
+    ports:
+      - "8102:8102"
+    environment:
+      SERVER_PORT: 8102
+      NODE_ID: S2
+      NODE_CLUSTER: C1
+      NODE_PEERS: http://sensor-1:8101
+      NODE_CENTRAL_URL: http://central-server:8000
+      NODE_IS_INITIAL_LEADER: "true"
+    depends_on:
+      - central-server
+
+  # Sensor Node 3 (:8103) - Cluster 2
+  sensor-3:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.sensor
+    container_name: ds-sensor-3
+    ports:
+      - "8103:8103"
+    environment:
+      SERVER_PORT: 8103
+      NODE_ID: S3
+      NODE_CLUSTER: C2
+      NODE_PEERS: http://sensor-4:8104
+      NODE_CENTRAL_URL: http://central-server:8000
+      NODE_IS_INITIAL_LEADER: "false"
+    depends_on:
+      - central-server
+
+  # Sensor Node 4 (:8104) - Cluster 2 Initial Head
+  sensor-4:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.sensor
+    container_name: ds-sensor-4
+    ports:
+      - "8104:8104"
+    environment:
+      SERVER_PORT: 8104
+      NODE_ID: S4
+      NODE_CLUSTER: C2
+      NODE_PEERS: http://sensor-3:8103
+      NODE_CENTRAL_URL: http://central-server:8000
+      NODE_IS_INITIAL_LEADER: "true"
+    depends_on:
+      - central-server
 
 volumes:
   pgdata:

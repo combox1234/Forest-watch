@@ -1,0 +1,19 @@
+FROM eclipse-temurin:21-jdk-alpine AS build
+WORKDIR /workspace
+
+COPY pom.xml ./
+COPY shared/ ./shared/
+COPY central-server/ ./central-server/
+COPY sensor-server/ ./sensor-server/
+COPY tools/ ./tools/
+
+RUN chmod +x tools/apache-maven-3.9.9/bin/mvn && \
+    ./tools/apache-maven-3.9.9/bin/mvn install -N && \
+    ./tools/apache-maven-3.9.9/bin/mvn install -pl shared && \
+    ./tools/apache-maven-3.9.9/bin/mvn package -pl sensor-server -DskipTests
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=build /workspace/sensor-server/target/sensor-server-1.0.0.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
