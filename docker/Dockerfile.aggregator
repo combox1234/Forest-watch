@@ -1,0 +1,16 @@
+FROM eclipse-temurin:21-jdk-alpine AS build
+WORKDIR /workspace
+
+COPY tools/ ./tools/
+COPY proto/ ./proto/
+COPY aggregator/ ./aggregator/
+
+RUN chmod +x tools/apache-maven-3.9.9/bin/mvn && \
+    ./tools/apache-maven-3.9.9/bin/mvn -f aggregator/pom.xml clean package -DskipTests
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=build /workspace/aggregator/target/aggregator-1.0.0.jar app.jar
+
+EXPOSE 8080 9090
+ENTRYPOINT ["java", "-jar", "app.jar"]

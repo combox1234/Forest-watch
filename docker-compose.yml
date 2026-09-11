@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Central PostgreSQL Database (Design Doc Section 11 & 13)
+  postgres:
+    image: postgres:16-alpine
+    container_name: ds-postgres
+    environment:
+      POSTGRES_DB: sensordb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sensordb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Central Spring Boot Aggregator (gRPC: 9090, REST/WebSocket/Dashboard: 8080)
+  aggregator:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.aggregator
+    container_name: ds-aggregator
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: sensordb
+      DB_USER: postgres
+      DB_PASSWORD: postgrespassword
+      SPRING_PROFILES_ACTIVE: postgres
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Distributed Sensor Network Simulation (3 Clusters x 4 Nodes = 12 Nodes)
+  sensor-network:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.sensors
+    container_name: ds-sensor-network
+    environment:
+      GRPC_SERVER: aggregator:9090
+      WS_SERVER: ws://aggregator:8080/ws
+    depends_on:
+      - aggregator
+
+volumes:
+  pgdata:

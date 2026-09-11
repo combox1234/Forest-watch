@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package ds.sensor.network;
+
+option java_multiple_files = true;
+option java_package = "com.ds.sensor.grpc";
+option java_outer_classname = "AggregationProto";
+
+service AggregationService {
+    rpc SubmitClusterSummary (ClusterSummaryRequest) returns (Ack);
+    rpc RegisterCluster (ClusterRegistration) returns (Ack);
+    rpc ReportClusterEvent (ClusterEvent) returns (Ack);
+    rpc GetClusterState (ClusterStateRequest) returns (ClusterStateResponse);
+}
+
+message Ack {
+    bool success = 1;
+    string message = 2;
+    int64 timestamp = 3;
+}
+
+message ClusterRegistration {
+    string cluster_id = 1;
+    string cluster_name = 2;
+    string leader_id = 3;
+    repeated string member_node_ids = 4;
+    int64 registration_time = 5;
+}
+
+message ClusterSummaryRequest {
+    string summary_id = 1;
+    string cluster_id = 2;
+    string leader_id = 3;
+    int64 window_start_time = 4;
+    int64 window_end_time = 5;
+    int32 sample_count = 6;
+    double avg_temperature = 7;
+    double max_temperature = 8;
+    double min_temperature = 9;
+    double avg_humidity = 10;
+    double avg_water_ph = 11;
+    double avg_water_turbidity = 12;
+    int32 motion_event_count = 13;
+    map<string, int64> vector_clock = 14;
+}
+
+message ClusterEvent {
+    string event_id = 1;
+    string cluster_id = 2;
+    string node_id = 3;
+    string event_type = 4;        // ELECTION, HEARTBEAT_TIMEOUT, ALERT_MUTEX, NODE_FAILED, NODE_RECOVERED
+    string severity = 5;          // INFO, WARNING, CRITICAL
+    string description = 6;
+    int64 timestamp = 7;
+    map<string, int64> vector_clock = 8;
+    bool is_deduplicated = 9;
+}
+
+message ClusterStateRequest {
+    string cluster_id = 1;
+}
+
+message ClusterStateResponse {
+    string cluster_id = 1;
+    string leader_id = 2;
+    string status = 3;
+    int64 last_election_time = 4;
+    repeated NodeState member_nodes = 5;
+}
+
+message NodeState {
+    string node_id = 1;
+    string sensor_type = 2;
+    string status = 3;            // HEALTHY, SUSPECTED, FAILED
+    double battery_score = 4;
+    int64 last_heartbeat = 5;
+    map<string, int64> vector_clock = 6;
+}

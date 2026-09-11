@@ -1,0 +1,11 @@
+FROM node:20-alpine
+WORKDIR /app
+
+COPY proto/ ../proto/
+COPY distributed-network/package*.json ./
+RUN npm install
+
+COPY distributed-network/ ./
+
+EXPOSE 3000
+CMD ["npm", "start"]
