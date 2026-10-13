@@ -36,10 +36,13 @@
   - **Mutual Exclusion (Algorithm 10.4):** Prevents duplicate execution of shared emergency alerts (e.g. wildfire or intrusion alarms) when multiple sensors concurrently detect the same physical event.
 
 ### Unit IV: Emerging Distributed Paradigms & Storage
-- **Concept:** Edge computing, fog architectures, distributed databases.
+- **Concept:** Distributed object-based systems, serverless architectures, cloud case studies (AWS), containerization, distributed databases.
 - **Our Implementation:**
-  - **Edge Aggregation (Algorithm 10.5):** Coordinators aggregate raw sensor data over sliding windows (avg temp, max temp, humidity, water pH, turbidity, sample count) before forwarding upstream, reducing message volume by 75–85%.
-  - **Data Persistence:** Operational data persisted in PostgreSQL (`sensor`, `cluster`, `reading`, `alert`, `heartbeat_log`, `election_log`) with embedded H2 zero-setup mode for local development.
+  - **Distributed Object Storage (AWS S3):** Cluster head edge aggregates are periodically batched and archived into Amazon S3 (`s3://ds-environmental-telemetry-archive/`) as immutable, content-addressed JSON objects with MD5 ETags.
+  - **Serverless Architecture (AWS Lambda):** Critical emergency alerts (`ANIMAL_DETECTED`, `WILDFIRE_ALERT`) invoke a serverless AWS Lambda handler (`EmergencyAlertDispatcher`) that executes within 35–80ms to broadcast notifications via Amazon SNS.
+  - **Cloud Case Study & Virtualization (AWS EC2 & Docker):** Deployed on AWS EC2 using multi-container Docker Compose orchestration, fulfilling the syllabus requirements for virtualization, containerization, and AWS cloud deployment.
+  - **Edge Aggregation (Algorithm 10.5):** Coordinators aggregate raw sensor data over sliding windows (avg temp, min/max temp, humidity, sample count) before forwarding upstream, reducing message volume by 75–85%.
+  - **Data Persistence:** Operational data persisted in PostgreSQL (`sensor`, `cluster`, `reading`, `alert`, `s3_archive_log`, `lambda_invocation_log`) with embedded H2 fallback for zero-setup local runs.
 
 ---
 
@@ -59,3 +62,17 @@
 
 ### Q5: Why did the project intentionally exclude Blockchain?
 **Answer:** As stated in the design document (Section 1 and Appendix A), environmental sensor telemetry requires high-throughput, low-latency edge coordination and causal synchronization. Blockchain consensus (PoW/PoS) introduces proof verification delays, transaction fees, and unnecessary complexity that does not align with the core distributed systems syllabus objectives.
+
+### Q6: How does our project demonstrate Unit IV Serverless Architectures on AWS?
+**Answer:** When an edge cluster triggers a mutual-exclusion emergency alert, it initiates an event-driven call to an AWS Lambda function (`EmergencyAlertDispatcher`). This function executes in a serverless microVM runtime on-demand without provisioning persistent server capacity, automatically scaling to burst alert volumes and broadcasting notifications with low latency.
+
+### Q7: Why use AWS S3 Object Storage alongside PostgreSQL relational storage?
+**Answer:** PostgreSQL provides ACID transactional guarantees and indexing for real-time node state and topology queries. In contrast, AWS S3 represents a **Distributed Object-Based Storage System** offering 99.999999999% (11 9's) durability and high-throughput write scalability for long-term historical telemetry dumps at a fraction of relational database storage cost.
+
+### Q8: How does our project implement Kubernetes container orchestration (Unit IV)?
+**Answer:** The project defines declarative Kubernetes manifests (`k8s/00` to `k8s/06`) deploying the system across an isolated namespace (`ds-sensor-network`). It runs multiple replicas of the Central Server coordinator backed by `livenessProbe` and `readinessProbe` health checks, a PersistentVolumeClaim for PostgreSQL, and Horizontal Pod Autoscaling (HPA) to scale dynamically between 2 and 5 pods.
+
+### Q9: How does the Load Balancer distribute traffic across backend replicas?
+**Answer:** Incoming client requests hit a Layer 7 Load Balancer / Kubernetes Service (`ds-load-balancer`) configured with a **Round-Robin** routing algorithm. The load balancer alternates traffic between healthy pod replicas (`Pod Alpha` and `Pod Beta`). If a pod crashes or fails its readiness probe, the load balancer automatically withdraws it from the endpoint pool to prevent service disruption.
+
+

@@ -1,0 +1,191 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sensor-1
+  namespace: ds-sensor-network
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sensor-1
+  template:
+    metadata:
+      labels:
+        app: sensor-1
+    spec:
+      containers:
+        - name: sensor-1
+          image: sensor-server:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8101
+          env:
+            - name: SERVER_PORT
+              value: "8101"
+            - name: NODE_ID
+              value: "S1"
+            - name: NODE_CLUSTER
+              value: "C1"
+            - name: NODE_PEERS
+              value: "http://sensor-2-svc:8102"
+            - name: NODE_CENTRAL_URL
+              value: "http://central-server-svc:8000"
+            - name: NODE_IS_INITIAL_LEADER
+              value: "false"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sensor-1-svc
+  namespace: ds-sensor-network
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8101
+      targetPort: 8101
+  selector:
+    app: sensor-1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sensor-2
+  namespace: ds-sensor-network
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sensor-2
+  template:
+    metadata:
+      labels:
+        app: sensor-2
+    spec:
+      containers:
+        - name: sensor-2
+          image: sensor-server:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8102
+          env:
+            - name: SERVER_PORT
+              value: "8102"
+            - name: NODE_ID
+              value: "S2"
+            - name: NODE_CLUSTER
+              value: "C1"
+            - name: NODE_PEERS
+              value: "http://sensor-1-svc:8101"
+            - name: NODE_CENTRAL_URL
+              value: "http://central-server-svc:8000"
+            - name: NODE_IS_INITIAL_LEADER
+              value: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sensor-2-svc
+  namespace: ds-sensor-network
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8102
+      targetPort: 8102
+  selector:
+    app: sensor-2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sensor-3
+  namespace: ds-sensor-network
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sensor-3
+  template:
+    metadata:
+      labels:
+        app: sensor-3
+    spec:
+      containers:
+        - name: sensor-3
+          image: sensor-server:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8103
+          env:
+            - name: SERVER_PORT
+              value: "8103"
+            - name: NODE_ID
+              value: "S3"
+            - name: NODE_CLUSTER
+              value: "C2"
+            - name: NODE_PEERS
+              value: "http://sensor-4-svc:8104"
+            - name: NODE_CENTRAL_URL
+              value: "http://central-server-svc:8000"
+            - name: NODE_IS_INITIAL_LEADER
+              value: "false"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sensor-3-svc
+  namespace: ds-sensor-network
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8103
+      targetPort: 8103
+  selector:
+    app: sensor-3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sensor-4
+  namespace: ds-sensor-network
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sensor-4
+  template:
+    metadata:
+      labels:
+        app: sensor-4
+    spec:
+      containers:
+        - name: sensor-4
+          image: sensor-server:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8104
+          env:
+            - name: SERVER_PORT
+              value: "8104"
+            - name: NODE_ID
+              value: "S4"
+            - name: NODE_CLUSTER
+              value: "C2"
+            - name: NODE_PEERS
+              value: "http://sensor-3-svc:8103"
+            - name: NODE_CENTRAL_URL
+              value: "http://central-server-svc:8000"
+            - name: NODE_IS_INITIAL_LEADER
+              value: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sensor-4-svc
+  namespace: ds-sensor-network
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8104
+      targetPort: 8104
+  selector:
+    app: sensor-4

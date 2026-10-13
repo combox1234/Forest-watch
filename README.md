@@ -261,3 +261,67 @@ Run all unit tests across the multi-module project:
    - Centralized coordinator within each cluster arbitrates access to critical alert dispatch actions, preventing duplicate concurrent alerts from overwhelming the upstream network.
 5. **Edge Aggregation:**
    - In-network statistical computation (mean, min, max, event counts) performed at the edge layer, minimizing cloud/central bandwidth utilization.
+6. **Distributed Object Storage (AWS S3):**
+   - Cold historical telemetry batches archived into AWS S3 (`s3://ds-environmental-telemetry-archive/`) with content-addressed object keys and MD5 ETags (Unit IV).
+7. **Serverless Architectures (AWS Lambda):**
+   - Event-driven invocation of AWS Lambda serverless function (`EmergencyAlertDispatcher`) on mutual exclusion alert triggers with sub-100ms execution and automatic scaling (Unit IV).
+
+---
+
+## ☁️ AWS Cloud Deployment (EC2 & Docker)
+
+### Option 3: 1-Click AWS EC2 Deployment
+Deploy directly to a free-tier AWS EC2 instance (Ubuntu 22.04 / 24.04 LTS):
+
+1. **Launch an AWS EC2 Instance:**
+   - AMI: **Ubuntu Server 24.04 LTS**
+   - Instance Type: **t2.micro** or **t3.small** (Free Tier eligible)
+   - Security Group Rules:
+     - Port 22 (SSH)
+     - Port 8000 (Central Server & Global Dashboard)
+     - Ports 8101–8104 (Sensor Node Web Consoles)
+
+2. **Connect & Deploy:**
+   ```bash
+   ssh -i your-key.pem ubuntu@<ec2-public-ip>
+   git clone <your-repo-url> ds-sensor-network
+   cd ds-sensor-network
+   chmod +x deploy_aws.sh
+   ./deploy_aws.sh
+   ```
+
+3. **Open Dashboard:**
+   - Central Coordinator & Global State Monitor: `http://<ec2-public-ip>:8000`
+   - Node Consoles: `http://<ec2-public-ip>:8101` to `:8104`
+
+---
+
+## ☸️ Kubernetes & Load Balancer Deployment (Unit IV)
+
+### Option 4: Deploying on Kubernetes with Layer 7 Load Balancing
+Deploy to Minikube, Docker Desktop Kubernetes, Kind, or AWS EKS:
+
+1. **Deploy all resources with 1 command:**
+   * **Windows:**
+     ```cmd
+     .\deploy_k8s.bat
+     ```
+   * **Linux / macOS / Cloud:**
+     ```bash
+     chmod +x deploy_k8s.sh
+     ./deploy_k8s.sh
+     ```
+   * **Direct `kubectl`:**
+     ```bash
+     kubectl apply -f k8s/
+     ```
+
+2. **Access via Load Balancer:**
+   * Kubernetes Service `ds-load-balancer` (Layer 4/Layer 7 Load Balancer) distributes incoming traffic across multiple `central-server` pod replicas using **Round-Robin**.
+   * Port-forward shortcut:
+     ```bash
+     kubectl port-forward svc/ds-load-balancer 8000:8000 -n ds-sensor-network
+     ```
+   * Dashboard URL: `http://localhost:8000`
+
+

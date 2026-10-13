@@ -18,17 +18,27 @@ public class AggregationStorageService {
 
     private final AggregatedReadingRepository aggregatedReadingRepository;
     private final GlobalStateService globalStateService;
+    private final AwsS3ArchiveService awsS3ArchiveService;
 
     @Autowired
     public AggregationStorageService(AggregatedReadingRepository aggregatedReadingRepository,
-                                     GlobalStateService globalStateService) {
+                                     GlobalStateService globalStateService,
+                                     AwsS3ArchiveService awsS3ArchiveService) {
         this.aggregatedReadingRepository = aggregatedReadingRepository;
         this.globalStateService = globalStateService;
+        this.awsS3ArchiveService = awsS3ArchiveService;
     }
 
     @Transactional
     public AggregatedReadingEntity saveAggregatedData(AggregatedData data) {
         if (data == null) return null;
+
+        // Archive batch to AWS S3 Distributed Object Storage (Unit IV)
+        try {
+            awsS3ArchiveService.archiveAggregatedData(data);
+        } catch (Exception e) {
+            log.warn("Non-blocking AWS S3 archival notice: {}", e.getMessage());
+        }
 
         String vcStr = data.getVectorClock() != null ? data.getVectorClock().toString() : "[]";
         AggregatedReadingEntity entity = new AggregatedReadingEntity(

@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: central-server
+  namespace: ds-sensor-network
+  labels:
+    app: central-server
+spec:
+  replicas: 2 # 2 Replicas to demonstrate horizontal scaling & round-robin load balancing
+  selector:
+    matchLabels:
+      app: central-server
+  template:
+    metadata:
+      labels:
+        app: central-server
+    spec:
+      containers:
+        - name: central-server
+          image: central-server:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/sensordb"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: ds-secrets
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ds-secrets
+                  key: POSTGRES_PASSWORD
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: ds-config
+                  key: AWS_REGION
+            - name: AWS_S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: ds-config
+                  key: AWS_S3_BUCKET
+            - name: AWS_LAMBDA_FUNCTION_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: ds-config
+                  key: AWS_LAMBDA_FUNCTION
+          livenessProbe:
+            httpGet:
+              path: /api/system-status
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/system-status
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "150m"
+            limits:
+              memory: "512Mi"
+              cpu: "600m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: central-server-svc
+  namespace: ds-sensor-network
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: central-server

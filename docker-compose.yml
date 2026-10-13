@@ -31,6 +31,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sensordb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgrespassword
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-ds-environmental-telemetry-archive}
+      AWS_LAMBDA_FUNCTION_NAME: ${AWS_LAMBDA_FUNCTION_NAME:-EmergencyAlertDispatcher}
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx160m -XX:+UseSerialGC"
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,6 +54,7 @@ services:
       NODE_PEERS: http://sensor-2:8102
       NODE_CENTRAL_URL: http://central-server:8000
       NODE_IS_INITIAL_LEADER: "false"
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx140m -XX:+UseSerialGC"
     depends_on:
       - central-server
 
@@ -68,6 +73,7 @@ services:
       NODE_PEERS: http://sensor-1:8101
       NODE_CENTRAL_URL: http://central-server:8000
       NODE_IS_INITIAL_LEADER: "true"
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx140m -XX:+UseSerialGC"
     depends_on:
       - central-server
 
@@ -86,6 +92,7 @@ services:
       NODE_PEERS: http://sensor-4:8104
       NODE_CENTRAL_URL: http://central-server:8000
       NODE_IS_INITIAL_LEADER: "false"
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx140m -XX:+UseSerialGC"
     depends_on:
       - central-server
 
@@ -104,8 +111,21 @@ services:
       NODE_PEERS: http://sensor-3:8103
       NODE_CENTRAL_URL: http://central-server:8000
       NODE_IS_INITIAL_LEADER: "true"
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx140m -XX:+UseSerialGC"
+    depends_on:
+      - central-server
+
+  # Layer 7 Reverse Proxy & Load Balancer (:80)
+  load-balancer:
+    image: nginx:alpine
+    container_name: ds-load-balancer
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx-load-balancer.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - central-server
 
 volumes:
   pgdata:
+

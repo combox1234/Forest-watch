@@ -507,6 +507,16 @@
                 <span class="metric-value" id="alertsDisplay">0</span>
                 <span class="metric-subtext">Mutex Coordinated Alerts</span>
             </div>
+            <div class="metric-card">
+                <span class="metric-title">AWS S3 Archives</span>
+                <span class="metric-value" id="s3MetricDisplay" style="color: #0284c7;">0</span>
+                <span class="metric-subtext">Unit IV: S3 Object Store</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-title">AWS Lambda Runs</span>
+                <span class="metric-value" id="lambdaMetricDisplay" style="color: #d97706;">0</span>
+                <span class="metric-subtext">Unit IV: Serverless Alerts</span>
+            </div>
             <div class="metric-card" style="grid-column: span 1;">
                 <span class="metric-title">Global Causal Frontier</span>
                 <div class="vector-clock-box" id="globalVcDisplay">[0, 0, 0, 0]</div>
@@ -846,6 +856,173 @@
                             <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No election failover events yet.</td></tr>
                         </tbody>
                     </table>
+                </div>
+        <!-- UNIT IV: AWS CLOUD SERVICES & EMERGING PARADIGMS -->
+        <div class="section-card" style="border: 2px solid #38bdf8; background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 80px);">
+            <div class="section-header" style="background: transparent; border-bottom: 1px solid #bae6fd;">
+                <div class="section-title">
+                    <span style="font-size: 1.25rem;">☁️</span>
+                    <span>Unit IV: Emerging Paradigms & AWS Cloud Infrastructure</span>
+                    <span class="badge" style="background: #0284c7; color: white;">AWS Cloud Active</span>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="btnManualS3" class="node-link" style="cursor: pointer; background: #0284c7; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 600;">📤 Sync Archive to AWS S3</button>
+                    <button id="btnTriggerLambda" class="node-link" style="cursor: pointer; background: #d97706; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 600;">⚡ Invoke Lambda Alert</button>
+                </div>
+            </div>
+            <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem;">
+                <div class="logs-grid">
+                    <!-- S3 Panel -->
+                    <div class="section-card" style="box-shadow: none; border: 1px solid var(--border-color);">
+                        <div class="section-header">
+                            <div>
+                                <div class="section-title">
+                                    <span>🪣 AWS S3 Distributed Object Store</span>
+                                </div>
+                                <span style="font-size: 0.72rem; color: var(--text-secondary);" id="s3BucketInfo">Bucket: s3://ds-environmental-telemetry-archive &bull; Region: us-east-1</span>
+                            </div>
+                            <span class="badge badge-info" id="s3CountBadge">0 Objects</span>
+                        </div>
+                        <div class="table-responsive" style="max-height: 280px;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Object Key</th>
+                                        <th>Cluster</th>
+                                        <th>Size</th>
+                                        <th>Vector Clock</th>
+                                        <th>ETag</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="s3ArchiveTableBody">
+                                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Waiting for telemetry batches to archive to S3...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Lambda Panel -->
+                    <div class="section-card" style="box-shadow: none; border: 1px solid var(--border-color);">
+                        <div class="section-header">
+                            <div>
+                                <div class="section-title">
+                                    <span>⚡ AWS Lambda Serverless Invocations</span>
+                                </div>
+                                <span style="font-size: 0.72rem; color: var(--text-secondary);" id="lambdaFunctionInfo">Function: EmergencyAlertDispatcher &bull; Python 3.12</span>
+                            </div>
+                            <span class="badge badge-warning" id="lambdaCountBadge">0 Runs</span>
+                        </div>
+                        <div class="table-responsive" style="max-height: 280px;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Trigger Event</th>
+                                        <th>Cluster</th>
+                                        <th>Latency</th>
+                                        <th>Status</th>
+                                        <th>Request ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lambdaInvocationTableBody">
+                                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No serverless alert events triggered yet.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- UNIT IV: KUBERNETES & LOAD BALANCER INFRASTRUCTURE -->
+        <div class="section-card" style="border: 2px solid #3b82f6; background: linear-gradient(180deg, #eff6ff 0%, #ffffff 80px);">
+            <div class="section-header" style="background: transparent; border-bottom: 1px solid #bfdbfe;">
+                <div class="section-title">
+                    <span style="font-size: 1.25rem;">☸️</span>
+                    <span>Unit IV: Kubernetes Cluster Orchestration & Layer 7 Load Balancer</span>
+                    <span class="badge" style="background: #2563eb; color: white;">K8s LoadBalancer Active</span>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="btnDispatchLb" class="node-link" style="cursor: pointer; background: #2563eb; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 600;">🔄 Send Request via Load Balancer</button>
+                </div>
+            </div>
+            <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem;">
+                <div class="logs-grid">
+                    <!-- Load Balancer Status Card -->
+                    <div class="section-card" style="box-shadow: none; border: 1px solid var(--border-color);">
+                        <div class="section-header">
+                            <div>
+                                <div class="section-title">
+                                    <span>⚖️ Layer 7 Load Balancer (Round-Robin)</span>
+                                </div>
+                                <span style="font-size: 0.72rem; color: var(--text-secondary);">Target Service: ds-load-balancer &bull; Port: 80 / 8000</span>
+                            </div>
+                            <span class="badge badge-success" id="lbHealthBadge">HEALTHY (2/2 Pods)</span>
+                        </div>
+                        <div style="padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                <span>Total Routed Requests: <strong id="lbTotalRouted" style="font-family: 'JetBrains Mono', monospace;">0</strong></span>
+                                <span>Algorithm: <strong class="badge badge-info">Round-Robin</strong></span>
+                            </div>
+                            <!-- Distribution bar -->
+                            <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
+                                    <span>Pod Alpha (10.244.1.18): <strong id="podAlphaPercent">50%</strong></span>
+                                    <span>Pod Beta (10.244.2.24): <strong id="podBetaPercent">50%</strong></span>
+                                </div>
+                                <div style="display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: #e2e8f0;">
+                                    <div id="barPodAlpha" style="width: 50%; background: #2563eb; transition: width 0.3s;"></div>
+                                    <div id="barPodBeta" style="width: 50%; background: #06b6d4; transition: width 0.3s;"></div>
+                                </div>
+                            </div>
+                            <div id="lbLastDispatchNotice" style="font-size: 0.75rem; padding: 0.5rem; background: #f8fafc; border-radius: 6px; border: 1px solid var(--border-color); color: var(--text-secondary);">
+                                Click <strong>[ Send Request via Load Balancer ]</strong> to test traffic distribution across Kubernetes pods.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kubernetes Pods Table -->
+                    <div class="section-card" style="box-shadow: none; border: 1px solid var(--border-color);">
+                        <div class="section-header">
+                            <div>
+                                <div class="section-title">
+                                    <span>📦 Kubernetes Pod Replicas & Probes</span>
+                                </div>
+                                <span style="font-size: 0.72rem; color: var(--text-secondary);">Namespace: ds-sensor-network &bull; HPA: 2-5 Replicas</span>
+                            </div>
+                            <span class="badge badge-purple" id="k8sPodCountBadge">2 Replicas</span>
+                        </div>
+                        <div class="table-responsive" style="max-height: 280px;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Pod Identifier</th>
+                                        <th>IP Address</th>
+                                        <th>Probes</th>
+                                        <th>Requests Handled</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="k8sPodsTableBody">
+                                    <tr>
+                                        <td><strong>central-server-pod-alpha</strong></td>
+                                        <td><span class="code-pill">10.244.1.18</span></td>
+                                        <td><span class="badge badge-success">Liveness: 200</span></td>
+                                        <td><strong id="countPodAlpha">0</strong></td>
+                                        <td><span class="badge badge-success">RUNNING</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>central-server-pod-beta</strong></td>
+                                        <td><span class="code-pill">10.244.2.24</span></td>
+                                        <td><span class="badge badge-success">Readiness: 200</span></td>
+                                        <td><strong id="countPodBeta">0</strong></td>
+                                        <td><span class="badge badge-success">RUNNING</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1315,12 +1492,156 @@
             }
         }
 
+        async function fetchAwsS3Archives() {
+            try {
+                const res = await fetch('/api/aws/s3-archives');
+                if (!res.ok) return;
+                const list = await res.json();
+                const tbody = document.getElementById('s3ArchiveTableBody');
+                document.getElementById('s3CountBadge').innerText = `${list.length} Objects`;
+                document.getElementById('s3MetricDisplay').innerText = list.length;
+                if (!list || list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Waiting for telemetry batches to archive to S3...</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = list.slice(0, 15).map(item => {
+                    const time = new Date(item.timestamp).toLocaleTimeString();
+                    return `
+                        <tr>
+                            <td>${time}</td>
+                            <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #0284c7;">${item.objectKey}</td>
+                            <td><span class="badge badge-info">${item.clusterId}</span></td>
+                            <td><span class="code-pill">${item.sizeBytes} B</span></td>
+                            <td><span class="code-pill">${item.vectorClock}</span></td>
+                            <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-muted);">${item.etag ? item.etag.substring(0, 8) + '...' : '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error fetching S3 archives:', err);
+            }
+        }
+
+        async function fetchAwsLambdaInvocations() {
+            try {
+                const res = await fetch('/api/aws/lambda-invocations');
+                if (!res.ok) return;
+                const list = await res.json();
+                const tbody = document.getElementById('lambdaInvocationTableBody');
+                document.getElementById('lambdaCountBadge').innerText = `${list.length} Runs`;
+                document.getElementById('lambdaMetricDisplay').innerText = list.length;
+                if (!list || list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No serverless alert events triggered yet.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = list.slice(0, 15).map(item => {
+                    const time = new Date(item.timestamp).toLocaleTimeString();
+                    return `
+                        <tr>
+                            <td>${time}</td>
+                            <td><span class="badge badge-warning">${item.triggerEvent}</span></td>
+                            <td><span class="badge badge-info">${item.clusterId}</span></td>
+                            <td><strong>${item.durationMs} ms</strong></td>
+                            <td><span class="badge badge-success">${item.statusCode} OK</span></td>
+                            <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-muted);">${item.requestId ? item.requestId.substring(0, 8) + '...' : '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error fetching Lambda invocations:', err);
+            }
+        }
+
+        document.getElementById('btnManualS3').addEventListener('click', async () => {
+            try {
+                const btn = document.getElementById('btnManualS3');
+                btn.innerText = 'Syncing...';
+                await fetch('/api/aws/s3-archive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clusterId: 'C1', clusterHeadId: 'S2' })
+                });
+                setTimeout(() => {
+                    btn.innerText = '📤 Sync Archive to AWS S3';
+                    fetchAwsS3Archives();
+                }, 500);
+            } catch (e) {
+                console.error(e);
+            }
+        });
+
+        document.getElementById('btnTriggerLambda').addEventListener('click', async () => {
+            try {
+                const btn = document.getElementById('btnTriggerLambda');
+                btn.innerText = 'Invoking...';
+                await fetch('/api/aws/trigger-lambda', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        alertType: 'WILDFIRE_EMERGENCY',
+                        clusterId: 'C2',
+                        sourceNode: 'S4',
+                        vectorClock: '[0, 0, 1, 3]'
+                    })
+                });
+                setTimeout(() => {
+                    btn.innerText = '⚡ Invoke Lambda Alert';
+                    fetchAwsLambdaInvocations();
+                }, 500);
+            } catch (e) {
+                console.error(e);
+            }
+        });
+
+        async function fetchLoadBalancerStats() {
+            try {
+                const res = await fetch('/api/load-balancer/stats');
+                if (!res.ok) return;
+                const data = await res.json();
+                document.getElementById('lbTotalRouted').innerText = data.totalRequestsRouted || 0;
+                const dist = data.distribution || {};
+                const alpha = dist['central-server-pod-alpha'] || 0;
+                const beta = dist['central-server-pod-beta'] || 0;
+                document.getElementById('countPodAlpha').innerText = alpha;
+                document.getElementById('countPodBeta').innerText = beta;
+
+                const total = Math.max(1, alpha + beta);
+                const pAlpha = Math.round((alpha / total) * 100);
+                const pBeta = 100 - pAlpha;
+                document.getElementById('podAlphaPercent').innerText = `${pAlpha}%`;
+                document.getElementById('podBetaPercent').innerText = `${pBeta}%`;
+                document.getElementById('barPodAlpha').style.width = `${pAlpha}%`;
+                document.getElementById('barPodBeta').style.width = `${pBeta}%`;
+            } catch (err) {
+                console.error('Error fetching load balancer stats:', err);
+            }
+        }
+
+        document.getElementById('btnDispatchLb').addEventListener('click', async () => {
+            try {
+                const btn = document.getElementById('btnDispatchLb');
+                btn.innerText = 'Routing...';
+                const res = await fetch('/api/load-balancer/dispatch');
+                const data = await res.json();
+                btn.innerText = '🔄 Send Request via Load Balancer';
+
+                const notice = document.getElementById('lbLastDispatchNotice');
+                notice.innerHTML = `✅ <strong>Request #${data.requestSequence}</strong> routed via <strong>${data.routingAlgorithm}</strong> to Pod: <span class="badge badge-purple">${data.handlingPod}</span> (IP: ${data.podIp}) &bull; Status: <span class="badge badge-success">${data.status}</span>`;
+                fetchLoadBalancerStats();
+            } catch (e) {
+                console.error(e);
+            }
+        });
+
         function refreshAll() {
             fetchSystemStatus();
             fetchAggregatedReadings();
             fetchCommunicationLogs();
             fetchAlerts();
             fetchElections();
+            fetchAwsS3Archives();
+            fetchAwsLambdaInvocations();
+            fetchLoadBalancerStats();
         }
 
         refreshAll();

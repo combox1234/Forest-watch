@@ -1,16 +1,17 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /workspace
 
+# Install Maven in the build stage (tools/ is gitignored and unavailable after clone)
+RUN apk add --no-cache maven
+
 COPY pom.xml ./
 COPY shared/ ./shared/
 COPY central-server/ ./central-server/
 COPY sensor-server/ ./sensor-server/
-COPY tools/ ./tools/
 
-RUN chmod +x tools/apache-maven-3.9.9/bin/mvn && \
-    ./tools/apache-maven-3.9.9/bin/mvn install -N && \
-    ./tools/apache-maven-3.9.9/bin/mvn install -pl shared && \
-    ./tools/apache-maven-3.9.9/bin/mvn package -pl central-server -DskipTests
+RUN mvn install -N && \
+    mvn install -pl shared && \
+    mvn package -pl central-server -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app

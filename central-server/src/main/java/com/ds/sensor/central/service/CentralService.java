@@ -29,6 +29,7 @@ public class CentralService {
     private final ClusterStateRepository clusterStateRepository;
     private final CommunicationLogRepository communicationLogRepository;
     private final ElectionLogRepository electionLogRepository;
+    private final AwsLambdaDispatcherService awsLambdaDispatcherService;
 
     @Autowired
     public CentralService(NodeRepository nodeRepository,
@@ -37,7 +38,8 @@ public class CentralService {
                           AlertRepository alertRepository,
                           ClusterStateRepository clusterStateRepository,
                           CommunicationLogRepository communicationLogRepository,
-                          ElectionLogRepository electionLogRepository) {
+                          ElectionLogRepository electionLogRepository,
+                          AwsLambdaDispatcherService awsLambdaDispatcherService) {
         this.nodeRepository = nodeRepository;
         this.sensorReadingRepository = sensorReadingRepository;
         this.eventRepository = eventRepository;
@@ -45,6 +47,7 @@ public class CentralService {
         this.clusterStateRepository = clusterStateRepository;
         this.communicationLogRepository = communicationLogRepository;
         this.electionLogRepository = electionLogRepository;
+        this.awsLambdaDispatcherService = awsLambdaDispatcherService;
     }
 
     @PostConstruct
@@ -219,7 +222,16 @@ public class CentralService {
         }
         String vcStr = alertData.getVectorClock() != null ? alertData.getVectorClock().toString() : "[]";
         AlertEntity newAlert = new AlertEntity(alertData.getAlertType(), alertData.getClusterId(), alertData.getDescription(), vcStr, sources);
-        return alertRepository.save(newAlert);
+        AlertEntity saved = alertRepository.save(newAlert);
+
+        // Unit IV: Serverless Architecture — trigger AWS Lambda alert handler
+        try {
+            awsLambdaDispatcherService.invokeAlertLambda(alertData);
+        } catch (Exception e) {
+            log.warn("Non-blocking AWS Lambda invocation notice: {}", e.getMessage());
+        }
+
+        return saved;
     }
 
     @Scheduled(fixedRate = 1500)
