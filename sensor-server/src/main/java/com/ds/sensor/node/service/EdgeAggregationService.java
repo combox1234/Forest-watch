@@ -79,7 +79,7 @@ public class EdgeAggregationService {
         minTemp = Math.round(minTemp * 10.0) / 10.0;
         maxTemp = Math.round(maxTemp * 10.0) / 10.0;
 
-        VectorClockData vc = vectorClockService.tick();
+        VectorClockData vc = vectorClockService.getCurrentClock();
 
         AggregatedData agg = new AggregatedData();
         agg.setClusterId(nodeConfig.getClusterId());

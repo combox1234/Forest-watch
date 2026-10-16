@@ -510,17 +510,20 @@
             <div class="metric-card">
                 <span class="metric-title">AWS S3 Archives</span>
                 <span class="metric-value" id="s3MetricDisplay" style="color: #0284c7;">0</span>
-                <span class="metric-subtext">Unit IV: S3 Object Store</span>
+                <span class="metric-subtext">Distributed Object Store</span>
             </div>
             <div class="metric-card">
                 <span class="metric-title">AWS Lambda Runs</span>
                 <span class="metric-value" id="lambdaMetricDisplay" style="color: #d97706;">0</span>
-                <span class="metric-subtext">Unit IV: Serverless Alerts</span>
+                <span class="metric-subtext">Serverless Alert Dispatcher</span>
             </div>
             <div class="metric-card" style="grid-column: span 1;">
-                <span class="metric-title">Global Causal Frontier</span>
-                <div class="vector-clock-box" id="globalVcDisplay">[0, 0, 0, 0]</div>
-                <span class="metric-subtext">Vector Clock [S1, S2, S3, S4]</span>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="metric-title">Global Causal Frontier</span>
+                    <button id="btnResetVcTop" title="Reset all vector clocks to [0,0,0,0]" style="background: #f1f5f9; border: 1px solid var(--border-color); color: var(--text-secondary); border-radius: 4px; font-size: 0.68rem; padding: 1px 6px; cursor: pointer; font-weight: 500;">↺ Reset</button>
+                </div>
+                <div class="vector-clock-box" id="globalVcDisplay" style="font-size: 0.92rem; letter-spacing: 0.5px; padding: 0.35rem 0.6rem;">[S1:0, S2:0, S3:0, S4:0]</div>
+                <span class="metric-subtext">Logical Vector Clock [S1, S2, S3, S4]</span>
             </div>
         </div>
 
@@ -632,6 +635,7 @@
                             <div class="gauge-row"><div class="gauge-lbl"><span>Humidity</span><span id="tcHumid-S1">55.0%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-humid" id="tcHumidBar-S1" style="width:55%"></div></div></div>
                             <div class="gauge-row"><div class="gauge-lbl"><span>Battery</span><span id="tcBat-S1">98%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-bat" id="tcBatBar-S1" style="width:98%"></div></div></div>
                         </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem;padding:3px 6px;background:#f1f5f9;border-radius:4px;"><span style="color:var(--text-secondary);font-weight:600;">VC:</span><span id="tcVc-S1" class="code-pill" style="font-size:0.68rem;">[S1:0, S2:0, S3:0, S4:0]</span></div>
                         <span class="tc-motion clear" id="tcMotion-S1">No Motion</span>
                         <span class="tc-hb" id="tcHb-S1">HB: &lt; 1s ago</span>
                     </div>
@@ -643,6 +647,7 @@
                             <div class="gauge-row"><div class="gauge-lbl"><span>Humidity</span><span id="tcHumid-S2">55.0%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-humid" id="tcHumidBar-S2" style="width:55%"></div></div></div>
                             <div class="gauge-row"><div class="gauge-lbl"><span>Battery</span><span id="tcBat-S2">98%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-bat" id="tcBatBar-S2" style="width:98%"></div></div></div>
                         </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem;padding:3px 6px;background:#f1f5f9;border-radius:4px;"><span style="color:var(--text-secondary);font-weight:600;">VC:</span><span id="tcVc-S2" class="code-pill" style="font-size:0.68rem;">[S1:0, S2:0, S3:0, S4:0]</span></div>
                         <span class="tc-motion clear" id="tcMotion-S2">No Motion</span>
                         <span class="tc-hb" id="tcHb-S2">HB: &lt; 1s ago</span>
                     </div>
@@ -654,6 +659,7 @@
                             <div class="gauge-row"><div class="gauge-lbl"><span>Humidity</span><span id="tcHumid-S3">55.0%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-humid" id="tcHumidBar-S3" style="width:55%"></div></div></div>
                             <div class="gauge-row"><div class="gauge-lbl"><span>Battery</span><span id="tcBat-S3">98%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-bat" id="tcBatBar-S3" style="width:98%"></div></div></div>
                         </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem;padding:3px 6px;background:#f1f5f9;border-radius:4px;"><span style="color:var(--text-secondary);font-weight:600;">VC:</span><span id="tcVc-S3" class="code-pill" style="font-size:0.68rem;">[S1:0, S2:0, S3:0, S4:0]</span></div>
                         <span class="tc-motion clear" id="tcMotion-S3">No Motion</span>
                         <span class="tc-hb" id="tcHb-S3">HB: &lt; 1s ago</span>
                     </div>
@@ -665,6 +671,7 @@
                             <div class="gauge-row"><div class="gauge-lbl"><span>Humidity</span><span id="tcHumid-S4">55.0%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-humid" id="tcHumidBar-S4" style="width:55%"></div></div></div>
                             <div class="gauge-row"><div class="gauge-lbl"><span>Battery</span><span id="tcBat-S4">98%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-bat" id="tcBatBar-S4" style="width:98%"></div></div></div>
                         </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem;padding:3px 6px;background:#f1f5f9;border-radius:4px;"><span style="color:var(--text-secondary);font-weight:600;">VC:</span><span id="tcVc-S4" class="code-pill" style="font-size:0.68rem;">[S1:0, S2:0, S3:0, S4:0]</span></div>
                         <span class="tc-motion clear" id="tcMotion-S4">No Motion</span>
                         <span class="tc-hb" id="tcHb-S4">HB: &lt; 1s ago</span>
                     </div>
@@ -833,118 +840,23 @@
                     </table>
                 </div>
             </div>
-
-            <!-- Bully Election & Failover Log -->
-            <div class="section-card">
-                <div class="section-header">
-                    <div class="section-title">
-                        <span>👑 Bully Election & Failover History</span>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Time</th>
-                                <th>Cluster</th>
-                                <th>Event</th>
-                                <th>Elected Leader</th>
-                                <th>Details</th>
-                            </tr>
-                        </thead>
-                        <tbody id="electionsTableBody">
-                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No election failover events yet.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-        <!-- UNIT IV: AWS CLOUD SERVICES & EMERGING PARADIGMS -->
-        <div class="section-card" style="border: 2px solid #38bdf8; background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 80px);">
-            <div class="section-header" style="background: transparent; border-bottom: 1px solid #bae6fd;">
-                <div class="section-title">
-                    <span style="font-size: 1.25rem;">☁️</span>
-                    <span>Unit IV: Emerging Paradigms & AWS Cloud Infrastructure</span>
-                    <span class="badge" style="background: #0284c7; color: white;">AWS Cloud Active</span>
-                </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button id="btnManualS3" class="node-link" style="cursor: pointer; background: #0284c7; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 600;">📤 Sync Archive to AWS S3</button>
-                    <button id="btnTriggerLambda" class="node-link" style="cursor: pointer; background: #d97706; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 600;">⚡ Invoke Lambda Alert</button>
-                </div>
-            </div>
-            <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem;">
-                <div class="logs-grid">
-                    <!-- S3 Panel -->
-                    <div class="section-card" style="box-shadow: none; border: 1px solid var(--border-color);">
-                        <div class="section-header">
-                            <div>
-                                <div class="section-title">
-                                    <span>🪣 AWS S3 Distributed Object Store</span>
-                                </div>
-                                <span style="font-size: 0.72rem; color: var(--text-secondary);" id="s3BucketInfo">Bucket: s3://ds-environmental-telemetry-archive &bull; Region: us-east-1</span>
-                            </div>
-                            <span class="badge badge-info" id="s3CountBadge">0 Objects</span>
-                        </div>
-                        <div class="table-responsive" style="max-height: 280px;">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Time</th>
-                                        <th>Object Key</th>
-                                        <th>Cluster</th>
-                                        <th>Size</th>
-                                        <th>Vector Clock</th>
-                                        <th>ETag</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="s3ArchiveTableBody">
-                                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Waiting for telemetry batches to archive to S3...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Lambda Panel -->
-                    <div class="section-card" style="box-shadow: none; border: 1px solid var(--border-color);">
-                        <div class="section-header">
-                            <div>
-                                <div class="section-title">
-                                    <span>⚡ AWS Lambda Serverless Invocations</span>
-                                </div>
-                                <span style="font-size: 0.72rem; color: var(--text-secondary);" id="lambdaFunctionInfo">Function: EmergencyAlertDispatcher &bull; Python 3.12</span>
-                            </div>
-                            <span class="badge badge-warning" id="lambdaCountBadge">0 Runs</span>
-                        </div>
-                        <div class="table-responsive" style="max-height: 280px;">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Time</th>
-                                        <th>Trigger Event</th>
-                                        <th>Cluster</th>
-                                        <th>Latency</th>
-                                        <th>Status</th>
-                                        <th>Request ID</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="lambdaInvocationTableBody">
-                                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No serverless alert events triggered yet.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- UNIT IV: KUBERNETES & LOAD BALANCER INFRASTRUCTURE -->
+        <!-- CONTAINER ORCHESTRATION & LAYER 7 LOAD BALANCING -->
         <div class="section-card" style="border: 2px solid #3b82f6; background: linear-gradient(180deg, #eff6ff 0%, #ffffff 80px);">
-            <div class="section-header" style="background: transparent; border-bottom: 1px solid #bfdbfe;">
-                <div class="section-title">
-                    <span style="font-size: 1.25rem;">☸️</span>
-                    <span>Unit IV: Kubernetes Cluster Orchestration & Layer 7 Load Balancer</span>
-                    <span class="badge" style="background: #2563eb; color: white;">K8s LoadBalancer Active</span>
+            <div class="section-header" style="background: transparent; border-bottom: 1px solid #bfdbfe; flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                    <div class="section-title">
+                        <span style="font-size: 1.25rem;">☸️</span>
+                        <span>Container Orchestration & Layer 7 Load Balancing</span>
+                        <span class="badge" style="background: #2563eb; color: white;">K8s LoadBalancer Active</span>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.3rem;">
+                        <strong>Role:</strong> Manages multi-replica container pods, automated Kubernetes liveness & readiness health probes, and Layer 7 reverse proxy traffic distribution for zero-downtime high availability.
+                    </p>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button id="btnDispatchLb" class="node-link" style="cursor: pointer; background: #2563eb; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 600;">🔄 Send Request via Load Balancer</button>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button id="btnDispatchLb" class="node-link" style="cursor: pointer; background: #2563eb; color: white; border: none; padding: 0.45rem 0.9rem; border-radius: 6px; font-weight: 600;">🔄 Send Request via Load Balancer</button>
                 </div>
             </div>
             <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem;">
@@ -957,6 +869,7 @@
                                     <span>⚖️ Layer 7 Load Balancer (Round-Robin)</span>
                                 </div>
                                 <span style="font-size: 0.72rem; color: var(--text-secondary);">Target Service: ds-load-balancer &bull; Port: 80 / 8000</span>
+                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Role: Distributes client requests across healthy backend pods using Round-Robin</div>
                             </div>
                             <span class="badge badge-success" id="lbHealthBadge">HEALTHY (2/2 Pods)</span>
                         </div>
@@ -990,6 +903,7 @@
                                     <span>📦 Kubernetes Pod Replicas & Probes</span>
                                 </div>
                                 <span style="font-size: 0.72rem; color: var(--text-secondary);">Namespace: ds-sensor-network &bull; HPA: 2-5 Replicas</span>
+                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Role: Isolated container replicas monitored with automated liveness and readiness health checks</div>
                             </div>
                             <span class="badge badge-purple" id="k8sPodCountBadge">2 Replicas</span>
                         </div>
@@ -1000,7 +914,7 @@
                                         <th>Pod Identifier</th>
                                         <th>IP Address</th>
                                         <th>Probes</th>
-                                        <th>Requests Handled</th>
+                                        <th>Requests</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -1008,17 +922,102 @@
                                     <tr>
                                         <td><strong>central-server-pod-alpha</strong></td>
                                         <td><span class="code-pill">10.244.1.18</span></td>
-                                        <td><span class="badge badge-success">Liveness: 200</span></td>
+                                        <td><span class="badge badge-success" style="white-space: nowrap;">Liveness: 200</span></td>
                                         <td><strong id="countPodAlpha">0</strong></td>
                                         <td><span class="badge badge-success">RUNNING</span></td>
                                     </tr>
                                     <tr>
                                         <td><strong>central-server-pod-beta</strong></td>
                                         <td><span class="code-pill">10.244.2.24</span></td>
-                                        <td><span class="badge badge-success">Readiness: 200</span></td>
+                                        <td><span class="badge badge-success" style="white-space: nowrap;">Readiness: 200</span></td>
                                         <td><strong id="countPodBeta">0</strong></td>
                                         <td><span class="badge badge-success">RUNNING</span></td>
                                     </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AWS CLOUD INFRASTRUCTURE & SERVERLESS ARCHIVING -->
+        <div class="section-card" style="border: 2px solid #38bdf8; background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 80px);">
+            <div class="section-header" style="background: transparent; border-bottom: 1px solid #bae6fd; flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                    <div class="section-title">
+                        <span style="font-size: 1.25rem;">☁️</span>
+                        <span>AWS Cloud Infrastructure & Serverless Archiving</span>
+                        <span class="badge" style="background: #0284c7; color: white;">AWS Cloud Active</span>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.3rem;">
+                        <strong>Role:</strong> Extends the distributed edge network to public cloud services: durable cold telemetry archiving in Amazon S3 and event-driven serverless emergency alerts via AWS Lambda.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button id="btnManualS3" class="node-link" style="cursor: pointer; background: #0284c7; color: white; border: none; padding: 0.45rem 0.9rem; border-radius: 6px; font-weight: 600;">📤 Sync Archive to AWS S3</button>
+                    <button id="btnTriggerLambda" class="node-link" style="cursor: pointer; background: #d97706; color: white; border: none; padding: 0.45rem 0.9rem; border-radius: 6px; font-weight: 600;">⚡ Invoke Lambda Alert</button>
+                </div>
+            </div>
+            <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem;">
+                <div class="logs-grid">
+                    <!-- S3 Panel -->
+                    <div class="section-card" style="box-shadow: none; border: 1px solid var(--border-color);">
+                        <div class="section-header">
+                            <div>
+                                <div class="section-title">
+                                    <span>🪣 AWS S3 Distributed Object Store</span>
+                                </div>
+                                <span style="font-size: 0.72rem; color: var(--text-secondary);" id="s3BucketInfo">Bucket: s3://ds-environmental-telemetry-archive &bull; Region: us-east-1</span>
+                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Role: Durable cold object storage for aggregated telemetry batches tagged with causal vector clocks</div>
+                            </div>
+                            <span class="badge badge-info" id="s3CountBadge">0 Objects</span>
+                        </div>
+                        <div class="table-responsive" style="max-height: 280px;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Object Key</th>
+                                        <th>Cluster</th>
+                                        <th>Size</th>
+                                        <th>Vector Clock</th>
+                                        <th>ETag</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="s3ArchiveTableBody">
+                                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Waiting for telemetry batches to archive to S3...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Lambda Panel -->
+                    <div class="section-card" style="box-shadow: none; border: 1px solid var(--border-color);">
+                        <div class="section-header">
+                            <div>
+                                <div class="section-title">
+                                    <span>⚡ AWS Lambda Serverless Invocations</span>
+                                </div>
+                                <span style="font-size: 0.72rem; color: var(--text-secondary);" id="lambdaFunctionInfo">Function: EmergencyAlertDispatcher &bull; Python 3.12</span>
+                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Role: Event-driven serverless functions executed on-demand for critical wildfire and temperature thresholds</div>
+                            </div>
+                            <span class="badge badge-warning" id="lambdaCountBadge">0 Runs</span>
+                        </div>
+                        <div class="table-responsive" style="max-height: 280px;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Trigger Event</th>
+                                        <th>Cluster</th>
+                                        <th>Latency</th>
+                                        <th>Status</th>
+                                        <th>Request ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lambdaInvocationTableBody">
+                                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No serverless alert events triggered yet.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1310,6 +1309,27 @@
                     hbEl.style.fontWeight='normal';
                 }
             }
+            var vce = document.getElementById('tcVc-' + id);
+            if (vce) vce.innerText = formatVectorClock(n.vectorClock);
+        }
+
+        function formatVectorClock(vc) {
+            if (!vc) return '[S1:0, S2:0, S3:0, S4:0]';
+            let arr = [];
+            if (Array.isArray(vc)) {
+                arr = vc;
+            } else if (typeof vc === 'string') {
+                const cleaned = vc.replace(/[\[\]\s]/g, '');
+                const m = cleaned.split(',');
+                if (m.length === 4) {
+                    arr = m.map(x => parseInt(x, 10) || 0);
+                } else {
+                    return vc;
+                }
+            } else {
+                return String(vc);
+            }
+            return `[S1:${arr[0] || 0}, S2:${arr[1] || 0}, S3:${arr[2] || 0}, S4:${arr[3] || 0}]`;
         }
 
         async function fetchSystemStatus() {
@@ -1322,7 +1342,7 @@
                 document.getElementById('activeSensorsDisplay').innerText = `${data.activeSensors} / ${data.totalSensors}`;
                 document.getElementById('batchesDisplay').innerText = data.totalAggregatedBatches || 0;
                 document.getElementById('alertsDisplay').innerText = data.totalAlerts || 0;
-                document.getElementById('globalVcDisplay').innerText = data.globalVectorClockString || '[0, 0, 0, 0]';
+                document.getElementById('globalVcDisplay').innerText = data.globalVectorClockFormatted || formatVectorClock(data.globalVectorClock) || '[S1:0, S2:0, S3:0, S4:0]';
                 document.getElementById('chDisplay').innerText = `${data.activeClusterHeads} Active`;
 
                 // Update cluster headers
@@ -1390,7 +1410,7 @@
                             <td>${item.minTemperature.toFixed(1)}&deg;C / ${item.maxTemperature.toFixed(1)}&deg;C</td>
                             <td>${item.avgHumidity.toFixed(1)}%</td>
                             <td>${item.activeSensorsCount}</td>
-                            <td><span class="code-pill">${item.vectorClock}</span></td>
+                            <td><span class="code-pill">${formatVectorClock(item.vectorClock)}</span></td>
                         </tr>
                     `;
                 }).join('');
@@ -1427,7 +1447,7 @@
                             <td><strong>${receiver}</strong></td>
                             <td><span class="badge badge-info">${log.clusterId}</span></td>
                             <td><span class="badge ${badgeClass}">${log.messageType}</span></td>
-                            <td><span class="code-pill">${log.vectorClock}</span></td>
+                            <td><span class="code-pill">${formatVectorClock(log.vectorClock)}</span></td>
                             <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${log.payloadSummary}</td>
                         </tr>
                     `;
@@ -1456,7 +1476,7 @@
                             <td><span class="badge badge-danger">${a.alertType}</span></td>
                             <td><span class="badge badge-info">${a.clusterId}</span></td>
                             <td>${sources}</td>
-                            <td><span class="code-pill">${a.vectorClock}</span></td>
+                            <td><span class="code-pill">${formatVectorClock(a.vectorClock)}</span></td>
                         </tr>
                     `;
                 }).join('');
@@ -1509,10 +1529,10 @@
                     return `
                         <tr>
                             <td>${time}</td>
-                            <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #0284c7;">${item.objectKey}</td>
+                            <td style="max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #0284c7;" title="${item.objectKey}">${item.objectKey}</td>
                             <td><span class="badge badge-info">${item.clusterId}</span></td>
                             <td><span class="code-pill">${item.sizeBytes} B</span></td>
-                            <td><span class="code-pill">${item.vectorClock}</span></td>
+                            <td><span class="code-pill">${formatVectorClock(item.vectorClock)}</span></td>
                             <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-muted);">${item.etag ? item.etag.substring(0, 8) + '...' : '-'}</td>
                         </tr>
                     `;
@@ -1632,6 +1652,30 @@
                 console.error(e);
             }
         });
+
+        const resetVcBtn = document.getElementById('btnResetVcTop');
+        if (resetVcBtn) {
+            resetVcBtn.addEventListener('click', async () => {
+                try {
+                    resetVcBtn.innerText = '↺ Resetting...';
+                    await fetch('/api/vector-clock/reset', { method: 'POST' });
+                    // Direct browser ping to all 4 sensors to guarantee immediate reset
+                    const ports = [8101, 8102, 8103, 8104];
+                    for (const p of ports) {
+                        try {
+                            fetch(`http://${window.location.hostname}:${p}/api/vector-clock/reset`, { method: 'POST' }).catch(() => {});
+                        } catch (e) {}
+                    }
+                    setTimeout(() => {
+                        resetVcBtn.innerText = '↺ Reset';
+                        refreshAll();
+                    }, 600);
+                } catch (e) {
+                    console.error('Error resetting vector clocks:', e);
+                    resetVcBtn.innerText = '↺ Reset';
+                }
+            });
+        }
 
         function refreshAll() {
             fetchSystemStatus();

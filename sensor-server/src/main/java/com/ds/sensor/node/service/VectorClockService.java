@@ -34,6 +34,13 @@ public class VectorClockService {
         return localClock.copy();
     }
 
+    public synchronized VectorClockData merge(VectorClockData incoming) {
+        if (incoming != null) {
+            localClock.merge(incoming);
+        }
+        return localClock.copy();
+    }
+
     public synchronized VectorClockData mergeAndTick(VectorClockData incoming) {
         if (incoming != null) {
             localClock.merge(incoming);
@@ -46,8 +53,16 @@ public class VectorClockService {
         return localClock.copy();
     }
 
+    public synchronized void reset() {
+        localClock.reset();
+    }
+
     public String getCurrentClockString() {
         return localClock.toString();
+    }
+
+    public String getFormattedClockString() {
+        return localClock.toFormattedString();
     }
 
     public String compare(VectorClockData c1, VectorClockData c2) {

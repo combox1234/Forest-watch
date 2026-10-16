@@ -48,8 +48,8 @@ public class AwsS3ArchiveService {
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
         String timeStr = sdf.format(new Date(now));
-        String objectKey = String.format("telemetry/%s/%s_%s_vc%s.json",
-                clusterId.toLowerCase(), timeStr, clusterHead, vcStr.replaceAll("[\\[\\], ]", "-"));
+        String objectKey = String.format("telemetry/%s/%s_%s_batch.json",
+                clusterId.toLowerCase(), timeStr, clusterHead);
 
         String payloadJson = String.format(Locale.US,
                 "{\n" +

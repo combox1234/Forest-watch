@@ -59,9 +59,8 @@ public class HeartbeatService {
     public void recordIncomingHeartbeat(String senderId, VectorClockData vc) {
         lastHeartbeats.put(senderId, System.currentTimeMillis());
         peerStatuses.put(senderId, NodeStatus.ACTIVE);
-        if (vc != null) {
-            vectorClockService.mergeAndTick(vc);
-        }
+        // Note: Routine 2-second heartbeat liveness pings do NOT advance the application vector clock.
+        // Vector clock only advances on real events (readings, elections, alerts, mutex, aggregation).
     }
 
     @Scheduled(fixedRate = 2000)
@@ -84,9 +83,9 @@ public class HeartbeatService {
             communicationService.sendHeartbeatToCentral();
         }
 
-        // 2. Send heartbeat to cluster peers
+        // 2. Send heartbeat to cluster peers (send current clock snapshot without ticking)
         List<String> peerUrls = nodeConfig.getPeerUrls();
-        VectorClockData vc = vectorClockService.tick();
+        VectorClockData vc = vectorClockService.getCurrentClock();
 
         for (String peerUrl : peerUrls) {
             Message hbMsg = new Message();

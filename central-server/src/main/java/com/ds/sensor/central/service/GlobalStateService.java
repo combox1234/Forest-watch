@@ -48,6 +48,10 @@ public class GlobalStateService {
         }
     }
 
+    public synchronized void resetGlobalClock() {
+        globalVectorClock.set(new VectorClockData());
+    }
+
     public VectorClockData getGlobalVectorClock() {
         return globalVectorClock.get();
     }
@@ -69,6 +73,7 @@ public class GlobalStateService {
         overview.put("totalAlerts", alertRepository.count());
         overview.put("globalVectorClock", globalVectorClock.get().getClock());
         overview.put("globalVectorClockString", globalVectorClock.get().toString());
+        overview.put("globalVectorClockFormatted", globalVectorClock.get().toFormattedString());
 
         List<ClusterStateEntity> clusters = clusterStateRepository.findAll();
         overview.put("clusters", clusters);

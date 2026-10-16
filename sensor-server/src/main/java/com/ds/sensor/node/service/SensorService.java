@@ -199,6 +199,13 @@ public class SensorService {
         return map;
     }
 
+    public synchronized void resetClock() {
+        vectorClockService.reset();
+        if (lastReading != null) {
+            lastReading.setVectorClock(vectorClockService.getCurrentClock());
+        }
+    }
+
     public NodeStatus getStatus() { return status; }
     public SensorReadingData getLastReading() { return lastReading; }
 }

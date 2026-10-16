@@ -275,4 +275,16 @@ public class CentralApiController {
                 "distribution", podRequestCounts
         ));
     }
+
+    @PostMapping("/vector-clock/reset")
+    public ResponseEntity<Map<String, Object>> resetVectorClock() {
+        globalStateService.resetGlobalClock();
+        centralService.broadcastVectorClockReset();
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "message", "Global and local vector clocks reset to [0, 0, 0, 0]",
+                "globalVectorClock", globalStateService.getGlobalVectorClock().getClock(),
+                "globalVectorClockFormatted", globalStateService.getGlobalVectorClock().toFormattedString()
+        ));
+    }
 }

@@ -272,4 +272,31 @@ public class CentralService {
     public List<EventEntity> getRecentEvents() { return eventRepository.findTop50ByOrderByTimestampDesc(); }
     public List<AlertEntity> getRecentAlerts() { return alertRepository.findTop50ByOrderByTimestampDesc(); }
     public List<ElectionLogEntity> getRecentElectionLogs() { return electionLogRepository.findTop50ByOrderByTimestampDesc(); }
+
+    public void broadcastVectorClockReset() {
+        java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+        List<NodeEntity> nodes = nodeRepository.findAll();
+        for (NodeEntity n : nodes) {
+            n.setVectorClock("[0, 0, 0, 0]");
+            nodeRepository.save(n);
+
+            int port = n.getPort() > 0 ? n.getPort() : 8101;
+            String[] candidateHosts = {
+                "http://localhost:" + port,
+                "http://127.0.0.1:" + port,
+                "http://sensor-" + n.getNodeId().replace("S", "") + ":" + port
+            };
+
+            for (String host : candidateHosts) {
+                try {
+                    java.net.http.HttpRequest req = java.net.http.HttpRequest.newBuilder()
+                            .uri(java.net.URI.create(host + "/api/vector-clock/reset"))
+                            .POST(java.net.http.HttpRequest.BodyPublishers.noBody())
+                            .timeout(java.time.Duration.ofMillis(1200))
+                            .build();
+                    client.sendAsync(req, java.net.http.HttpResponse.BodyHandlers.discarding());
+                } catch (Exception ignored) {}
+            }
+        }
+    }
 }

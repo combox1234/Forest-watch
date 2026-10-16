@@ -106,6 +106,19 @@ public class VectorClockData implements Serializable {
         return new VectorClockData(this.clock);
     }
 
+    public synchronized void reset() {
+        if (this.clock != null) {
+            Arrays.fill(this.clock, 0);
+        } else {
+            this.clock = new int[SIZE];
+        }
+    }
+
+    public String toFormattedString() {
+        if (clock == null || clock.length < SIZE) return "[S1:0, S2:0, S3:0, S4:0]";
+        return String.format("[S1:%d, S2:%d, S3:%d, S4:%d]", clock[0], clock[1], clock[2], clock[3]);
+    }
+
     @Override
     public String toString() {
         return Arrays.toString(clock);

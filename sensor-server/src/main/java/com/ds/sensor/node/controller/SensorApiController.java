@@ -97,7 +97,7 @@ public class SensorApiController {
             }
 
             case SENSOR_DATA -> {
-                vectorClockService.mergeAndTick(message.getVectorClock());
+                vectorClockService.merge(message.getVectorClock());
                 try {
                     SensorReadingData data = objectMapper.convertValue(message.getPayload(), SensorReadingData.class);
                     edgeAggregationService.recordReading(data);
@@ -172,5 +172,16 @@ public class SensorApiController {
     @GetMapping("/logs")
     public ResponseEntity<List<Map<String, Object>>> getLogs() {
         return ResponseEntity.ok(communicationService.getRecentLogs());
+    }
+
+    @PostMapping({"/vector-clock/reset", "/sensor/vector-clock/reset"})
+    public ResponseEntity<Map<String, String>> resetVectorClock() {
+        sensorService.resetClock();
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "nodeId", nodeConfig.getNodeId(),
+                "vectorClock", vectorClockService.getCurrentClockString(),
+                "vectorClockFormatted", vectorClockService.getFormattedClockString()
+        ));
     }
 }
