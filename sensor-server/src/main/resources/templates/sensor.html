@@ -526,7 +526,7 @@
 
         async function fetchStatus() {
             try {
-                const res = await fetch('/api/status');
+                const res = await fetch('api/status');
                 if (!res.ok) return;
                 const data = await res.json();
 
@@ -617,7 +617,7 @@
 
         async function fetchLogs() {
             try {
-                const res = await fetch('/api/logs');
+                const res = await fetch('api/logs');
                 if (!res.ok) return;
                 const logs = await res.json();
                 const tbody = document.getElementById('logsTableBody');
@@ -650,7 +650,7 @@
 
         async function triggerReading() {
             try {
-                const res = await fetch('/api/generate-reading', { method: 'POST' });
+                const res = await fetch('api/generate-reading', { method: 'POST' });
                 const r = await res.json();
                 showFeedback(`Generated Reading: ${r.temperature}\u00B0C, ${r.humidity}%. Vector Clock ticked!`, 'success');
                 fetchStatus();
@@ -662,7 +662,7 @@
 
         async function triggerEvent(type) {
             try {
-                const res = await fetch('/api/generate-event', {
+                const res = await fetch('api/generate-event', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ eventType: type })
@@ -684,7 +684,7 @@
 
         async function triggerElection() {
             try {
-                await fetch('/api/start-election', { method: 'POST' });
+                await fetch('api/start-election', { method: 'POST' });
                 showFeedback('Bully Election initiated!', 'info');
                 setTimeout(() => { fetchStatus(); fetchLogs(); }, 600);
             } catch (e) {
@@ -694,7 +694,7 @@
 
         async function simulateFailure() {
             try {
-                await fetch('/api/simulate-failure', { method: 'POST' });
+                await fetch('api/simulate-failure', { method: 'POST' });
                 showFeedback('SIMULATED FAILURE: Node crashed! Heartbeats silenced.', 'danger');
                 fetchStatus();
                 fetchLogs();
@@ -705,7 +705,7 @@
 
         async function recoverNode() {
             try {
-                await fetch('/api/recover', { method: 'POST' });
+                await fetch('api/recover', { method: 'POST' });
                 showFeedback('NODE RECOVERED: Node is online and evaluating Bully priority!', 'success');
                 fetchStatus();
                 fetchLogs();
@@ -716,7 +716,7 @@
 
         async function triggerAggregation() {
             try {
-                const res = await fetch('/api/aggregate-and-send', { method: 'POST' });
+                const res = await fetch('api/aggregate-and-send', { method: 'POST' });
                 const r = await res.json();
                 if (r && r.sampleCount) {
                     showFeedback(`Edge Aggregation dispatched: ${r.sampleCount} samples, AVG: ${r.avgTemperature}\u00B0C`, 'success');
