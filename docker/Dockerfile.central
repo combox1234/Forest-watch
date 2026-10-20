@@ -16,7 +16,9 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 # Run as non-root user for security best practices (UID 1000 matches Kubernetes fsGroup 1000)
-RUN addgroup -g 1000 -S forestwatch && adduser -u 1000 -S forestwatch -G forestwatch && \
+# Install sqlite package to provide reliable sqlite3 CLI for online database backups and diagnostic inspection
+RUN apk add --no-cache sqlite && \
+    addgroup -g 1000 -S forestwatch && adduser -u 1000 -S forestwatch -G forestwatch && \
     mkdir -p /data && chown -R forestwatch:forestwatch /data && chmod 775 /data
 
 VOLUME ["/data"]

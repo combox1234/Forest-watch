@@ -110,6 +110,9 @@ public class SecurityConfig {
                     "/api/log-message"
                 ).hasAnyRole("SENSOR_SERVICE", "FOREST_OPERATOR", "ADMINISTRATOR")
 
+                // Authenticated User Own Password Management (Any authenticated role: VIEWER, FOREST_OPERATOR, ADMINISTRATOR)
+                .requestMatchers(HttpMethod.PUT, "/api/auth/password", "/api/users/me/password").authenticated()
+
                 // Administrator-Only Endpoints
                 .requestMatchers("/users/**", "/api/users/**").hasRole("ADMINISTRATOR")
 

@@ -1,3 +1,4 @@
+
 # AWS Cloud Deployment & Syllabus Integration Guide
 **Course:** Distributed Systems (Final Year B.Tech — Curriculum Regulations 2023 w.e.f. 2026–27)  
 **Project:** Distributed Environmental Sensor Network with Edge Aggregation, Leader Election, Synchronization, and Fault-Tolerant Coordination
@@ -258,11 +259,17 @@ Provide the faculty with the architectural synthesis:
 * **Continuous Integration (CI — `.github/workflows/ci.yml`):** Runs on every push and pull request to `main`. It automatically compiles Java 21 multi-module Maven source, runs 21 unit and integration tests (including SQLite WAL mode and busy timeout verification, and Spring Security RBAC), validates Docker Compose configurations with placeholder credentials, builds Docker images, checks Terraform formatting, and lints Kubernetes manifests using `kubeconform`. CI never touches AWS infrastructure or deploys code.
 * **Continuous Delivery (CD — `.github/workflows/cd.yml`):** Runs **only** when CI has successfully passed for a commit on the `main` branch (or via manual maintainer dispatch). It deploys the verified commit to the live AWS EC2 host using AWS Systems Manager Run Command, authenticated via OpenID Connect (OIDC).
 
-### 6.2 Production Approval Gate
+### 6.2 Production Approval Gate & GitHub Settings Configuration
 Deployment is governed by GitHub's `production` environment:
-* **Manual Setup in GitHub:** Navigate to **Repository Settings** $\to$ **Environments** $\to$ **production** $\to$ check **Required reviewers** $\to$ add designated project maintainers/evaluators.
-* When a commit on `main` passes CI, the CD workflow transitions to `Waiting for review`. A human maintainer must click **Review deployments** $\to$ **Approve and deploy** before any AWS command is executed.
-* Pull requests from untrusted forks or unapproved branches can never trigger deployment.
+* **CRITICAL: Manual Setup in GitHub Repository Settings:**
+  Declaring `environment: name: production` in `.github/workflows/cd.yml` attaches the deployment job to the environment, but **GitHub will only enforce human review if configured in Repository Settings**:
+  1. Navigate to **Repository Settings** $\to$ **Environments**.
+  2. Click **New environment** and enter name: `production`.
+  3. Under **Deployment protection rules**, check **Required reviewers**.
+  4. Select designated project maintainers/evaluators as required signers.
+  5. Under **Deployment branches**, optionally restrict deployments to `Selected branches` (specifying `main`).
+* **Approval Workflow:** When a commit on `main` passes CI, the CD workflow transitions to `Waiting for review`. A human maintainer must explicitly click **Review deployments** $\to$ **Approve and deploy** before any AWS credentials can be assumed or SSM commands dispatched.
+* **Feature Branch & Pull Request Protection:** Pull requests and feature branch commits can never trigger deployment.
 
 ### 6.3 AWS Authentication via GitHub Actions OIDC (Zero Hardcoded Keys)
 Rather than storing static AWS access keys in GitHub Secrets, the CD pipeline uses cryptographic OpenID Connect (OIDC) identity federation:

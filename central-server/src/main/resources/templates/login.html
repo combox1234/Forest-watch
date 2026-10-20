@@ -229,6 +229,10 @@
                 <span>✅</span>
                 <span>You have been signed out safely.</span>
             </div>
+            <div th:if="${param.reset}" class="alert-box alert-success">
+                <span>✅</span>
+                <span>Password updated successfully. Please sign in with your new password.</span>
+            </div>
 
             <!-- Login Form -->
             <form th:action="@{/login}" method="post" id="loginForm">
@@ -255,5 +259,11 @@
             ForestWatch Autonomous Field Network &bull; Role-Based Access Control Active
         </div>
     </div>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            var u = document.getElementById('username');
+            if (u) u.value = u.value.trim();
+        });
+    </script>
 </body>
 </html>

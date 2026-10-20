@@ -171,6 +171,89 @@ public class UserController {
         return ResponseEntity.ok(user.toDto());
     }
 
+    @PutMapping("/users/{username}/password")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    public ResponseEntity<?> resetUserPassword(@PathVariable String username,
+                                               @RequestBody Map<String, String> request) {
+        String newPassword = request != null ? request.get("newPassword") : null;
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            newPassword = request != null ? request.get("password") : null;
+        }
+
+        if (newPassword == null || newPassword.trim().length() < 6) {
+            return ResponseEntity.badRequest().body(Map.of("error", "New password must be at least 6 characters long"));
+        }
+        if (newPassword.length() > 128) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Password exceeds maximum allowable length"));
+        }
+
+        String targetUsername = username != null ? username.trim() : "";
+        Optional<UserEntity> userOpt = userRepository.findByUsername(targetUsername)
+                .or(() -> userRepository.findByUsernameIgnoreCase(targetUsername));
+
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User '" + targetUsername + "' not found"));
+        }
+
+        UserEntity user = userOpt.get();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "message", "Password reset successfully for user '" + user.getUsername() + "'",
+                "username", user.getUsername()
+        ));
+    }
+
+    @PutMapping({"/auth/password", "/users/me/password"})
+    public ResponseEntity<?> changeOwnPassword(@RequestBody Map<String, String> request, Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String currentPassword = request != null ? request.get("currentPassword") : null;
+        String newPassword = request != null ? request.get("newPassword") : null;
+
+        if (currentPassword == null || currentPassword.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Current password is required"));
+        }
+
+        if (newPassword == null || newPassword.trim().length() < 6) {
+            return ResponseEntity.badRequest().body(Map.of("error", "New password must be at least 6 characters long"));
+        }
+        if (newPassword.length() > 128) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Password exceeds maximum allowable length"));
+        }
+
+        String authUsername = auth.getName();
+        Optional<UserEntity> userOpt = userRepository.findByUsername(authUsername)
+                .or(() -> userRepository.findByUsernameIgnoreCase(authUsername));
+
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Authenticated user not found in database"));
+        }
+
+        UserEntity user = userOpt.get();
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Current password does not match"));
+        }
+
+        if (newPassword.equals(currentPassword)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "New password cannot be identical to the current password"));
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "message", "Your password has been changed successfully",
+                "username", user.getUsername()
+        ));
+    }
+
     @PostMapping("/alerts/{id}/acknowledge")
     @PreAuthorize("hasAnyRole('FOREST_OPERATOR', 'ADMINISTRATOR')")
     public ResponseEntity<?> acknowledgeAlert(@PathVariable Long id, Authentication auth) {
