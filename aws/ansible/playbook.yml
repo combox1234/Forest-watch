@@ -1,0 +1,42 @@
+---
+- name: Deploy ForestWatch Distributed Fleet on EC2
+  hosts: forestwatch
+  become: yes
+  vars:
+    project_repo: "https://github.com/combox1234/Forestwatch.git"
+    app_dir: "/home/ubuntu/forestwatch"
+
+  tasks:
+    - name: Update apt cache and install prerequisites
+      apt:
+        update_cache: yes
+        name:
+          - git
+          - curl
+          - ca-certificates
+          - gnupg
+        state: present
+
+    - name: Enable 2GB swap space for t2.micro stability
+      shell: |
+        if [ $(swapon --show | wc -l) -le 1 ]; then
+          fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048
+          chmod 600 /swapfile
+          mkswap /swapfile
+          swapon /swapfile
+          echo '/swapfile none swap sw 0 0' >> /etc/fstab
+        fi
+
+    - name: Clone or pull ForestWatch repository
+      git:
+        repo: "{{ project_repo }}"
+        dest: "{{ app_dir }}"
+        version: main
+        force: yes
+      become_user: ubuntu
+
+    - name: Launch ForestWatch fleet and monitoring with Docker Compose
+      shell: "docker compose up -d --build"
+      args:
+        chdir: "{{ app_dir }}"
+      become_user: ubuntu

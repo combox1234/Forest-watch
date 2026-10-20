@@ -6,9 +6,11 @@ import com.ds.sensor.shared.message.AlertData;
 import com.ds.sensor.shared.message.Message;
 import com.ds.sensor.shared.message.MessageType;
 import com.ds.sensor.shared.message.SensorReadingData;
+import com.ds.sensor.shared.model.SecurityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -29,10 +31,20 @@ public class CommunicationService {
     private final Deque<Map<String, Object>> recentLogs = new ConcurrentLinkedDeque<>();
     private static final int MAX_LOGS = 50;
 
+    @Value("${forestwatch.security.service-key:" + SecurityConstants.DEFAULT_SERVICE_KEY + "}")
+    private String serviceKey;
+
     @Autowired
     public CommunicationService(NodeConfig nodeConfig, RestTemplate restTemplate) {
         this.nodeConfig = nodeConfig;
         this.restTemplate = restTemplate;
+    }
+
+    private HttpHeaders createHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(SecurityConstants.SERVICE_HEADER_NAME, serviceKey != null ? serviceKey : SecurityConstants.DEFAULT_SERVICE_KEY);
+        return headers;
     }
 
     public static String inferNodeIdFromUrl(String url) {
@@ -41,7 +53,7 @@ public class CommunicationService {
         if (url.contains("8102") || url.contains("sensor-2")) return "S2";
         if (url.contains("8103") || url.contains("sensor-3")) return "S3";
         if (url.contains("8104") || url.contains("sensor-4")) return "S4";
-        if (url.contains("8000") || url.contains("central")) return "CENTRAL";
+        if (url.contains("8000") || url.contains("8099") || url.contains("central")) return "CENTRAL";
         return "PEER";
     }
 
@@ -52,9 +64,7 @@ public class CommunicationService {
         }
         String targetEndpoint = peerUrl.replaceAll("/$", "") + "/api/message";
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Message> request = new HttpEntity<>(message, headers);
+            HttpEntity<Message> request = new HttpEntity<>(message, createHeaders());
 
             logLocal(message.getSenderId(), message.getReceiverId(), message.getMessageType().name(),
                     message.getVectorClock() != null ? message.getVectorClock().toString() : "[]",
@@ -75,7 +85,8 @@ public class CommunicationService {
         new Thread(() -> {
             try {
                 String centralEndpoint = nodeConfig.getCentralUrl().replaceAll("/$", "") + "/api/log-message";
-                restTemplate.postForEntity(centralEndpoint, message, Map.class);
+                HttpEntity<Message> request = new HttpEntity<>(message, createHeaders());
+                restTemplate.postForEntity(centralEndpoint, request, Map.class);
             } catch (Exception ignored) {
             }
         }).start();
@@ -95,7 +106,9 @@ public class CommunicationService {
             if (batt != null) body.put("battery", batt);
             if (motion != null) body.put("motion", motion);
             if (vectorClock != null) body.put("vectorClock", vectorClock);
-            restTemplate.postForEntity(url, body, Map.class);
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, createHeaders());
+            restTemplate.postForEntity(url, request, Map.class);
         } catch (Exception ex) {
             log.debug("Heartbeat to Central Server failed: {}", ex.getMessage());
         }
@@ -109,7 +122,8 @@ public class CommunicationService {
                     "headId", headId,
                     "port", port
             );
-            restTemplate.postForEntity(url, body, Map.class);
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, createHeaders());
+            restTemplate.postForEntity(url, request, Map.class);
             log.info("Notified Central Server: Node {} is new Cluster Head on port {}", headId, port);
         } catch (Exception ex) {
             log.warn("Failed to notify Central Server of cluster head change: {}", ex.getMessage());
@@ -120,7 +134,8 @@ public class CommunicationService {
         try {
             String url = nodeConfig.getCentralUrl().replaceAll("/$", "") + "/api/node-status";
             Map<String, String> body = Map.of("nodeId", nodeId, "status", status);
-            restTemplate.postForEntity(url, body, Map.class);
+            HttpEntity<Map<String, String>> request = new HttpEntity<>(body, createHeaders());
+            restTemplate.postForEntity(url, request, Map.class);
             log.info("Notified Central Server: Node {} status is {}", nodeId, status);
         } catch (Exception ex) {
             log.debug("Failed to notify Central Server of node status change: {}", ex.getMessage());
@@ -137,7 +152,8 @@ public class CommunicationService {
                     "eventType", eventType,
                     "details", details
             );
-            restTemplate.postForEntity(url, body, Map.class);
+            HttpEntity<Map<String, String>> request = new HttpEntity<>(body, createHeaders());
+            restTemplate.postForEntity(url, request, Map.class);
         } catch (Exception ex) {
             log.debug("Failed to log election event to Central Server: {}", ex.getMessage());
         }
@@ -146,7 +162,8 @@ public class CommunicationService {
     public void sendAggregatedDataToCentral(AggregatedData data) {
         try {
             String url = nodeConfig.getCentralUrl().replaceAll("/$", "") + "/api/aggregate";
-            restTemplate.postForEntity(url, data, Map.class);
+            HttpEntity<AggregatedData> request = new HttpEntity<>(data, createHeaders());
+            restTemplate.postForEntity(url, request, Map.class);
             log.info("Successfully sent AggregatedData to Central Server from cluster {}", data.getClusterId());
 
             Message logMsg = new Message();
@@ -164,7 +181,8 @@ public class CommunicationService {
     public void sendAlertToCentral(AlertData alertData) {
         try {
             String url = nodeConfig.getCentralUrl().replaceAll("/$", "") + "/api/alert";
-            restTemplate.postForEntity(url, alertData, Map.class);
+            HttpEntity<AlertData> request = new HttpEntity<>(alertData, createHeaders());
+            restTemplate.postForEntity(url, request, Map.class);
             log.info("Successfully reported Alert to Central Server: {}", alertData.getAlertType());
 
             Message logMsg = new Message();
@@ -183,7 +201,8 @@ public class CommunicationService {
     public void sendReadingToCentral(SensorReadingData readingData) {
         try {
             String url = nodeConfig.getCentralUrl().replaceAll("/$", "") + "/api/reading";
-            restTemplate.postForEntity(url, readingData, Map.class);
+            HttpEntity<SensorReadingData> request = new HttpEntity<>(readingData, createHeaders());
+            restTemplate.postForEntity(url, request, Map.class);
         } catch (Exception ex) {
             log.debug("Failed sending raw reading to Central: {}", ex.getMessage());
         }
@@ -199,7 +218,8 @@ public class CommunicationService {
                     "description", description,
                     "vectorClock", vectorClock
             );
-            restTemplate.postForEntity(url, body, Map.class);
+            HttpEntity<Map<String, String>> request = new HttpEntity<>(body, createHeaders());
+            restTemplate.postForEntity(url, request, Map.class);
         } catch (Exception ex) {
             log.debug("Failed logging event to Central: {}", ex.getMessage());
         }

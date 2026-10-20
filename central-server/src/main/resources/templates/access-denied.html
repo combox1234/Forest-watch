@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 &bull; Access Denied | ForestWatch</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --forest-900: #022018;
+            --danger-600: #dc2626;
+            --danger-700: #b91c1c;
+            --card-bg: rgba(15, 23, 42, 0.9);
+            --border-card: rgba(239, 68, 68, 0.3);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: radial-gradient(circle at 50% 25%, #450a0a 0%, #1e1b1b 50%, #09090b 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .denied-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-card);
+            border-radius: 18px;
+            max-width: 520px;
+            width: 100%;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 35px rgba(220, 38, 38, 0.2);
+            backdrop-filter: blur(16px);
+        }
+
+        .icon-circle {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 1.5rem;
+            background: rgba(220, 38, 38, 0.15);
+            border: 2px solid rgba(239, 68, 68, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            box-shadow: 0 0 24px rgba(220, 38, 38, 0.3);
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .badge-code {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            padding: 2px 10px;
+            border-radius: 999px;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: #059669;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #047857;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(51, 65, 85, 0.6);
+            color: #e2e8f0;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(51, 65, 85, 0.9);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="denied-card">
+        <div class="icon-circle">🛡️</div>
+        <span class="badge-code">HTTP 403 &bull; ROLE PRIVILEGE RESTRICTION</span>
+        <h1>Access Restricted</h1>
+        <p>
+            You do not have the required permissions to access this feature or perform this operational action.
+            ForestWatch enforces role-based authorization: only <strong>Forest Operators</strong> or <strong>Administrators</strong> may perform state-changing or configuration workflows.
+        </p>
+
+        <div class="btn-group">
+            <a href="/" class="btn btn-primary">
+                <span>🌲 Return to Dashboard</span>
+            </a>
+            <form th:action="@{/logout}" method="post" style="width: 100%;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="btn btn-secondary" style="width: 100%;">
+                    <span>🔒 Sign Out & Switch Account</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

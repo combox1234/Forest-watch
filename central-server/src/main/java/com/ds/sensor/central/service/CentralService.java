@@ -7,9 +7,11 @@ import com.ds.sensor.shared.message.Message;
 import com.ds.sensor.shared.message.SensorReadingData;
 import com.ds.sensor.shared.model.NodeRole;
 import com.ds.sensor.shared.model.NodeStatus;
+import com.ds.sensor.shared.model.SecurityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,9 @@ import java.util.*;
 public class CentralService {
 
     private static final Logger log = LoggerFactory.getLogger(CentralService.class);
+
+    @Value("${forestwatch.security.service-key:" + SecurityConstants.DEFAULT_SERVICE_KEY + "}")
+    private String serviceKey;
 
     private final NodeRepository nodeRepository;
     private final SensorReadingRepository sensorReadingRepository;
@@ -271,6 +276,18 @@ public class CentralService {
     public List<CommunicationLogEntity> getRecentLogs() { return communicationLogRepository.findTop100ByOrderByTimestampDesc(); }
     public List<EventEntity> getRecentEvents() { return eventRepository.findTop50ByOrderByTimestampDesc(); }
     public List<AlertEntity> getRecentAlerts() { return alertRepository.findTop50ByOrderByTimestampDesc(); }
+
+    @Transactional
+    public AlertEntity acknowledgeAlert(Long alertId, String username) {
+        AlertEntity alert = alertRepository.findById(alertId).orElse(null);
+        if (alert != null) {
+            alert.setAcknowledged(true);
+            alert.setAcknowledgedBy(username);
+            log.info("Alert id={} acknowledged by operator '{}'", alertId, username);
+            return alertRepository.save(alert);
+        }
+        return null;
+    }
     public List<ElectionLogEntity> getRecentElectionLogs() { return electionLogRepository.findTop50ByOrderByTimestampDesc(); }
 
     public void broadcastVectorClockReset() {
@@ -289,11 +306,14 @@ public class CentralService {
 
             for (String host : candidateHosts) {
                 try {
-                    java.net.http.HttpRequest req = java.net.http.HttpRequest.newBuilder()
+                    java.net.http.HttpRequest.Builder reqBuilder = java.net.http.HttpRequest.newBuilder()
                             .uri(java.net.URI.create(host + "/api/vector-clock/reset"))
                             .POST(java.net.http.HttpRequest.BodyPublishers.noBody())
-                            .timeout(java.time.Duration.ofMillis(1200))
-                            .build();
+                            .timeout(java.time.Duration.ofMillis(1200));
+                    if (serviceKey != null && !serviceKey.trim().isEmpty()) {
+                        reqBuilder.header(SecurityConstants.SERVICE_HEADER_NAME, serviceKey);
+                    }
+                    java.net.http.HttpRequest req = reqBuilder.build();
                     client.sendAsync(req, java.net.http.HttpResponse.BodyHandlers.discarding());
                 } catch (Exception ignored) {}
             }

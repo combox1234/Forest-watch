@@ -7,18 +7,18 @@ metadata:
     app: ds-load-balancer
     tier: load-balancer
   annotations:
-    service.beta.kubernetes.io/aws-load-balancer-type: "nlb" # Provisions AWS Network Load Balancer when on AWS EKS
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
 spec:
-  type: LoadBalancer # Kubernetes LoadBalancer Service (Layer 4/Layer 7 Load Distribution)
+  type: LoadBalancer
   ports:
     - name: http-dashboard
       port: 80
-      targetPort: 8000
+      targetPort: 8099
     - name: direct-dashboard
-      port: 8000
-      targetPort: 8000
+      port: 8099
+      targetPort: 8099
   selector:
-    app: central-server # Distributes incoming client traffic across all active central-server pod replicas
+    app: central-server
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -40,7 +40,7 @@ spec:
               service:
                 name: central-server-svc
                 port:
-                  number: 8000
+                  number: 8099
           - path: /api/s1
             pathType: Prefix
             backend:

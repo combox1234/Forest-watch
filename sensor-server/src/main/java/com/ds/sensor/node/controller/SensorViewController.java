@@ -10,4 +10,15 @@ public class SensorViewController {
     public String index() {
         return "sensor";
     }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login";
+    }
+
+    @GetMapping("/access-denied")
+    public String accessDenied() {
+        return "access-denied";
+    }
 }
+

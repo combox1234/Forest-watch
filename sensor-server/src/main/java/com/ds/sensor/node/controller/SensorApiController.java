@@ -184,4 +184,46 @@ public class SensorApiController {
                 "vectorClockFormatted", vectorClockService.getFormattedClockString()
         ));
     }
+
+    @GetMapping("/auth/me")
+    public ResponseEntity<Map<String, Object>> getCurrentUser(org.springframework.security.core.Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String username = authentication.getName();
+        String displayName = username;
+        String role = "VIEWER";
+        if ("priya.admin".equals(username)) {
+            displayName = "Priya Sharma";
+            role = "ADMINISTRATOR";
+        } else if ("arjun.operator".equals(username)) {
+            displayName = "Arjun Patil";
+            role = "FOREST_OPERATOR";
+        } else if ("ananya.viewer".equals(username)) {
+            displayName = "Ananya Deshmukh";
+            role = "VIEWER";
+        } else if ("rahul.operator".equals(username)) {
+            displayName = "Rahul Verma";
+            role = "FOREST_OPERATOR";
+        } else if ("kavya.viewer".equals(username)) {
+            displayName = "Kavya Iyer";
+            role = "VIEWER";
+        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRATOR"))) {
+            role = "ADMINISTRATOR";
+        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_FOREST_OPERATOR"))) {
+            role = "FOREST_OPERATOR";
+        }
+
+        List<String> authorities = authentication.getAuthorities().stream()
+                .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                .toList();
+
+        Map<String, Object> resp = new java.util.HashMap<>();
+        resp.put("username", username);
+        resp.put("displayName", displayName);
+        resp.put("role", role);
+        resp.put("authorities", authorities);
+        return ResponseEntity.ok(resp);
+    }
 }
+

@@ -1,7 +1,6 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /workspace
 
-# Install Maven in the build stage (tools/ is gitignored and unavailable after clone)
 RUN apk add --no-cache maven
 
 COPY pom.xml ./
@@ -15,6 +14,17 @@ RUN mvn install -N && \
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=build /workspace/sensor-server/target/sensor-server-1.0.0.jar app.jar
+
+# Run as non-root user for security best practices
+RUN addgroup -S forestwatch && adduser -S forestwatch -G forestwatch
+USER forestwatch:forestwatch
+
+COPY --from=build --chown=forestwatch:forestwatch /workspace/sensor-server/target/sensor-server-1.0.0.jar app.jar
+
+ENV SERVER_PORT=8101
+EXPOSE 8101 8102 8103 8104
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${SERVER_PORT}/actuator/health || exit 1
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

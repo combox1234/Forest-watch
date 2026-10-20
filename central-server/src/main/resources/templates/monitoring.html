@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForestWatch | Live Telemetry & Monitoring</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --forest-900: #022c22;
+            --forest-800: #064e3b;
+            --forest-700: #047857;
+            --forest-600: #059669;
+            --forest-500: #10b981;
+            --forest-400: #34d399;
+            --forest-100: #d1fae5;
+            --forest-50:  #ecfdf5;
+
+            --bg-primary: #f0fdf4;
+            --bg-canvas: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-card-hover: #fcfdfd;
+            --border-color: #e2e8f0;
+            --border-forest: #a7f3d0;
+
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+
+            --primary: #047857;
+            --primary-hover: #065f46;
+            --primary-light: #ecfdf5;
+
+            --success: #059669;
+            --success-bg: #d1fae5;
+            --warning: #d97706;
+            --warning-bg: #fef3c7;
+            --danger: #dc2626;
+            --danger-bg: #fee2e2;
+            --info: #0284c7;
+            --info-bg: #e0f2fe;
+            --purple: #7c3aed;
+            --purple-bg: #ede9fe;
+
+            --radius: 14px;
+            --radius-sm: 8px;
+            --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 12px 24px -4px rgba(6, 78, 59, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.03);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #ecfdf5 0%, #f8fafc 400px, #f8fafc 100%);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #d1fae5;
+            padding: 0.85rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(6, 78, 59, 0.04);
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 0.9rem; text-decoration: none; }
+        .logo-badge {
+            background: linear-gradient(135deg, var(--forest-800) 0%, var(--forest-600) 100%);
+            color: #ffffff;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 10px rgba(4, 120, 87, 0.25);
+            border: 1px solid #34d399;
+        }
+
+        .header-title h1 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--forest-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .header-title p {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .nav-links { display: flex; align-items: center; gap: 0.35rem; }
+        .nav-item {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s ease;
+        }
+        .nav-item:hover { background: #ecfdf5; color: var(--forest-700); }
+        .nav-item.active { background: #d1fae5; color: var(--forest-800); font-weight: 700; }
+
+        .header-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+        .sensor-nav-pills {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: #f1f5f9;
+            padding: 3px 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .sensor-nav-link {
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 3px 8px;
+            border-radius: 5px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            transition: all 0.15s ease;
+        }
+        .sensor-nav-link:hover { background: var(--forest-50); color: var(--forest-700); border-color: var(--forest-400); }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.02em;
+        }
+        .status-pill.online { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulseGreen 1.6s infinite;
+        }
+        @keyframes pulseGreen {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.3rem 0.7rem;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .role-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; letter-spacing: 0.02em; }
+        .role-admin { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
+        .role-operator { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+        .role-viewer { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+        .btn-logout {
+            background: none;
+            border: 1px solid #cbd5e1;
+            padding: 0.3rem 0.65rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-logout:hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 4rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .page-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            background: #ffffff;
+            border: 1px solid var(--border-forest);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow-subtle);
+        }
+        .page-title-box h2 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--forest-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .page-title-box p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.2rem;
+        }
+
+        .stream-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+        .stream-stat {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .stream-stat strong { color: var(--forest-900); font-family: 'JetBrains Mono', monospace; }
+
+        /* Topology & Telemetry Panels */
+        .visual-section {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 1.25rem;
+            align-items: stretch;
+        }
+        @media (max-width: 1100px) {
+            .visual-section { grid-template-columns: 1fr; }
+        }
+
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .section-header {
+            padding: 0.9rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fcfdfd;
+        }
+        .section-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--forest-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .topology-panel {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            background: #ffffff;
+            height: 100%;
+            justify-content: space-between;
+        }
+        .topology-svg-wrap {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .link-flow { stroke-dasharray: 6 3; animation: flowDash 1.2s linear infinite; }
+        .link-failover { stroke-dasharray: 8 4; animation: failoverDash 0.8s linear infinite; }
+        @keyframes flowDash { to { stroke-dashoffset: -18; } }
+        @keyframes failoverDash { to { stroke-dashoffset: -24; } }
+        @keyframes pulseLeader {
+            0%, 100% { stroke-width: 2.5; stroke: #059669; }
+            50% { stroke-width: 4; stroke: #10b981; filter: drop-shadow(0 0 4px #10b981); }
+        }
+        .pulse-leader { animation: pulseLeader 1.8s ease-in-out infinite; }
+
+        .topo-status-bar {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+        .topo-status-bar.alert { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+        .topo-status-bar.failover { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+
+        /* Telemetry Cards */
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: #fafcfb;
+            flex-grow: 1;
+        }
+        @media (max-width: 600px) { .telemetry-grid { grid-template-columns: 1fr; } }
+
+        .telemetry-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-subtle);
+        }
+        .telemetry-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            transition: background 0.4s;
+        }
+        .telemetry-card.s-active::before { background: var(--success); }
+        .telemetry-card.s-suspected::before { background: var(--warning); }
+        .telemetry-card.s-failed { background: #fff8f8; border-color: #fecaca; }
+        .telemetry-card.s-failed::before { background: var(--danger); }
+
+        .tc-head { display: flex; justify-content: space-between; align-items: center; }
+        .tc-node-id { font-size: 0.95rem; font-weight: 800; color: var(--forest-900); }
+        .tc-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 999px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .tc-badge.active { background: #d1fae5; color: #047857; }
+        .tc-badge.suspected { background: #fef3c7; color: #b45309; }
+        .tc-badge.failed { background: #fee2e2; color: #b91c1c; }
+
+        .tc-role { font-size: 0.72rem; color: var(--text-secondary); font-weight: 500; }
+        .tc-role.ch { color: #6d28d9; font-weight: 700; }
+
+        .tc-gauges { display: flex; flex-direction: column; gap: 0.45rem; }
+        .gauge-row { display: flex; flex-direction: column; gap: 2px; }
+        .gauge-lbl { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary); }
+        .gauge-lbl span:last-child { font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--forest-900); }
+        .gauge-bg { height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+        .gauge-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+        .gauge-temp { background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444); }
+        .gauge-humid { background: linear-gradient(90deg, #38bdf8, #0284c7); }
+        .gauge-bat { background: linear-gradient(90deg, #10b981, #059669); }
+
+        .code-pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            border: 1px solid #e2e8f0;
+        }
+        .tc-motion {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .tc-motion.clear { background: #f8fafc; color: var(--text-muted); border: 1px solid var(--border-color); }
+        .tc-motion.detected { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; animation: pulseRed 1.2s infinite; }
+        @keyframes pulseRed { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .tc-hb { font-size: 0.68rem; color: var(--text-muted); text-align: right; }
+
+        /* Table */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left; }
+        th {
+            background: #f8fafc;
+            padding: 0.65rem 1rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        td {
+            padding: 0.65rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-primary);
+        }
+        tbody tr:hover { background: #fafcfb; }
+        .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .badge-success { background: var(--success-bg); color: var(--success); }
+        .badge-warning { background: var(--warning-bg); color: #b45309; }
+        .badge-danger { background: var(--danger-bg); color: var(--danger); }
+        .badge-info { background: var(--info-bg); color: var(--info); }
+        .badge-purple { background: var(--purple-bg); color: var(--purple); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="/" class="header-brand">
+            <div class="logo-badge">🌲</div>
+            <div class="header-title">
+                <h1>ForestWatch Operations Center</h1>
+                <p>Distributed Wildfire & Environmental Early Warning Network &bull; Central Controller (:8099)</p>
+            </div>
+        </a>
+
+        <!-- Navigation Links -->
+        <nav class="nav-links">
+            <a href="/" class="nav-item">Overview</a>
+            <a href="/monitoring" class="nav-item active">Live Monitoring</a>
+            <a href="/sensors" class="nav-item">Sensors</a>
+            <a href="/alerts" class="nav-item">Alerts</a>
+            <a href="/reports" class="nav-item">Reports</a>
+            <a href="/users" class="nav-item" id="navUserMgmt" style="display: none;">User Management</a>
+        </nav>
+
+        <div class="header-actions">
+            <div class="sensor-nav-pills">
+                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-right: 2px;">Nodes:</span>
+                <a href="http://localhost:8101" class="sensor-nav-link" title="Open Node S1 Console">S1</a>
+                <a href="http://localhost:8102" class="sensor-nav-link" title="Open Node S2 Console">S2</a>
+                <a href="http://localhost:8103" class="sensor-nav-link" title="Open Node S3 Console">S3</a>
+                <a href="http://localhost:8104" class="sensor-nav-link" title="Open Node S4 Console">S4</a>
+            </div>
+
+            <div class="status-pill online">
+                <div class="pulse-dot"></div>
+                <span>LIVE STREAMING (:8099)</span>
+            </div>
+
+            <!-- Profile & Role Badge -->
+            <div class="user-badge" id="userBadge">
+                <span id="userDisplayName">User</span>
+                <span class="role-tag role-viewer" id="userRoleBadge">VIEWER</span>
+            </div>
+
+            <!-- Sign Out -->
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="btn-logout" title="Sign out of ForestWatch">Sign Out</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Page Sub-Header / Live Status Bar -->
+        <div class="page-header-row">
+            <div class="page-title-box">
+                <h2>📡 Real-Time Telemetry & Field Network Monitor</h2>
+                <p>Live sensor metrics streams, dynamic cluster failover topology, and inter-node message frame bus</p>
+            </div>
+            <div class="stream-meta">
+                <div class="stream-stat">
+                    <span>Polling Rate:</span>
+                    <strong>2,000 ms</strong>
+                </div>
+                <div class="stream-stat">
+                    <span>Active Telemetry Streams:</span>
+                    <strong id="activeStreamsCount">4 / 4 Nodes</strong>
+                </div>
+                <div class="stream-stat">
+                    <span>Average Forest Temp:</span>
+                    <strong id="avgForestTemp">24.0°C</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Field Network Topology Map + Real-Time Telemetry Cards -->
+        <div class="visual-section">
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span>🗺️</span>
+                        <span>Field Network Topology Map</span>
+                    </div>
+                    <span style="font-size: 0.75rem; color: var(--text-secondary);">Real-time cluster links & adaptive failover routing</span>
+                </div>
+                <div class="topology-panel">
+                    <svg id="topoSvg" viewBox="0 0 500 310" class="topology-svg-wrap" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <pattern id="tgrid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0L0 0 0 20" fill="none" stroke="#e2e8f0" stroke-width="0.5"/></pattern>
+                            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                            <filter id="redGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                        </defs>
+                        <rect width="500" height="310" fill="url(#tgrid)" rx="10" opacity="0.6"/>
+
+                        <!-- Cluster 1 Box (Canopy) -->
+                        <rect id="box-c1" x="12" y="92" width="226" height="178" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" opacity="0.9"/>
+                        <text id="title-c1" x="125" y="110" text-anchor="middle" fill="#065f46" font-size="8.5" font-family="Inter,sans-serif" font-weight="700">Cluster 1: Alpha Forest Canopy</text>
+                        <text id="badge-c1" x="125" y="122" text-anchor="middle" fill="#059669" font-size="7" font-family="Inter,sans-serif" font-weight="600">● Normal — Head: S2</text>
+                        <text id="lbl-failover-c1" x="125" y="134" text-anchor="middle" fill="#0284c7" font-size="6.8" font-family="Inter,sans-serif" font-weight="700" style="display:none">⚡ FAILOVER REROUTED TO S1</text>
+
+                        <!-- Cluster 2 Box (River Basin) -->
+                        <rect id="box-c2" x="262" y="92" width="226" height="178" rx="8" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1.2" opacity="0.9"/>
+                        <text id="title-c2" x="375" y="110" text-anchor="middle" fill="#0369a1" font-size="8.5" font-family="Inter,sans-serif" font-weight="700">Cluster 2: Beta River Basin</text>
+                        <text id="badge-c2" x="375" y="122" text-anchor="middle" fill="#059669" font-size="7" font-family="Inter,sans-serif" font-weight="600">● Normal — Head: S4</text>
+                        <text id="lbl-failover-c2" x="375" y="134" text-anchor="middle" fill="#0284c7" font-size="6.8" font-family="Inter,sans-serif" font-weight="700" style="display:none">⚡ FAILOVER REROUTED TO S3</text>
+
+                        <!-- Connection Links Cluster 1 -->
+                        <line id="link-c-s2"  x1="235" y1="56" x2="155" y2="152" stroke="#059669" stroke-width="2.5" class="link-flow" opacity="0.9"/>
+                        <line id="link-c-s1"  x1="228" y1="60" x2="72"  y2="218" stroke="#0284c7" stroke-width="2.8" class="link-failover" style="display:none" opacity="0"/>
+                        <line id="link-s2-s1" x1="135" y1="184" x2="76"  y2="220" stroke="#059669" stroke-width="1.8" class="link-flow" opacity="0.8"/>
+
+                        <!-- Connection Links Cluster 2 -->
+                        <line id="link-c-s4"  x1="265" y1="56" x2="345" y2="152" stroke="#059669" stroke-width="2.5" class="link-flow" opacity="0.9"/>
+                        <line id="link-c-s3"  x1="272" y1="60" x2="428" y2="218" stroke="#0284c7" stroke-width="2.8" class="link-failover" style="display:none" opacity="0"/>
+                        <line id="link-s4-s3" x1="365" y1="184" x2="424" y2="220" stroke="#059669" stroke-width="1.8" class="link-flow" opacity="0.8"/>
+
+                        <!-- Central Server Node -->
+                        <circle cx="250" cy="48" r="32" fill="#064e3b" opacity="0.1" filter="url(#glow)"/>
+                        <circle cx="250" cy="48" r="23" fill="#064e3b"/>
+                        <circle cx="250" cy="48" r="27" fill="none" stroke="#10b981" stroke-width="2.5"/>
+                        <text x="250" y="44" text-anchor="middle" fill="#fff" font-size="7.5" font-family="Inter,sans-serif" font-weight="800">CENTRAL</text>
+                        <text x="250" y="55" text-anchor="middle" fill="#a7f3d0" font-size="6.5" font-family="JetBrains Mono,monospace">:8099</text>
+
+                        <!-- Node S2 (C1 Leader) -->
+                        <circle cx="150" cy="168" r="22" fill="#f0fdf4" id="tFill-S2"/>
+                        <circle cx="150" cy="168" r="26" fill="none" stroke="#059669" stroke-width="2.5" id="tRing-S2"/>
+                        <g id="tLeader-S2"><rect x="126" y="132" width="48" height="11" rx="3" fill="#7c3aed"/><text x="150" y="140.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">👑 LEADER</text></g>
+                        <g id="tCrash-S2" style="display:none"><rect x="123" y="132" width="54" height="11" rx="3" fill="#dc2626"/><text x="150" y="140.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">⚡ CRASHED</text></g>
+                        <text x="150" y="172" text-anchor="middle" fill="#0f172a" font-size="9.5" font-family="Inter,sans-serif" font-weight="700">S2</text>
+                        <text x="150" y="182" text-anchor="middle" fill="#475569" font-size="6.5" font-family="JetBrains Mono,monospace">:8102</text>
+                        <text id="tSub-S2" x="150" y="200" text-anchor="middle" fill="#7c3aed" font-size="6" font-family="Inter,sans-serif" font-weight="600">LEADER</text>
+
+                        <!-- Node S1 (C1 Member) -->
+                        <circle cx="62" cy="235" r="21" fill="#f0fdf4" id="tFill-S1"/>
+                        <circle cx="62" cy="235" r="25" fill="none" stroke="#059669" stroke-width="2" id="tRing-S1"/>
+                        <g id="tLeader-S1" style="display:none"><rect x="38" y="199" width="48" height="11" rx="3" fill="#7c3aed"/><text x="62" y="207.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">👑 LEADER</text></g>
+                        <g id="tCrash-S1" style="display:none"><rect x="35" y="199" width="54" height="11" rx="3" fill="#dc2626"/><text x="62" y="207.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">⚡ CRASHED</text></g>
+                        <text x="62" y="239" text-anchor="middle" fill="#0f172a" font-size="9.5" font-family="Inter,sans-serif" font-weight="700">S1</text>
+                        <text x="62" y="249" text-anchor="middle" fill="#475569" font-size="6.5" font-family="JetBrains Mono,monospace">:8101</text>
+                        <text id="tSub-S1" x="62" y="266" text-anchor="middle" fill="#475569" font-size="6" font-family="Inter,sans-serif" font-weight="600">MEMBER</text>
+
+                        <!-- Node S4 (C2 Leader) -->
+                        <circle cx="350" cy="168" r="22" fill="#f0fdf4" id="tFill-S4"/>
+                        <circle cx="350" cy="168" r="26" fill="none" stroke="#059669" stroke-width="2.5" id="tRing-S4"/>
+                        <g id="tLeader-S4"><rect x="326" y="132" width="48" height="11" rx="3" fill="#7c3aed"/><text x="350" y="140.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">👑 LEADER</text></g>
+                        <g id="tCrash-S4" style="display:none"><rect x="323" y="132" width="54" height="11" rx="3" fill="#dc2626"/><text x="350" y="140.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">⚡ CRASHED</text></g>
+                        <text x="350" y="172" text-anchor="middle" fill="#0f172a" font-size="9.5" font-family="Inter,sans-serif" font-weight="700">S4</text>
+                        <text x="350" y="182" text-anchor="middle" fill="#475569" font-size="6.5" font-family="JetBrains Mono,monospace">:8104</text>
+                        <text id="tSub-S4" x="350" y="200" text-anchor="middle" fill="#7c3aed" font-size="6" font-family="Inter,sans-serif" font-weight="600">LEADER</text>
+
+                        <!-- Node S3 (C2 Member) -->
+                        <circle cx="438" cy="235" r="21" fill="#f0fdf4" id="tFill-S3"/>
+                        <circle cx="438" cy="235" r="25" fill="none" stroke="#059669" stroke-width="2" id="tRing-S3"/>
+                        <g id="tLeader-S3" style="display:none"><rect x="414" y="199" width="48" height="11" rx="3" fill="#7c3aed"/><text x="438" y="207.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">👑 LEADER</text></g>
+                        <g id="tCrash-S3" style="display:none"><rect x="411" y="199" width="54" height="11" rx="3" fill="#dc2626"/><text x="438" y="207.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">⚡ CRASHED</text></g>
+                        <text x="438" y="239" text-anchor="middle" fill="#0f172a" font-size="9.5" font-family="Inter,sans-serif" font-weight="700">S3</text>
+                        <text x="438" y="249" text-anchor="middle" fill="#475569" font-size="6.5" font-family="JetBrains Mono,monospace">:8103</text>
+                        <text id="tSub-S3" x="438" y="266" text-anchor="middle" fill="#475569" font-size="6" font-family="Inter,sans-serif" font-weight="600">MEMBER</text>
+
+                        <!-- Legend -->
+                        <circle cx="20"  cy="295" r="4.5" fill="#059669"/><text x="29"  y="298" fill="#475569" font-size="6.5" font-family="Inter,sans-serif">Active</text>
+                        <circle cx="70"  cy="295" r="4.5" fill="#d97706"/><text x="79"  y="298" fill="#475569" font-size="6.5" font-family="Inter,sans-serif">Suspected</text>
+                        <circle cx="135" cy="295" r="4.5" fill="#dc2626"/><text x="144" y="298" fill="#475569" font-size="6.5" font-family="Inter,sans-serif">Offline / Crashed</text>
+                        <rect x="210" y="290" width="7" height="7" rx="2" fill="#7c3aed"/><text x="221" y="298" fill="#475569" font-size="6.5" font-family="Inter,sans-serif">Cluster Coordinator</text>
+                        <line x1="290" y1="295" x2="310" y2="295" stroke="#0284c7" stroke-width="2" stroke-dasharray="4 2"/><text x="315" y="298" fill="#0284c7" font-size="6.5" font-family="Inter,sans-serif" font-weight="600">Failover Route</text>
+                    </svg>
+                    <div id="topoStatusBanner" class="topo-status-bar">
+                        <span>🟢</span> <span><strong>Topology Healthy:</strong> All 4 field nodes communicating normally.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Sensor Telemetry Cards -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span>📡</span>
+                        <span>Live Sensor Telemetry Streams</span>
+                    </div>
+                    <span style="font-size: 0.75rem; color: var(--text-secondary);">Direct node readings & causal state</span>
+                </div>
+                <div class="telemetry-grid">
+                    <!-- S1 -->
+                    <div class="telemetry-card s-active" id="tc-S1">
+                        <div class="tc-head"><span class="tc-node-id">Node S1</span><span class="tc-badge active" id="tcBadge-S1">ACTIVE</span></div>
+                        <span class="tc-role" id="tcRole-S1">Sensor &bull; Cluster C1 &bull; :8101</span>
+                        <div class="tc-gauges">
+                            <div class="gauge-row"><div class="gauge-lbl"><span>Temperature</span><span id="tcTemp-S1">24.0°C</span></div><div class="gauge-bg"><div class="gauge-fill gauge-temp" id="tcTempBar-S1" style="width:40%"></div></div></div>
+                            <div class="gauge-row"><div class="gauge-lbl"><span>Humidity</span><span id="tcHumid-S1">55.0%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-humid" id="tcHumidBar-S1" style="width:55%"></div></div></div>
+                            <div class="gauge-row"><div class="gauge-lbl"><span>Battery</span><span id="tcBat-S1">98%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-bat" id="tcBatBar-S1" style="width:98%"></div></div></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem;padding:3px 6px;background:#f1f5f9;border-radius:4px;"><span style="color:var(--text-secondary);font-weight:600;">VC:</span><span id="tcVc-S1" class="code-pill" style="font-size:0.68rem;">[S1:0, S2:0, S3:0, S4:0]</span></div>
+                        <span class="tc-motion clear" id="tcMotion-S1">No Motion</span>
+                        <span class="tc-hb" id="tcHb-S1">HB: &lt; 1s ago</span>
+                        <a href="http://localhost:8101" style="margin-top:4px;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;padding:5px 8px;border-radius:6px;background:#ecfdf5;color:#047857;text-decoration:none;border:1px solid #a7f3d0;">🖥️ Open S1 Console &rarr;</a>
+                    </div>
+                    <!-- S2 -->
+                    <div class="telemetry-card s-active" id="tc-S2">
+                        <div class="tc-head"><span class="tc-node-id">Node S2</span><span class="tc-badge active" id="tcBadge-S2">ACTIVE</span></div>
+                        <span class="tc-role ch" id="tcRole-S2">👑 CLUSTER COORDINATOR &bull; C1 &bull; :8102</span>
+                        <div class="tc-gauges">
+                            <div class="gauge-row"><div class="gauge-lbl"><span>Temperature</span><span id="tcTemp-S2">24.0°C</span></div><div class="gauge-bg"><div class="gauge-fill gauge-temp" id="tcTempBar-S2" style="width:40%"></div></div></div>
+                            <div class="gauge-row"><div class="gauge-lbl"><span>Humidity</span><span id="tcHumid-S2">55.0%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-humid" id="tcHumidBar-S2" style="width:55%"></div></div></div>
+                            <div class="gauge-row"><div class="gauge-lbl"><span>Battery</span><span id="tcBat-S2">98%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-bat" id="tcBatBar-S2" style="width:98%"></div></div></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem;padding:3px 6px;background:#f1f5f9;border-radius:4px;"><span style="color:var(--text-secondary);font-weight:600;">VC:</span><span id="tcVc-S2" class="code-pill" style="font-size:0.68rem;">[S1:0, S2:0, S3:0, S4:0]</span></div>
+                        <span class="tc-motion clear" id="tcMotion-S2">No Motion</span>
+                        <span class="tc-hb" id="tcHb-S2">HB: &lt; 1s ago</span>
+                        <a href="http://localhost:8102" style="margin-top:4px;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;padding:5px 8px;border-radius:6px;background:#f5f3ff;color:#6d28d9;text-decoration:none;border:1px solid #ddd6fe;">👑 Open S2 Console &rarr;</a>
+                    </div>
+                    <!-- S3 -->
+                    <div class="telemetry-card s-active" id="tc-S3">
+                        <div class="tc-head"><span class="tc-node-id">Node S3</span><span class="tc-badge active" id="tcBadge-S3">ACTIVE</span></div>
+                        <span class="tc-role" id="tcRole-S3">Sensor &bull; Cluster C2 &bull; :8103</span>
+                        <div class="tc-gauges">
+                            <div class="gauge-row"><div class="gauge-lbl"><span>Temperature</span><span id="tcTemp-S3">24.0°C</span></div><div class="gauge-bg"><div class="gauge-fill gauge-temp" id="tcTempBar-S3" style="width:40%"></div></div></div>
+                            <div class="gauge-row"><div class="gauge-lbl"><span>Humidity</span><span id="tcHumid-S3">55.0%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-humid" id="tcHumidBar-S3" style="width:55%"></div></div></div>
+                            <div class="gauge-row"><div class="gauge-lbl"><span>Battery</span><span id="tcBat-S3">98%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-bat" id="tcBatBar-S3" style="width:98%"></div></div></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem;padding:3px 6px;background:#f1f5f9;border-radius:4px;"><span style="color:var(--text-secondary);font-weight:600;">VC:</span><span id="tcVc-S3" class="code-pill" style="font-size:0.68rem;">[S1:0, S2:0, S3:0, S4:0]</span></div>
+                        <span class="tc-motion clear" id="tcMotion-S3">No Motion</span>
+                        <span class="tc-hb" id="tcHb-S3">HB: &lt; 1s ago</span>
+                        <a href="http://localhost:8103" style="margin-top:4px;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;padding:5px 8px;border-radius:6px;background:#ecfdf5;color:#047857;text-decoration:none;border:1px solid #a7f3d0;">🖥️ Open S3 Console &rarr;</a>
+                    </div>
+                    <!-- S4 -->
+                    <div class="telemetry-card s-active" id="tc-S4">
+                        <div class="tc-head"><span class="tc-node-id">Node S4</span><span class="tc-badge active" id="tcBadge-S4">ACTIVE</span></div>
+                        <span class="tc-role ch" id="tcRole-S4">👑 CLUSTER COORDINATOR &bull; C2 &bull; :8104</span>
+                        <div class="tc-gauges">
+                            <div class="gauge-row"><div class="gauge-lbl"><span>Temperature</span><span id="tcTemp-S4">24.0°C</span></div><div class="gauge-bg"><div class="gauge-fill gauge-temp" id="tcTempBar-S4" style="width:40%"></div></div></div>
+                            <div class="gauge-row"><div class="gauge-lbl"><span>Humidity</span><span id="tcHumid-S4">55.0%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-humid" id="tcHumidBar-S4" style="width:55%"></div></div></div>
+                            <div class="gauge-row"><div class="gauge-lbl"><span>Battery</span><span id="tcBat-S4">98%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-bat" id="tcBatBar-S4" style="width:98%"></div></div></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem;padding:3px 6px;background:#f1f5f9;border-radius:4px;"><span style="color:var(--text-secondary);font-weight:600;">VC:</span><span id="tcVc-S4" class="code-pill" style="font-size:0.68rem;">[S1:0, S2:0, S3:0, S4:0]</span></div>
+                        <span class="tc-motion clear" id="tcMotion-S4">No Motion</span>
+                        <span class="tc-hb" id="tcHb-S4">HB: &lt; 1s ago</span>
+                        <a href="http://localhost:8104" style="margin-top:4px;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;padding:5px 8px;border-radius:6px;background:#f5f3ff;color:#6d28d9;text-decoration:none;border:1px solid #ddd6fe;">👑 Open S4 Console &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-Time Communication Log -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">
+                    <span>📡</span>
+                    <span>Network Message Frame Bus Monitor</span>
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-secondary);">Direct HTTP REST message exchange frames between nodes & central controller</span>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Sender</th>
+                            <th>Receiver</th>
+                            <th>Cluster</th>
+                            <th>Type</th>
+                            <th>Vector Clock [S1,S2,S3,S4]</th>
+                            <th>Payload Summary</th>
+                        </tr>
+                    </thead>
+                    <tbody id="communicationLogsTableBody">
+                        <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Listening for message frames...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function updateTopology(nodes, clusters) {
+            if (!nodes || nodes.length === 0) return;
+            const nodeMap = {};
+            nodes.forEach(n => { nodeMap[n.nodeId] = n; });
+            const s1 = nodeMap['S1'], s2 = nodeMap['S2'], s3 = nodeMap['S3'], s4 = nodeMap['S4'];
+
+            nodes.forEach(n => {
+                const id = n.nodeId;
+                const status = (n.status || 'ACTIVE').toUpperCase();
+                const isFailed = (status === 'FAILED');
+                const isSuspected = (status === 'SUSPECTED');
+                const isCh = (n.role === 'CLUSTER_HEAD');
+
+                const ring = document.getElementById('tRing-' + id);
+                const fill = document.getElementById('tFill-' + id);
+                const leaderBadge = document.getElementById('tLeader-' + id);
+                const crashBadge = document.getElementById('tCrash-' + id);
+                const sub = document.getElementById('tSub-' + id);
+
+                if (ring) {
+                    if (isFailed) {
+                        ring.setAttribute('stroke', '#dc2626');
+                        ring.setAttribute('stroke-width', '3');
+                        ring.classList.remove('pulse-leader');
+                    } else if (isSuspected) {
+                        ring.setAttribute('stroke', '#d97706');
+                        ring.setAttribute('stroke-width', '2.5');
+                        ring.classList.remove('pulse-leader');
+                    } else {
+                        ring.setAttribute('stroke', '#059669');
+                        ring.setAttribute('stroke-width', isCh ? '3' : '2');
+                        if (isCh) ring.classList.add('pulse-leader'); else ring.classList.remove('pulse-leader');
+                    }
+                }
+
+                if (fill) fill.setAttribute('fill', isFailed ? '#fee2e2' : isSuspected ? '#fffbeb' : '#f0fdf4');
+                if (leaderBadge) leaderBadge.style.display = (isCh && !isFailed) ? 'inline' : 'none';
+                if (crashBadge) crashBadge.style.display = isFailed ? 'inline' : 'none';
+                if (sub) {
+                    if (isFailed) { sub.setAttribute('fill', '#dc2626'); sub.textContent = 'CRASHED'; }
+                    else if (isSuspected) { sub.setAttribute('fill', '#d97706'); sub.textContent = 'TIMEOUT'; }
+                    else { sub.setAttribute('fill', isCh ? '#7c3aed' : '#475569'); sub.textContent = isCh ? 'LEADER' : 'MEMBER'; }
+                }
+            });
+
+            // C1 failover
+            const linkCS2 = document.getElementById('link-c-s2');
+            const linkCS1 = document.getElementById('link-c-s1');
+            const linkS2S1 = document.getElementById('link-s2-s1');
+            const boxC1 = document.getElementById('box-c1');
+            const badgeC1 = document.getElementById('badge-c1');
+            const lblFailoverC1 = document.getElementById('lbl-failover-c1');
+            const s2Failed = (s2 && s2.status === 'FAILED'), s1Failed = (s1 && s1.status === 'FAILED'), s1IsCH = (s1 && s1.role === 'CLUSTER_HEAD' && !s1Failed);
+
+            if (s2Failed && s1IsCH) {
+                if (linkCS2) { linkCS2.setAttribute('stroke', '#dc2626'); linkCS2.setAttribute('opacity', '0.35'); linkCS2.classList.remove('link-flow'); }
+                if (linkCS1) { linkCS1.style.display = 'inline'; linkCS1.setAttribute('stroke', '#0284c7'); linkCS1.classList.add('link-failover'); }
+                if (linkS2S1) { linkS2S1.setAttribute('stroke', '#dc2626'); linkS2S1.classList.remove('link-flow'); }
+                if (lblFailoverC1) lblFailoverC1.style.display = 'inline';
+                if (boxC1) { boxC1.setAttribute('stroke', '#d97706'); boxC1.setAttribute('stroke-dasharray', '4 3'); }
+                if (badgeC1) { badgeC1.setAttribute('fill', '#d97706'); badgeC1.textContent = '⚡ FAILOVER: S1 ACTING COORDINATOR'; }
+            } else {
+                if (linkCS2) { linkCS2.setAttribute('stroke', s2 && s2.status === 'SUSPECTED' ? '#d97706' : '#059669'); linkCS2.classList.add('link-flow'); }
+                if (linkCS1) { linkCS1.style.display = 'none'; linkCS1.classList.remove('link-failover'); }
+                if (linkS2S1) { linkS2S1.setAttribute('stroke', s1Failed ? '#dc2626' : (s1 && s1.status === 'SUSPECTED' ? '#d97706' : '#059669')); }
+                if (lblFailoverC1) lblFailoverC1.style.display = 'none';
+                if (boxC1) { boxC1.setAttribute('stroke', s1Failed ? '#f59e0b' : '#cbd5e1'); boxC1.removeAttribute('stroke-dasharray'); }
+                if (badgeC1) { badgeC1.setAttribute('fill', s1Failed ? '#d97706' : '#059669'); badgeC1.textContent = s1Failed ? '⚠️ S1 DOWN (S2 ACTIVE)' : '● Normal — Head: S2'; }
+            }
+
+            // C2 failover
+            const linkCS4 = document.getElementById('link-c-s4');
+            const linkCS3 = document.getElementById('link-c-s3');
+            const linkS4S3 = document.getElementById('link-s4-s3');
+            const boxC2 = document.getElementById('box-c2');
+            const badgeC2 = document.getElementById('badge-c2');
+            const lblFailoverC2 = document.getElementById('lbl-failover-c2');
+            const s4Failed = (s4 && s4.status === 'FAILED'), s3Failed = (s3 && s3.status === 'FAILED'), s3IsCH = (s3 && s3.role === 'CLUSTER_HEAD' && !s3Failed);
+
+            if (s4Failed && s3IsCH) {
+                if (linkCS4) { linkCS4.setAttribute('stroke', '#dc2626'); linkCS4.setAttribute('opacity', '0.35'); linkCS4.classList.remove('link-flow'); }
+                if (linkCS3) { linkCS3.style.display = 'inline'; linkCS3.setAttribute('stroke', '#0284c7'); linkCS3.classList.add('link-failover'); }
+                if (linkS4S3) { linkS4S3.setAttribute('stroke', '#dc2626'); linkS4S3.classList.remove('link-flow'); }
+                if (lblFailoverC2) lblFailoverC2.style.display = 'inline';
+                if (boxC2) { boxC2.setAttribute('stroke', '#d97706'); boxC2.setAttribute('stroke-dasharray', '4 3'); }
+                if (badgeC2) { badgeC2.setAttribute('fill', '#d97706'); badgeC2.textContent = '⚡ FAILOVER: S3 ACTING COORDINATOR'; }
+            } else {
+                if (linkCS4) { linkCS4.setAttribute('stroke', s4 && s4.status === 'SUSPECTED' ? '#d97706' : '#059669'); linkCS4.classList.add('link-flow'); }
+                if (linkCS3) { linkCS3.style.display = 'none'; linkCS3.classList.remove('link-failover'); }
+                if (linkS4S3) { linkS4S3.setAttribute('stroke', s3Failed ? '#dc2626' : (s3 && s3.status === 'SUSPECTED' ? '#d97706' : '#059669')); }
+                if (lblFailoverC2) lblFailoverC2.style.display = 'none';
+                if (boxC2) { boxC2.setAttribute('stroke', s3Failed ? '#f59e0b' : '#bae6fd'); boxC2.removeAttribute('stroke-dasharray'); }
+                if (badgeC2) { badgeC2.setAttribute('fill', s3Failed ? '#d97706' : '#0369a1'); badgeC2.textContent = s3Failed ? '⚠️ S3 DOWN (S4 ACTIVE)' : '● Normal — Head: S4'; }
+            }
+
+            const banner = document.getElementById('topoStatusBanner');
+            if (banner) {
+                if (s2Failed && s1IsCH) {
+                    banner.className = 'topo-status-bar failover';
+                    banner.innerHTML = '<span>⚡</span> <span><strong>FAILOVER ACTIVE (Cluster 1):</strong> Node S2 OFFLINE. Bully algorithm elected S1 as Cluster Coordinator.</span>';
+                } else if (s4Failed && s3IsCH) {
+                    banner.className = 'topo-status-bar failover';
+                    banner.innerHTML = '<span>⚡</span> <span><strong>FAILOVER ACTIVE (Cluster 2):</strong> Node S4 OFFLINE. Bully algorithm elected S3 as Cluster Coordinator.</span>';
+                } else if (s2Failed || s4Failed || s1Failed || s3Failed) {
+                    banner.className = 'topo-status-bar alert';
+                    banner.innerHTML = '<span>⚠️</span> <span><strong>FAULT DETECTED:</strong> Node failure detected. Dynamic failover active.</span>';
+                } else {
+                    banner.className = 'topo-status-bar';
+                    banner.innerHTML = '<span>🟢</span> <span><strong>Topology Healthy:</strong> All 4 field nodes communicating normally. C1 Head: S2 &bull; C2 Head: S4.</span>';
+                }
+            }
+        }
+
+        function updateTelemetryCard(n) {
+            const id = n.nodeId, status = (n.status || 'ACTIVE').toLowerCase();
+            const card = document.getElementById('tc-' + id); if (!card) return;
+            card.className = 'telemetry-card s-' + status;
+
+            const badge = document.getElementById('tcBadge-' + id);
+            if (badge) { badge.className = 'tc-badge ' + status; badge.innerText = n.status === 'FAILED' ? 'OFFLINE' : n.status; }
+
+            const role = document.getElementById('tcRole-' + id);
+            if (role) {
+                const isCh = n.role === 'CLUSTER_HEAD';
+                role.className = isCh ? 'tc-role ch' : 'tc-role';
+                role.innerText = (isCh ? '👑 COORDINATOR' : 'Sensor') + ' • ' + (n.clusterId || '') + ' • :' + (n.port || '');
+            }
+
+            const temp = n.temperature != null ? n.temperature : 24.0;
+            const te = document.getElementById('tcTemp-' + id), tb = document.getElementById('tcTempBar-' + id);
+            if (te) te.innerText = n.status === 'FAILED' ? '--' : temp.toFixed(1) + '°C';
+            if (tb) tb.style.width = n.status === 'FAILED' ? '0%' : Math.min(100, Math.max(0, (temp / 60) * 100)).toFixed(0) + '%';
+
+            const humid = n.humidity != null ? n.humidity : 55.0;
+            const he = document.getElementById('tcHumid-' + id), hb2 = document.getElementById('tcHumidBar-' + id);
+            if (he) he.innerText = n.status === 'FAILED' ? '--' : humid.toFixed(1) + '%';
+            if (hb2) hb2.style.width = n.status === 'FAILED' ? '0%' : Math.min(100, humid).toFixed(0) + '%';
+
+            const bat = n.battery != null ? n.battery : 98.0;
+            const be = document.getElementById('tcBat-' + id), bb = document.getElementById('tcBatBar-' + id);
+            if (be) be.innerText = n.status === 'FAILED' ? '0%' : bat.toFixed(0) + '%';
+            if (bb) bb.style.width = n.status === 'FAILED' ? '0%' : Math.min(100, bat).toFixed(0) + '%';
+
+            const me = document.getElementById('tcMotion-' + id);
+            if (me) {
+                if (n.status === 'FAILED') { me.className = 'tc-motion'; me.style.background = '#fee2e2'; me.style.color = '#dc2626'; me.innerText = 'Sensor Offline'; }
+                else if (n.motion) { me.className = 'tc-motion detected'; me.innerText = '🚨 Motion Alert'; }
+                else { me.className = 'tc-motion clear'; me.innerText = 'No Motion'; }
+            }
+
+            const hbEl = document.getElementById('tcHb-' + id);
+            if (hbEl) {
+                if (n.status === 'FAILED') {
+                    hbEl.innerText = 'Heartbeat Lost';
+                    hbEl.style.color = '#dc2626';
+                    hbEl.style.fontWeight = '700';
+                } else {
+                    const sec = Math.max(0, Math.floor((Date.now() - n.lastHeartbeat) / 1000));
+                    hbEl.innerText = 'HB: ' + (sec === 0 ? '< 1s ago' : sec + 's ago');
+                    hbEl.style.color = 'var(--text-muted)';
+                    hbEl.style.fontWeight = 'normal';
+                }
+            }
+
+            const vce = document.getElementById('tcVc-' + id);
+            if (vce) vce.innerText = formatVectorClock(n.vectorClock);
+        }
+
+        function formatVectorClock(vc) {
+            if (!vc) return '[S1:0, S2:0, S3:0, S4:0]';
+            let arr = [];
+            if (Array.isArray(vc)) {
+                arr = vc;
+            } else if (typeof vc === 'string') {
+                const cleaned = vc.replace(/[\[\]\s]/g, '');
+                const m = cleaned.split(',');
+                if (m.length === 4) arr = m.map(x => parseInt(x, 10) || 0); else return vc;
+            } else {
+                return String(vc);
+            }
+            return `[S1:${arr[0] || 0}, S2:${arr[1] || 0}, S3:${arr[2] || 0}, S4:${arr[3] || 0}]`;
+        }
+
+        async function fetchMonitoringData() {
+            try {
+                const res = await fetch('/api/system-status');
+                if (!res.ok) return;
+                const data = await res.json();
+
+                if (data.nodes && data.nodes.length > 0) {
+                    let totalTemp = 0;
+                    let validNodes = 0;
+                    data.nodes.forEach(n => {
+                        updateTelemetryCard(n);
+                        if (n.status !== 'FAILED' && n.temperature != null) {
+                            totalTemp += n.temperature;
+                            validNodes++;
+                        }
+                    });
+                    document.getElementById('activeStreamsCount').innerText = `${data.activeSensors} / ${data.totalSensors} Nodes`;
+                    if (validNodes > 0) {
+                        document.getElementById('avgForestTemp').innerText = (totalTemp / validNodes).toFixed(1) + '°C';
+                    }
+                    updateTopology(data.nodes, data.clusters);
+                }
+            } catch (err) {
+                console.error('Error fetching system status for monitoring:', err);
+            }
+        }
+
+        async function fetchCommunicationLogs() {
+            try {
+                const res = await fetch('/api/logs');
+                if (!res.ok) return;
+                const list = await res.json();
+                const tbody = document.getElementById('communicationLogsTableBody');
+                if (!tbody) return;
+                if (!list || list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Listening for message frames...</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = list.slice(0, 35).map(log => {
+                    const time = new Date(log.timestamp).toLocaleTimeString();
+                    return `
+                        <tr>
+                            <td><span style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;">${time}</span></td>
+                            <td><strong>${log.senderId}</strong></td>
+                            <td><strong>${log.receiverId}</strong></td>
+                            <td><span class="badge badge-info">${log.clusterId || '--'}</span></td>
+                            <td><span class="badge badge-purple">${log.messageType}</span></td>
+                            <td><span class="code-pill">${formatVectorClock(log.vectorClock)}</span></td>
+                            <td style="color:var(--text-secondary);font-size:0.75rem;">${log.payloadSummary || '--'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error fetching communication logs:', err);
+            }
+        }
+
+        async function checkCurrentUser() {
+            try {
+                const res = await fetch('/api/auth/me');
+                if (!res.ok) return;
+                const user = await res.json();
+
+                const nameEl = document.getElementById('userDisplayName');
+                const badgeEl = document.getElementById('userRoleBadge');
+                const navMgmt = document.getElementById('navUserMgmt');
+
+                if (nameEl) nameEl.textContent = user.displayName || user.username;
+                if (badgeEl) {
+                    badgeEl.textContent = user.role;
+                    badgeEl.className = 'role-tag ' + (
+                        user.role === 'ADMINISTRATOR' ? 'role-admin' :
+                        user.role === 'FOREST_OPERATOR' ? 'role-operator' : 'role-viewer'
+                    );
+                }
+
+                if (navMgmt && user.role === 'ADMINISTRATOR') {
+                    navMgmt.style.display = 'inline-block';
+                }
+            } catch (e) {
+                console.error('Auth verification error:', e);
+            }
+        }
+
+        // Init & Polling
+        checkCurrentUser();
+        fetchMonitoringData();
+        fetchCommunicationLogs();
+        setInterval(fetchMonitoringData, 2000);
+        setInterval(fetchCommunicationLogs, 2500);
+    </script>
+</body>
+</html>

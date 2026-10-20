@@ -4,13 +4,16 @@ services:
   # Central PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: ds-postgres
+    container_name: fw-postgres
     environment:
       POSTGRES_DB: sensordb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgrespassword
+    # Do NOT bind 5432 to host to prevent conflict with other local projects
+    expose:
+      - "5432"
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -18,16 +21,20 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - forestwatch-net
 
-  # Central Server Process (:8000)
+  # Central Server Process (:8099)
   central-server:
     build:
       context: .
       dockerfile: docker/Dockerfile.central
-    container_name: ds-central-server
+    container_name: fw-central-server
     ports:
-      - "8000:8000"
+      - "8099:8099"
     environment:
+      SERVER_PORT: 8099
+      FORESTWATCH_SECURITY_SERVICE_KEY: ${FORESTWATCH_SECURITY_SERVICE_KEY:-forestwatch-internal-sensor-key-2026}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sensordb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgrespassword
@@ -36,17 +43,25 @@ services:
       AWS_REGION: ${AWS_REGION:-us-east-1}
       AWS_S3_BUCKET: ${AWS_S3_BUCKET:-ds-environmental-telemetry-archive}
       AWS_LAMBDA_FUNCTION_NAME: ${AWS_LAMBDA_FUNCTION_NAME:-EmergencyAlertDispatcher}
-      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx160m -XX:+UseSerialGC"
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx256m -XX:+UseSerialGC"
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8099/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    networks:
+      - forestwatch-net
 
   # Sensor Node 1 (:8101) - Cluster 1
   sensor-1:
     build:
       context: .
       dockerfile: docker/Dockerfile.sensor
-    container_name: ds-sensor-1
+    container_name: fw-sensor-1
     ports:
       - "8101:8101"
     environment:
@@ -54,18 +69,28 @@ services:
       NODE_ID: S1
       NODE_CLUSTER: C1
       NODE_PEERS: http://sensor-2:8102
-      NODE_CENTRAL_URL: http://central-server:8000
+      NODE_CENTRAL_URL: http://central-server:8099
       NODE_IS_INITIAL_LEADER: "false"
-      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx140m -XX:+UseSerialGC"
+      FORESTWATCH_SECURITY_SERVICE_KEY: ${FORESTWATCH_SECURITY_SERVICE_KEY:-forestwatch-internal-sensor-key-2026}
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx160m -XX:+UseSerialGC"
     depends_on:
-      - central-server
+      central-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8101/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - forestwatch-net
 
   # Sensor Node 2 (:8102) - Cluster 1 Initial Head
   sensor-2:
     build:
       context: .
       dockerfile: docker/Dockerfile.sensor
-    container_name: ds-sensor-2
+    container_name: fw-sensor-2
     ports:
       - "8102:8102"
     environment:
@@ -73,18 +98,28 @@ services:
       NODE_ID: S2
       NODE_CLUSTER: C1
       NODE_PEERS: http://sensor-1:8101
-      NODE_CENTRAL_URL: http://central-server:8000
+      NODE_CENTRAL_URL: http://central-server:8099
       NODE_IS_INITIAL_LEADER: "true"
-      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx140m -XX:+UseSerialGC"
+      FORESTWATCH_SECURITY_SERVICE_KEY: ${FORESTWATCH_SECURITY_SERVICE_KEY:-forestwatch-internal-sensor-key-2026}
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx160m -XX:+UseSerialGC"
     depends_on:
-      - central-server
+      central-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8102/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - forestwatch-net
 
   # Sensor Node 3 (:8103) - Cluster 2
   sensor-3:
     build:
       context: .
       dockerfile: docker/Dockerfile.sensor
-    container_name: ds-sensor-3
+    container_name: fw-sensor-3
     ports:
       - "8103:8103"
     environment:
@@ -92,18 +127,28 @@ services:
       NODE_ID: S3
       NODE_CLUSTER: C2
       NODE_PEERS: http://sensor-4:8104
-      NODE_CENTRAL_URL: http://central-server:8000
+      NODE_CENTRAL_URL: http://central-server:8099
       NODE_IS_INITIAL_LEADER: "false"
-      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx140m -XX:+UseSerialGC"
+      FORESTWATCH_SECURITY_SERVICE_KEY: ${FORESTWATCH_SECURITY_SERVICE_KEY:-forestwatch-internal-sensor-key-2026}
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx160m -XX:+UseSerialGC"
     depends_on:
-      - central-server
+      central-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8103/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - forestwatch-net
 
   # Sensor Node 4 (:8104) - Cluster 2 Initial Head
   sensor-4:
     build:
       context: .
       dockerfile: docker/Dockerfile.sensor
-    container_name: ds-sensor-4
+    container_name: fw-sensor-4
     ports:
       - "8104:8104"
     environment:
@@ -111,23 +156,102 @@ services:
       NODE_ID: S4
       NODE_CLUSTER: C2
       NODE_PEERS: http://sensor-3:8103
-      NODE_CENTRAL_URL: http://central-server:8000
+      NODE_CENTRAL_URL: http://central-server:8099
       NODE_IS_INITIAL_LEADER: "true"
-      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx140m -XX:+UseSerialGC"
+      FORESTWATCH_SECURITY_SERVICE_KEY: ${FORESTWATCH_SECURITY_SERVICE_KEY:-forestwatch-internal-sensor-key-2026}
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx160m -XX:+UseSerialGC"
     depends_on:
-      - central-server
+      central-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8104/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - forestwatch-net
 
   # Layer 7 Reverse Proxy & Load Balancer (:80)
   load-balancer:
     image: nginx:alpine
-    container_name: ds-load-balancer
+    container_name: fw-load-balancer
     ports:
       - "80:80"
     volumes:
       - ./docker/nginx-load-balancer.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - central-server
+    networks:
+      - forestwatch-net
+
+  # Prometheus Server (:9090)
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: fw-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    depends_on:
+      - central-server
+    networks:
+      - forestwatch-net
+
+  # Alertmanager (:9093)
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: fw-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    networks:
+      - forestwatch-net
+
+  # Grafana Dashboard (:3000)
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: fw-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - forestwatch-net
+
+  # Loki Log Aggregator (:3100)
+  loki:
+    image: grafana/loki:3.1.1
+    container_name: fw-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - forestwatch-net
 
 volumes:
   pgdata:
 
+networks:
+  forestwatch-net:
+    driver: bridge

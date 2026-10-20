@@ -43,6 +43,7 @@ kubectl apply -f k8s/03-central-server.yaml
 kubectl apply -f k8s/04-sensor-nodes.yaml
 kubectl apply -f k8s/05-load-balancer.yaml
 kubectl apply -f k8s/06-hpa.yaml
+kubectl apply -f k8s/07-monitoring.yaml
 
 echo "⏳ Waiting for database and services to reach Ready state..."
 kubectl rollout status deployment/postgres -n ds-sensor-network --timeout=90s || true
@@ -71,5 +72,6 @@ echo "   minikube service ds-load-balancer -n ds-sensor-network"
 echo "👉 If running on Cloud / AWS EKS:"
 echo "   Access via the External-IP shown in 'kubectl get svc ds-load-balancer -n ds-sensor-network'"
 echo "👉 Port-forwarding shortcut:"
-echo "   kubectl port-forward svc/ds-load-balancer 8000:8000 -n ds-sensor-network"
+echo "   kubectl port-forward svc/ds-load-balancer 8099:8099 -n ds-sensor-network"
+echo "   Grafana Dashboard: kubectl port-forward svc/grafana-svc 3000:3000 -n ds-sensor-network"
 echo "=========================================================="

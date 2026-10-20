@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForestWatch | Alert Management & Incident Response</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --forest-900: #022c22;
+            --forest-800: #064e3b;
+            --forest-700: #047857;
+            --forest-600: #059669;
+            --forest-500: #10b981;
+            --forest-400: #34d399;
+            --forest-100: #d1fae5;
+            --forest-50:  #ecfdf5;
+
+            --bg-primary: #f0fdf4;
+            --bg-canvas: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-card-hover: #fcfdfd;
+            --border-color: #e2e8f0;
+            --border-forest: #a7f3d0;
+
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+
+            --primary: #047857;
+            --primary-hover: #065f46;
+            --primary-light: #ecfdf5;
+
+            --success: #059669;
+            --success-bg: #d1fae5;
+            --warning: #d97706;
+            --warning-bg: #fef3c7;
+            --danger: #dc2626;
+            --danger-bg: #fee2e2;
+            --info: #0284c7;
+            --info-bg: #e0f2fe;
+            --purple: #7c3aed;
+            --purple-bg: #ede9fe;
+
+            --radius: 14px;
+            --radius-sm: 8px;
+            --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 12px 24px -4px rgba(6, 78, 59, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.03);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #ecfdf5 0%, #f8fafc 400px, #f8fafc 100%);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #d1fae5;
+            padding: 0.85rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(6, 78, 59, 0.04);
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 0.9rem; text-decoration: none; }
+        .logo-badge {
+            background: linear-gradient(135deg, var(--forest-800) 0%, var(--forest-600) 100%);
+            color: #ffffff;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 10px rgba(4, 120, 87, 0.25);
+            border: 1px solid #34d399;
+        }
+
+        .header-title h1 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--forest-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .header-title p {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .nav-links { display: flex; align-items: center; gap: 0.35rem; }
+        .nav-item {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s ease;
+        }
+        .nav-item:hover { background: #ecfdf5; color: var(--forest-700); }
+        .nav-item.active { background: #d1fae5; color: var(--forest-800); font-weight: 700; }
+
+        .header-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+        .sensor-nav-pills {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: #f1f5f9;
+            padding: 3px 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .sensor-nav-link {
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 3px 8px;
+            border-radius: 5px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            transition: all 0.15s ease;
+        }
+        .sensor-nav-link:hover { background: var(--forest-50); color: var(--forest-700); border-color: var(--forest-400); }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.02em;
+        }
+        .status-pill.online { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulseGreen 1.6s infinite;
+        }
+        @keyframes pulseGreen {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.3rem 0.7rem;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .role-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; letter-spacing: 0.02em; }
+        .role-admin { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
+        .role-operator { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+        .role-viewer { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+        .btn-logout {
+            background: none;
+            border: 1px solid #cbd5e1;
+            padding: 0.3rem 0.65rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-logout:hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 4rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .page-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            background: #ffffff;
+            border: 1px solid var(--border-forest);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow-subtle);
+        }
+        .page-title-box h2 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--forest-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .page-title-box p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.2rem;
+        }
+
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.1rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            box-shadow: var(--shadow-subtle);
+            border-left: 4px solid var(--forest-600);
+        }
+        .metric-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; }
+        .metric-value { font-size: 1.7rem; font-weight: 800; color: var(--forest-900); font-family: 'JetBrains Mono', monospace; }
+        .metric-subtext { font-size: 0.72rem; color: var(--text-secondary); }
+
+        /* Filter Toolbar */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 0.75rem 1.25rem;
+            box-shadow: var(--shadow-subtle);
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .filter-select {
+            padding: 0.35rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-family: inherit;
+            background: #f8fafc;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Section Card & Table */
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .section-header {
+            padding: 0.9rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fcfdfd;
+        }
+        .section-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--forest-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left; }
+        th {
+            background: #f8fafc;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-primary);
+        }
+        tbody tr:hover { background: #fafcfb; }
+
+        .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .badge-success { background: var(--success-bg); color: var(--success); }
+        .badge-warning { background: var(--warning-bg); color: #b45309; }
+        .badge-danger { background: var(--danger-bg); color: var(--danger); }
+        .badge-info { background: var(--info-bg); color: var(--info); }
+        .badge-purple { background: var(--purple-bg); color: var(--purple); }
+
+        .code-pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Action Buttons */
+        .btn-ack {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #047857;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-ack:hover:not(:disabled) {
+            background: #047857;
+            color: #ffffff;
+        }
+        .btn-ack:disabled {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+            color: var(--text-muted);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .ack-stamp {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #059669;
+            background: #d1fae5;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid #a7f3d0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="/" class="header-brand">
+            <div class="logo-badge">🌲</div>
+            <div class="header-title">
+                <h1>ForestWatch Operations Center</h1>
+                <p>Distributed Wildfire & Environmental Early Warning Network &bull; Central Controller (:8099)</p>
+            </div>
+        </a>
+
+        <!-- Navigation Links -->
+        <nav class="nav-links">
+            <a href="/" class="nav-item">Overview</a>
+            <a href="/monitoring" class="nav-item">Live Monitoring</a>
+            <a href="/sensors" class="nav-item">Sensors</a>
+            <a href="/alerts" class="nav-item active">Alerts</a>
+            <a href="/reports" class="nav-item">Reports</a>
+            <a href="/users" class="nav-item" id="navUserMgmt" style="display: none;">User Management</a>
+        </nav>
+
+        <div class="header-actions">
+            <div class="sensor-nav-pills">
+                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-right: 2px;">Nodes:</span>
+                <a href="http://localhost:8101" class="sensor-nav-link" title="Open Node S1 Console">S1</a>
+                <a href="http://localhost:8102" class="sensor-nav-link" title="Open Node S2 Console">S2</a>
+                <a href="http://localhost:8103" class="sensor-nav-link" title="Open Node S3 Console">S3</a>
+                <a href="http://localhost:8104" class="sensor-nav-link" title="Open Node S4 Console">S4</a>
+            </div>
+
+            <div class="status-pill online">
+                <div class="pulse-dot"></div>
+                <span>INCIDENT MGMT (:8099)</span>
+            </div>
+
+            <!-- Profile & Role Badge -->
+            <div class="user-badge" id="userBadge">
+                <span id="userDisplayName">User</span>
+                <span class="role-tag role-viewer" id="userRoleBadge">VIEWER</span>
+            </div>
+
+            <!-- Sign Out -->
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="btn-logout" title="Sign out of ForestWatch">Sign Out</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="page-header-row">
+            <div class="page-title-box">
+                <h2>🚨 Emergency Incident & Alert Management</h2>
+                <p>Mutual exclusion coordinated emergency alerts, deduplication suppression, and cluster failover audit log</p>
+            </div>
+            <div>
+                <span id="rbacNotice" style="font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); background: #f8fafc; padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--border-color);">
+                    Role: <strong id="rbacRoleLabel">VIEWER</strong> &bull; <span id="rbacPermissionLabel">Read-Only</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Alert Overview Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card" style="border-left-color: #dc2626;">
+                <span class="metric-title">Total Alerts Recorded</span>
+                <span class="metric-value" id="totalAlertsVal" style="color: #dc2626;">0</span>
+                <span class="metric-subtext">Received from edge clusters</span>
+            </div>
+            <div class="metric-card" style="border-left-color: #d97706;">
+                <span class="metric-title">Pending Incidents</span>
+                <span class="metric-value" id="pendingAlertsVal" style="color: #d97706;">0</span>
+                <span class="metric-subtext">Awaiting operator acknowledgment</span>
+            </div>
+            <div class="metric-card" style="border-left-color: #059669;">
+                <span class="metric-title">Acknowledged Alerts</span>
+                <span class="metric-value" id="ackAlertsVal" style="color: #059669;">0</span>
+                <span class="metric-subtext">Verified by operational staff</span>
+            </div>
+            <div class="metric-card" style="border-left-color: #7c3aed;">
+                <span class="metric-title">Coordinator Elections</span>
+                <span class="metric-value" id="totalElectionsVal" style="color: #7c3aed;">0</span>
+                <span class="metric-subtext">Bully failovers recorded</span>
+            </div>
+        </div>
+
+        <!-- Filter Toolbar -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <span>Filter by Status:</span>
+                <select id="filterStatus" class="filter-select" onchange="renderFilteredAlerts()">
+                    <option value="ALL">All Alerts</option>
+                    <option value="PENDING">Pending Acknowledgment</option>
+                    <option value="ACKNOWLEDGED">Acknowledged</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span>Filter by Cluster:</span>
+                <select id="filterCluster" class="filter-select" onchange="renderFilteredAlerts()">
+                    <option value="ALL">All Clusters</option>
+                    <option value="C1">Cluster 1 (Canopy)</option>
+                    <option value="C2">Cluster 2 (River Basin)</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span>Total Filtered:</span>
+                <strong id="filteredCountText" style="font-family:'JetBrains Mono',monospace;color:var(--forest-900);">0</strong>
+            </div>
+        </div>
+
+        <!-- Emergency Alerts Table -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">
+                    <span>🚨</span>
+                    <span>Emergency Alerts (Distributed Mutex Coordinated)</span>
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-secondary);">Ricart-Agrawala deduplication active</span>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Incident ID</th>
+                            <th>Timestamp</th>
+                            <th>Alert Classification</th>
+                            <th>Cluster Group</th>
+                            <th>Source Nodes</th>
+                            <th>Causal Vector Clock</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertsTableBody">
+                        <tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">No active emergency alerts recorded.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bully Elections Failover History -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">
+                    <span>👑</span>
+                    <span>Coordinator Failover & Election History</span>
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-secondary);">Distributed Bully election transition audit log</span>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Cluster Group</th>
+                            <th>Election Event</th>
+                            <th>Elected Coordinator</th>
+                            <th>Details & Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody id="electionsTableBody">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No election failover events recorded.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let cachedAlerts = [];
+        let currentUserRole = 'VIEWER';
+        let currentUserName = '';
+
+        function getCookie(name) {
+            const val = `; ${document.cookie}`;
+            const parts = val.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        function formatVectorClock(vc) {
+            if (!vc) return '[S1:0, S2:0, S3:0, S4:0]';
+            let arr = [];
+            if (Array.isArray(vc)) {
+                arr = vc;
+            } else if (typeof vc === 'string') {
+                const cleaned = vc.replace(/[\[\]\s]/g, '');
+                const m = cleaned.split(',');
+                if (m.length === 4) arr = m.map(x => parseInt(x, 10) || 0); else return vc;
+            } else {
+                return String(vc);
+            }
+            return `[S1:${arr[0] || 0}, S2:${arr[1] || 0}, S3:${arr[2] || 0}, S4:${arr[3] || 0}]`;
+        }
+
+        async function fetchAlerts() {
+            try {
+                const res = await fetch('/api/alerts');
+                if (!res.ok) return;
+                cachedAlerts = await res.json();
+                renderFilteredAlerts();
+            } catch (err) {
+                console.error('Error fetching alerts:', err);
+            }
+        }
+
+        function renderFilteredAlerts() {
+            const statusFilter = document.getElementById('filterStatus').value;
+            const clusterFilter = document.getElementById('filterCluster').value;
+            const tbody = document.getElementById('alertsTableBody');
+
+            let filtered = cachedAlerts;
+            if (statusFilter === 'PENDING') {
+                filtered = filtered.filter(a => !a.acknowledged);
+            } else if (statusFilter === 'ACKNOWLEDGED') {
+                filtered = filtered.filter(a => a.acknowledged);
+            }
+
+            if (clusterFilter !== 'ALL') {
+                filtered = filtered.filter(a => a.clusterId === clusterFilter);
+            }
+
+            // Update stats
+            const total = cachedAlerts.length;
+            const acked = cachedAlerts.filter(a => a.acknowledged).length;
+            const pending = total - acked;
+
+            document.getElementById('totalAlertsVal').innerText = total;
+            document.getElementById('pendingAlertsVal').innerText = pending;
+            document.getElementById('ackAlertsVal').innerText = acked;
+            document.getElementById('filteredCountText').innerText = `${filtered.length} of ${total}`;
+
+            if (!filtered || filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">No matching emergency alerts found.</td></tr>';
+                return;
+            }
+
+            const canAcknowledge = (currentUserRole === 'FOREST_OPERATOR' || currentUserRole === 'ADMINISTRATOR');
+
+            tbody.innerHTML = filtered.map(a => {
+                const time = new Date(a.timestamp).toLocaleTimeString();
+                const isAck = a.acknowledged;
+                const ackBtnHtml = isAck ?
+                    `<span class="ack-stamp">✓ Acknowledged by ${a.acknowledgedBy || 'Operator'}</span>` :
+                    `<button class="btn-ack" onclick="acknowledgeAlert(${a.id})" ${canAcknowledge ? '' : 'disabled title="Viewer role cannot acknowledge alerts"'}>
+                        ${canAcknowledge ? '✓ Acknowledge' : '🔒 Operator Required'}
+                     </button>`;
+
+                const statusBadge = isAck ?
+                    '<span class="badge badge-success">RESOLVED</span>' :
+                    '<span class="badge badge-danger">PENDING</span>';
+
+                return `
+                    <tr>
+                        <td><span class="code-pill">#${a.id}</span></td>
+                        <td><span style="font-family:'JetBrains Mono',monospace;">${time}</span></td>
+                        <td><strong style="color:#b91c1c;">${a.alertType}</strong></td>
+                        <td><span class="badge badge-info">${a.clusterId}</span></td>
+                        <td>${a.sourceNodes || '--'}</td>
+                        <td><span class="code-pill">${formatVectorClock(a.vectorClock)}</span></td>
+                        <td>${statusBadge}</td>
+                        <td>${ackBtnHtml}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function acknowledgeAlert(alertId) {
+            const csrfToken = getCookie('FW_CENTRAL_XSRF') || getCookie('XSRF-TOKEN');
+            try {
+                const res = await fetch(`/api/alerts/${alertId}/acknowledge`, {
+                    method: 'POST',
+                    headers: {
+                        'X-XSRF-TOKEN': csrfToken || ''
+                    }
+                });
+
+                if (res.ok) {
+                    await fetchAlerts();
+                } else if (res.status === 403) {
+                    alert('Permission Denied: Only Forest Operators and Administrators can acknowledge alerts.');
+                } else {
+                    alert('Error acknowledging alert.');
+                }
+            } catch (err) {
+                console.error('Error acknowledging alert:', err);
+            }
+        }
+
+        async function fetchElections() {
+            try {
+                const res = await fetch('/api/elections');
+                if (!res.ok) return;
+                const list = await res.json();
+                const tbody = document.getElementById('electionsTableBody');
+                document.getElementById('totalElectionsVal').innerText = list ? list.length : 0;
+
+                if (!tbody) return;
+                if (!list || list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No election failover events recorded.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = list.map(item => {
+                    const time = new Date(item.timestamp).toLocaleTimeString();
+                    return `
+                        <tr>
+                            <td><span style="font-family:'JetBrains Mono',monospace;">${time}</span></td>
+                            <td><span class="badge badge-info">${item.clusterId}</span></td>
+                            <td><span class="badge badge-purple">${item.eventType}</span></td>
+                            <td><strong>${item.electedLeaderId}</strong></td>
+                            <td style="color:var(--text-secondary);">${item.details}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error fetching elections:', err);
+            }
+        }
+
+        async function checkCurrentUser() {
+            try {
+                const res = await fetch('/api/auth/me');
+                if (!res.ok) return;
+                const user = await res.json();
+
+                currentUserRole = user.role || 'VIEWER';
+                currentUserName = user.displayName || user.username;
+
+                const nameEl = document.getElementById('userDisplayName');
+                const badgeEl = document.getElementById('userRoleBadge');
+                const navMgmt = document.getElementById('navUserMgmt');
+                const roleLabel = document.getElementById('rbacRoleLabel');
+                const permLabel = document.getElementById('rbacPermissionLabel');
+
+                if (nameEl) nameEl.textContent = currentUserName;
+                if (badgeEl) {
+                    badgeEl.textContent = currentUserRole;
+                    badgeEl.className = 'role-tag ' + (
+                        currentUserRole === 'ADMINISTRATOR' ? 'role-admin' :
+                        currentUserRole === 'FOREST_OPERATOR' ? 'role-operator' : 'role-viewer'
+                    );
+                }
+
+                if (roleLabel) roleLabel.innerText = currentUserRole;
+                if (permLabel) {
+                    permLabel.innerText = (currentUserRole === 'VIEWER') ?
+                        'Read-Only (Alert Ack Disabled)' : 'Operational Response Enabled';
+                }
+
+                if (navMgmt && currentUserRole === 'ADMINISTRATOR') {
+                    navMgmt.style.display = 'inline-block';
+                }
+
+                renderFilteredAlerts();
+            } catch (e) {
+                console.error('Auth verification error:', e);
+            }
+        }
+
+        checkCurrentUser();
+        fetchAlerts();
+        fetchElections();
+        setInterval(fetchAlerts, 3000);
+        setInterval(fetchElections, 4000);
+    </script>
+</body>
+</html>

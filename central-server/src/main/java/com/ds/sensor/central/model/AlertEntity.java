@@ -65,6 +65,18 @@ public class AlertEntity {
     public List<String> getSourceNodes() { return sourceNodes; }
     public void setSourceNodes(List<String> sourceNodes) { this.sourceNodes = sourceNodes; }
 
+    @Column(name = "acknowledged")
+    private boolean acknowledged = false;
+
+    @Column(name = "acknowledged_by", length = 64)
+    private String acknowledgedBy;
+
     public long getTimestamp() { return timestamp; }
     public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
+
+    public boolean isAcknowledged() { return acknowledged; }
+    public void setAcknowledged(boolean acknowledged) { this.acknowledged = acknowledged; }
+
+    public String getAcknowledgedBy() { return acknowledgedBy; }
+    public void setAcknowledgedBy(String acknowledgedBy) { this.acknowledgedBy = acknowledgedBy; }
 }

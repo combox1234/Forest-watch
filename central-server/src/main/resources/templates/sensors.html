@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForestWatch | Sensor Inventory & Node Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --forest-900: #022c22;
+            --forest-800: #064e3b;
+            --forest-700: #047857;
+            --forest-600: #059669;
+            --forest-500: #10b981;
+            --forest-400: #34d399;
+            --forest-100: #d1fae5;
+            --forest-50:  #ecfdf5;
+
+            --bg-primary: #f0fdf4;
+            --bg-canvas: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-card-hover: #fcfdfd;
+            --border-color: #e2e8f0;
+            --border-forest: #a7f3d0;
+
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+
+            --primary: #047857;
+            --primary-hover: #065f46;
+            --primary-light: #ecfdf5;
+
+            --success: #059669;
+            --success-bg: #d1fae5;
+            --warning: #d97706;
+            --warning-bg: #fef3c7;
+            --danger: #dc2626;
+            --danger-bg: #fee2e2;
+            --info: #0284c7;
+            --info-bg: #e0f2fe;
+            --purple: #7c3aed;
+            --purple-bg: #ede9fe;
+
+            --radius: 14px;
+            --radius-sm: 8px;
+            --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 12px 24px -4px rgba(6, 78, 59, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.03);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #ecfdf5 0%, #f8fafc 400px, #f8fafc 100%);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #d1fae5;
+            padding: 0.85rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(6, 78, 59, 0.04);
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 0.9rem; text-decoration: none; }
+        .logo-badge {
+            background: linear-gradient(135deg, var(--forest-800) 0%, var(--forest-600) 100%);
+            color: #ffffff;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 10px rgba(4, 120, 87, 0.25);
+            border: 1px solid #34d399;
+        }
+
+        .header-title h1 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--forest-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .header-title p {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .nav-links { display: flex; align-items: center; gap: 0.35rem; }
+        .nav-item {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s ease;
+        }
+        .nav-item:hover { background: #ecfdf5; color: var(--forest-700); }
+        .nav-item.active { background: #d1fae5; color: var(--forest-800); font-weight: 700; }
+
+        .header-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+        .sensor-nav-pills {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: #f1f5f9;
+            padding: 3px 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .sensor-nav-link {
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 3px 8px;
+            border-radius: 5px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            transition: all 0.15s ease;
+        }
+        .sensor-nav-link:hover { background: var(--forest-50); color: var(--forest-700); border-color: var(--forest-400); }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.02em;
+        }
+        .status-pill.online { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulseGreen 1.6s infinite;
+        }
+        @keyframes pulseGreen {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.3rem 0.7rem;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .role-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; letter-spacing: 0.02em; }
+        .role-admin { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
+        .role-operator { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+        .role-viewer { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+        .btn-logout {
+            background: none;
+            border: 1px solid #cbd5e1;
+            padding: 0.3rem 0.65rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-logout:hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 4rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .page-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            background: #ffffff;
+            border: 1px solid var(--border-forest);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow-subtle);
+        }
+        .page-title-box h2 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--forest-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .page-title-box p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.2rem;
+        }
+
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.1rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            box-shadow: var(--shadow-subtle);
+            border-left: 4px solid var(--forest-600);
+        }
+        .metric-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; }
+        .metric-value { font-size: 1.7rem; font-weight: 800; color: var(--forest-900); font-family: 'JetBrains Mono', monospace; }
+        .metric-subtext { font-size: 0.72rem; color: var(--text-secondary); }
+
+        /* Clusters Grid */
+        .clusters-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+        @media (max-width: 900px) { .clusters-grid { grid-template-columns: 1fr; } }
+
+        .cluster-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .cluster-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+        .cluster-name { font-size: 1.05rem; font-weight: 800; color: var(--forest-900); }
+        .cluster-ch-badge {
+            background: #ede9fe;
+            color: #6d28d9;
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 3px 9px;
+            border-radius: 999px;
+            border: 1px solid #c4b5fd;
+        }
+
+        .nodes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.85rem;
+        }
+        @media (max-width: 500px) { .nodes-grid { grid-template-columns: 1fr; } }
+
+        .node-box {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+        }
+        .node-box:hover { border-color: var(--forest-500); background: #ffffff; box-shadow: var(--shadow-subtle); }
+        .node-box.active { border-left: 3px solid var(--success); }
+        .node-box.suspected { border-left: 3px solid var(--warning); }
+        .node-box.failed { border-left: 3px solid var(--danger); background: #fff8f8; }
+
+        .node-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem; }
+        .node-id { font-size: 0.95rem; font-weight: 800; color: var(--forest-900); }
+        .node-role-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+        .node-role-tag.sensor { background: #e0f2fe; color: #0284c7; }
+        .node-role-tag.ch { background: #ede9fe; color: #7c3aed; }
+
+        .node-detail { font-size: 0.75rem; color: var(--text-secondary); display: flex; justify-content: space-between; }
+        .node-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            margin-top: 0.5rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 6px;
+            background: #ecfdf5;
+            color: #047857;
+            text-decoration: none;
+            border: 1px solid #a7f3d0;
+            transition: all 0.15s ease;
+        }
+        .node-link:hover { background: #047857; color: #ffffff; }
+
+        /* Section Card & Table */
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .section-header {
+            padding: 0.9rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fcfdfd;
+        }
+        .section-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--forest-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left; }
+        th {
+            background: #f8fafc;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-primary);
+        }
+        tbody tr:hover { background: #fafcfb; }
+
+        .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .badge-success { background: var(--success-bg); color: var(--success); }
+        .badge-warning { background: var(--warning-bg); color: #b45309; }
+        .badge-danger { background: var(--danger-bg); color: var(--danger); }
+        .badge-info { background: var(--info-bg); color: var(--info); }
+        .badge-purple { background: var(--purple-bg); color: var(--purple); }
+
+        .code-pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="/" class="header-brand">
+            <div class="logo-badge">🌲</div>
+            <div class="header-title">
+                <h1>ForestWatch Operations Center</h1>
+                <p>Distributed Wildfire & Environmental Early Warning Network &bull; Central Controller (:8099)</p>
+            </div>
+        </a>
+
+        <!-- Navigation Links -->
+        <nav class="nav-links">
+            <a href="/" class="nav-item">Overview</a>
+            <a href="/monitoring" class="nav-item">Live Monitoring</a>
+            <a href="/sensors" class="nav-item active">Sensors</a>
+            <a href="/alerts" class="nav-item">Alerts</a>
+            <a href="/reports" class="nav-item">Reports</a>
+            <a href="/users" class="nav-item" id="navUserMgmt" style="display: none;">User Management</a>
+        </nav>
+
+        <div class="header-actions">
+            <div class="sensor-nav-pills">
+                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-right: 2px;">Nodes:</span>
+                <a href="http://localhost:8101" class="sensor-nav-link" title="Open Node S1 Console">S1</a>
+                <a href="http://localhost:8102" class="sensor-nav-link" title="Open Node S2 Console">S2</a>
+                <a href="http://localhost:8103" class="sensor-nav-link" title="Open Node S3 Console">S3</a>
+                <a href="http://localhost:8104" class="sensor-nav-link" title="Open Node S4 Console">S4</a>
+            </div>
+
+            <div class="status-pill online">
+                <div class="pulse-dot"></div>
+                <span>OPERATIONAL (:8099)</span>
+            </div>
+
+            <!-- Profile & Role Badge -->
+            <div class="user-badge" id="userBadge">
+                <span id="userDisplayName">User</span>
+                <span class="role-tag role-viewer" id="userRoleBadge">VIEWER</span>
+            </div>
+
+            <!-- Sign Out -->
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="btn-logout" title="Sign out of ForestWatch">Sign Out</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="page-header-row">
+            <div class="page-title-box">
+                <h2>🌲 Sensor Fleet Inventory & Cluster Hierarchy</h2>
+                <p>Distributed edge sensor inventory, dynamic Bully election cluster coordinators, and node consoles</p>
+            </div>
+            <div>
+                <a href="/monitoring" class="node-link" style="padding: 0.5rem 1rem; font-size: 0.8rem; background: var(--forest-700); color: white; border-color: var(--forest-800);">
+                    📡 View Live Telemetry Stream &rarr;
+                </a>
+            </div>
+        </div>
+
+        <!-- Sensor Overview Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <span class="metric-title">Total Registered Nodes</span>
+                <span class="metric-value" id="totalSensorsVal">4</span>
+                <span class="metric-subtext">Active in Distributed Mesh</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-title">Active Field Nodes</span>
+                <span class="metric-value" id="activeSensorsVal" style="color: #059669;">4 / 4</span>
+                <span class="metric-subtext">100% Operational Telemetry</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-title">Logical Monitoring Clusters</span>
+                <span class="metric-value">2</span>
+                <span class="metric-subtext">Canopy (C1) & River Basin (C2)</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-title">Bully Coordinators</span>
+                <span class="metric-value" id="coordinatorCountVal">2 Active</span>
+                <span class="metric-subtext">S2 (C1) & S4 (C2)</span>
+            </div>
+        </div>
+
+        <!-- Clusters & Field Nodes Row -->
+        <div class="clusters-grid">
+            <!-- Cluster 1 -->
+            <div class="cluster-card" id="cluster1Card">
+                <div class="cluster-header">
+                    <div>
+                        <div class="cluster-name">
+                            <span>🌲 Cluster 1: Alpha Forest Canopy</span>
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Logical Group C1 &bull; Bully Priority: S2 &gt; S1</span>
+                    </div>
+                    <span class="cluster-ch-badge" id="c1HeadBadge">Head: S2 (:8102)</span>
+                </div>
+                <div class="nodes-grid">
+                    <!-- S1 -->
+                    <div class="node-box active" id="nodeBox-S1">
+                        <div class="node-header">
+                            <span class="node-id">Node S1</span>
+                            <span class="node-role-tag sensor" id="roleTag-S1">SENSOR</span>
+                        </div>
+                        <div class="node-detail"><span>Port:</span> <strong>8101</strong></div>
+                        <div class="node-detail"><span>Status:</span> <span id="status-S1" class="badge badge-success">ACTIVE</span></div>
+                        <div class="node-detail"><span>Battery:</span> <span id="bat-S1">98%</span></div>
+                        <div class="node-detail"><span>Heartbeat:</span> <span id="hb-S1">&lt; 1s ago</span></div>
+                        <a href="http://localhost:8101" class="node-link">🖥️ Open S1 Dashboard &rarr;</a>
+                    </div>
+                    <!-- S2 -->
+                    <div class="node-box active" id="nodeBox-S2">
+                        <div class="node-header">
+                            <span class="node-id">Node S2</span>
+                            <span class="node-role-tag ch" id="roleTag-S2">CLUSTER_HEAD</span>
+                        </div>
+                        <div class="node-detail"><span>Port:</span> <strong>8102</strong></div>
+                        <div class="node-detail"><span>Status:</span> <span id="status-S2" class="badge badge-success">ACTIVE</span></div>
+                        <div class="node-detail"><span>Battery:</span> <span id="bat-S2">98%</span></div>
+                        <div class="node-detail"><span>Heartbeat:</span> <span id="hb-S2">&lt; 1s ago</span></div>
+                        <a href="http://localhost:8102" class="node-link">👑 Open S2 Dashboard &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cluster 2 -->
+            <div class="cluster-card" id="cluster2Card">
+                <div class="cluster-header">
+                    <div>
+                        <div class="cluster-name">
+                            <span>🌊 Cluster 2: Beta River Basin</span>
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Logical Group C2 &bull; Bully Priority: S4 &gt; S3</span>
+                    </div>
+                    <span class="cluster-ch-badge" id="c2HeadBadge">Head: S4 (:8104)</span>
+                </div>
+                <div class="nodes-grid">
+                    <!-- S3 -->
+                    <div class="node-box active" id="nodeBox-S3">
+                        <div class="node-header">
+                            <span class="node-id">Node S3</span>
+                            <span class="node-role-tag sensor" id="roleTag-S3">SENSOR</span>
+                        </div>
+                        <div class="node-detail"><span>Port:</span> <strong>8103</strong></div>
+                        <div class="node-detail"><span>Status:</span> <span id="status-S3" class="badge badge-success">ACTIVE</span></div>
+                        <div class="node-detail"><span>Battery:</span> <span id="bat-S3">98%</span></div>
+                        <div class="node-detail"><span>Heartbeat:</span> <span id="hb-S3">&lt; 1s ago</span></div>
+                        <a href="http://localhost:8103" class="node-link">🖥️ Open S3 Dashboard &rarr;</a>
+                    </div>
+                    <!-- S4 -->
+                    <div class="node-box active" id="nodeBox-S4">
+                        <div class="node-header">
+                            <span class="node-id">Node S4</span>
+                            <span class="node-role-tag ch" id="roleTag-S4">CLUSTER_HEAD</span>
+                        </div>
+                        <div class="node-detail"><span>Port:</span> <strong>8104</strong></div>
+                        <div class="node-detail"><span>Status:</span> <span id="status-S4" class="badge badge-success">ACTIVE</span></div>
+                        <div class="node-detail"><span>Battery:</span> <span id="bat-S4">98%</span></div>
+                        <div class="node-detail"><span>Heartbeat:</span> <span id="hb-S4">&lt; 1s ago</span></div>
+                        <a href="http://localhost:8104" class="node-link">👑 Open S4 Dashboard &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Complete Sensor Fleet Inventory Table -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">
+                    <span>📋</span>
+                    <span>Complete Sensor Fleet Directory</span>
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-secondary);">Live telemetry state, logical roles, and port endpoints</span>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Node ID</th>
+                            <th>Cluster Group</th>
+                            <th>Operational Role</th>
+                            <th>Port / Endpoint</th>
+                            <th>Status</th>
+                            <th>Battery</th>
+                            <th>Temperature</th>
+                            <th>Humidity</th>
+                            <th>Logical Vector Clock</th>
+                            <th>Last Heartbeat</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sensorInventoryTableBody">
+                        <tr><td colspan="11" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading sensor inventory...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function formatVectorClock(vc) {
+            if (!vc) return '[S1:0, S2:0, S3:0, S4:0]';
+            let arr = [];
+            if (Array.isArray(vc)) {
+                arr = vc;
+            } else if (typeof vc === 'string') {
+                const cleaned = vc.replace(/[\[\]\s]/g, '');
+                const m = cleaned.split(',');
+                if (m.length === 4) arr = m.map(x => parseInt(x, 10) || 0); else return vc;
+            } else {
+                return String(vc);
+            }
+            return `[S1:${arr[0] || 0}, S2:${arr[1] || 0}, S3:${arr[2] || 0}, S4:${arr[3] || 0}]`;
+        }
+
+        async function fetchSensors() {
+            try {
+                const res = await fetch('/api/system-status');
+                if (!res.ok) return;
+                const data = await res.json();
+
+                document.getElementById('totalSensorsVal').innerText = data.totalSensors || 4;
+                document.getElementById('activeSensorsVal').innerText = `${data.activeSensors} / ${data.totalSensors}`;
+                document.getElementById('coordinatorCountVal').innerText = `${data.activeClusterHeads} Active`;
+
+                // Update cluster headers
+                if (data.clusters && data.clusters.length > 0) {
+                    data.clusters.forEach(c => {
+                        if (c.clusterId === 'C1') {
+                            const badge = document.getElementById('c1HeadBadge');
+                            if (badge) badge.innerText = `Head: ${c.currentHeadId} (:${c.headPort})`;
+                        } else if (c.clusterId === 'C2') {
+                            const badge = document.getElementById('c2HeadBadge');
+                            if (badge) badge.innerText = `Head: ${c.currentHeadId} (:${c.headPort})`;
+                        }
+                    });
+                }
+
+                // Update cluster node boxes and inventory table
+                if (data.nodes && data.nodes.length > 0) {
+                    const tbody = document.getElementById('sensorInventoryTableBody');
+                    let rowsHtml = '';
+
+                    data.nodes.forEach(n => {
+                        const box = document.getElementById(`nodeBox-${n.nodeId}`);
+                        const roleTag = document.getElementById(`roleTag-${n.nodeId}`);
+                        const statusBadge = document.getElementById(`status-${n.nodeId}`);
+                        const batSpan = document.getElementById(`bat-${n.nodeId}`);
+                        const hbSpan = document.getElementById(`hb-${n.nodeId}`);
+
+                        const sec = Math.max(0, Math.floor((Date.now() - n.lastHeartbeat) / 1000));
+                        const hbText = sec === 0 ? '< 1s ago' : `${sec}s ago`;
+
+                        if (box && roleTag && statusBadge && batSpan && hbSpan) {
+                            box.className = `node-box ${n.status.toLowerCase()}`;
+                            statusBadge.className = `badge ${n.status === 'ACTIVE' ? 'badge-success' : n.status === 'SUSPECTED' ? 'badge-warning' : 'badge-danger'}`;
+                            statusBadge.innerText = n.status;
+                            roleTag.className = `node-role-tag ${n.role === 'CLUSTER_HEAD' ? 'ch' : 'sensor'}`;
+                            roleTag.innerText = n.role;
+                            batSpan.innerText = n.status === 'FAILED' ? '0%' : (n.battery != null ? n.battery.toFixed(0) + '%' : '98%');
+                            hbSpan.innerText = n.status === 'FAILED' ? 'Heartbeat Lost' : hbText;
+                        }
+
+                        // Build Table Row
+                        const isCH = n.role === 'CLUSTER_HEAD';
+                        const tempText = n.status === 'FAILED' ? '--' : (n.temperature != null ? n.temperature.toFixed(1) + '°C' : '24.0°C');
+                        const humidText = n.status === 'FAILED' ? '--' : (n.humidity != null ? n.humidity.toFixed(1) + '%' : '55.0%');
+                        const batText = n.status === 'FAILED' ? '0%' : (n.battery != null ? n.battery.toFixed(0) + '%' : '98%');
+
+                        rowsHtml += `
+                            <tr>
+                                <td><strong style="font-size:0.95rem;color:var(--forest-900);">${n.nodeId}</strong></td>
+                                <td><span class="badge badge-info">${n.clusterId || '--'}</span></td>
+                                <td><span class="badge ${isCH ? 'badge-purple' : 'badge-info'}">${isCH ? '👑 CLUSTER_HEAD' : 'SENSOR'}</span></td>
+                                <td><span class="code-pill">:${n.port}</span></td>
+                                <td><span class="badge ${n.status === 'ACTIVE' ? 'badge-success' : n.status === 'SUSPECTED' ? 'badge-warning' : 'badge-danger'}">${n.status}</span></td>
+                                <td><strong>${batText}</strong></td>
+                                <td>${tempText}</td>
+                                <td>${humidText}</td>
+                                <td><span class="code-pill">${formatVectorClock(n.vectorClock)}</span></td>
+                                <td style="color:${n.status==='FAILED'?'#dc2626':'var(--text-secondary)'};">${n.status==='FAILED'?'Heartbeat Lost':hbText}</td>
+                                <td>
+                                    <a href="http://localhost:${n.port}" class="node-link" style="margin-top:0;padding:3px 8px;">
+                                        Open :${n.port} &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    if (tbody) tbody.innerHTML = rowsHtml;
+                }
+            } catch (err) {
+                console.error('Error fetching sensor inventory:', err);
+            }
+        }
+
+        async function checkCurrentUser() {
+            try {
+                const res = await fetch('/api/auth/me');
+                if (!res.ok) return;
+                const user = await res.json();
+
+                const nameEl = document.getElementById('userDisplayName');
+                const badgeEl = document.getElementById('userRoleBadge');
+                const navMgmt = document.getElementById('navUserMgmt');
+
+                if (nameEl) nameEl.textContent = user.displayName || user.username;
+                if (badgeEl) {
+                    badgeEl.textContent = user.role;
+                    badgeEl.className = 'role-tag ' + (
+                        user.role === 'ADMINISTRATOR' ? 'role-admin' :
+                        user.role === 'FOREST_OPERATOR' ? 'role-operator' : 'role-viewer'
+                    );
+                }
+
+                if (navMgmt && user.role === 'ADMINISTRATOR') {
+                    navMgmt.style.display = 'inline-block';
+                }
+            } catch (e) {
+                console.error('Auth verification error:', e);
+            }
+        }
+
+        checkCurrentUser();
+        fetchSensors();
+        setInterval(fetchSensors, 2000);
+    </script>
+</body>
+</html>

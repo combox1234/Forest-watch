@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForestWatch | Telemetry Reports & Cloud Archive</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --forest-900: #022c22;
+            --forest-800: #064e3b;
+            --forest-700: #047857;
+            --forest-600: #059669;
+            --forest-500: #10b981;
+            --forest-400: #34d399;
+            --forest-100: #d1fae5;
+            --forest-50:  #ecfdf5;
+
+            --bg-primary: #f0fdf4;
+            --bg-canvas: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-card-hover: #fcfdfd;
+            --border-color: #e2e8f0;
+            --border-forest: #a7f3d0;
+
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+
+            --primary: #047857;
+            --primary-hover: #065f46;
+            --primary-light: #ecfdf5;
+
+            --success: #059669;
+            --success-bg: #d1fae5;
+            --warning: #d97706;
+            --warning-bg: #fef3c7;
+            --danger: #dc2626;
+            --danger-bg: #fee2e2;
+            --info: #0284c7;
+            --info-bg: #e0f2fe;
+            --purple: #7c3aed;
+            --purple-bg: #ede9fe;
+
+            --radius: 14px;
+            --radius-sm: 8px;
+            --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 12px 24px -4px rgba(6, 78, 59, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.03);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #ecfdf5 0%, #f8fafc 400px, #f8fafc 100%);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #d1fae5;
+            padding: 0.85rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(6, 78, 59, 0.04);
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 0.9rem; text-decoration: none; }
+        .logo-badge {
+            background: linear-gradient(135deg, var(--forest-800) 0%, var(--forest-600) 100%);
+            color: #ffffff;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 10px rgba(4, 120, 87, 0.25);
+            border: 1px solid #34d399;
+        }
+
+        .header-title h1 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--forest-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .header-title p {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .nav-links { display: flex; align-items: center; gap: 0.35rem; }
+        .nav-item {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s ease;
+        }
+        .nav-item:hover { background: #ecfdf5; color: var(--forest-700); }
+        .nav-item.active { background: #d1fae5; color: var(--forest-800); font-weight: 700; }
+
+        .header-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+        .sensor-nav-pills {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: #f1f5f9;
+            padding: 3px 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .sensor-nav-link {
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 3px 8px;
+            border-radius: 5px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            transition: all 0.15s ease;
+        }
+        .sensor-nav-link:hover { background: var(--forest-50); color: var(--forest-700); border-color: var(--forest-400); }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.02em;
+        }
+        .status-pill.online { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulseGreen 1.6s infinite;
+        }
+        @keyframes pulseGreen {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.3rem 0.7rem;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .role-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; letter-spacing: 0.02em; }
+        .role-admin { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
+        .role-operator { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+        .role-viewer { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+        .btn-logout {
+            background: none;
+            border: 1px solid #cbd5e1;
+            padding: 0.3rem 0.65rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-logout:hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 4rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .page-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            background: #ffffff;
+            border: 1px solid var(--border-forest);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow-subtle);
+        }
+        .page-title-box h2 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--forest-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .page-title-box p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.2rem;
+        }
+
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.1rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            box-shadow: var(--shadow-subtle);
+            border-left: 4px solid var(--forest-600);
+        }
+        .metric-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; }
+        .metric-value { font-size: 1.7rem; font-weight: 800; color: var(--forest-900); font-family: 'JetBrains Mono', monospace; }
+        .metric-subtext { font-size: 0.72rem; color: var(--text-secondary); }
+
+        /* Section Card & Table */
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .section-header {
+            padding: 0.9rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fcfdfd;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .section-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--forest-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left; }
+        th {
+            background: #f8fafc;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-primary);
+        }
+        tbody tr:hover { background: #fafcfb; }
+
+        .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .badge-success { background: var(--success-bg); color: var(--success); }
+        .badge-warning { background: var(--warning-bg); color: #b45309; }
+        .badge-danger { background: var(--danger-bg); color: var(--danger); }
+        .badge-info { background: var(--info-bg); color: var(--info); }
+        .badge-purple { background: var(--purple-bg); color: var(--purple); }
+
+        .code-pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-action-sm {
+            background: #f1f5f9;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-action-sm:hover:not(:disabled) { background: #e2e8f0; color: var(--text-primary); }
+        .btn-action-sm:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="/" class="header-brand">
+            <div class="logo-badge">🌲</div>
+            <div class="header-title">
+                <h1>ForestWatch Operations Center</h1>
+                <p>Distributed Wildfire & Environmental Early Warning Network &bull; Central Controller (:8099)</p>
+            </div>
+        </a>
+
+        <!-- Navigation Links -->
+        <nav class="nav-links">
+            <a href="/" class="nav-item">Overview</a>
+            <a href="/monitoring" class="nav-item">Live Monitoring</a>
+            <a href="/sensors" class="nav-item">Sensors</a>
+            <a href="/alerts" class="nav-item">Alerts</a>
+            <a href="/reports" class="nav-item active">Reports</a>
+            <a href="/users" class="nav-item" id="navUserMgmt" style="display: none;">User Management</a>
+        </nav>
+
+        <div class="header-actions">
+            <div class="sensor-nav-pills">
+                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-right: 2px;">Nodes:</span>
+                <a href="http://localhost:8101" class="sensor-nav-link" title="Open Node S1 Console">S1</a>
+                <a href="http://localhost:8102" class="sensor-nav-link" title="Open Node S2 Console">S2</a>
+                <a href="http://localhost:8103" class="sensor-nav-link" title="Open Node S3 Console">S3</a>
+                <a href="http://localhost:8104" class="sensor-nav-link" title="Open Node S4 Console">S4</a>
+            </div>
+
+            <div class="status-pill online">
+                <div class="pulse-dot"></div>
+                <span>REPORTS & ARCHIVE (:8099)</span>
+            </div>
+
+            <!-- Profile & Role Badge -->
+            <div class="user-badge" id="userBadge">
+                <span id="userDisplayName">User</span>
+                <span class="role-tag role-viewer" id="userRoleBadge">VIEWER</span>
+            </div>
+
+            <!-- Sign Out -->
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="btn-logout" title="Sign out of ForestWatch">Sign Out</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="page-header-row">
+            <div class="page-title-box">
+                <h2>📊 Historical Reports & Cloud Architecture Archive</h2>
+                <p>Edge aggregated sliding window batches, durable AWS S3 cold telemetry storage, serverless alerts, and Kubernetes routing</p>
+            </div>
+            <div>
+                <span id="rbacNotice" style="font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); background: #f8fafc; padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--border-color);">
+                    Role: <strong id="rbacRoleLabel">VIEWER</strong>
+                </span>
+            </div>
+        </div>
+
+        <!-- Analytics Overview Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card" style="border-left-color: #059669;">
+                <span class="metric-title">Aggregated Batches</span>
+                <span class="metric-value" id="totalBatchesVal" style="color: #059669;">0</span>
+                <span class="metric-subtext">Received from edge coordinators</span>
+            </div>
+            <div class="metric-card" style="border-left-color: #0284c7;">
+                <span class="metric-title">AWS S3 Cold Objects</span>
+                <span class="metric-value" id="s3CountVal" style="color: #0284c7;">0</span>
+                <span class="metric-subtext">Durable S3 object archive</span>
+            </div>
+            <div class="metric-card" style="border-left-color: #d97706;">
+                <span class="metric-title">Serverless Runs</span>
+                <span class="metric-value" id="lambdaCountVal" style="color: #d97706;">0</span>
+                <span class="metric-subtext">AWS Lambda alert dispatches</span>
+            </div>
+            <div class="metric-card" style="border-left-color: #7c3aed;">
+                <span class="metric-title">K8s Routed Requests</span>
+                <span class="metric-value" id="lbRoutedVal" style="color: #7c3aed;">0</span>
+                <span class="metric-subtext">Layer 7 Round-Robin balancing</span>
+            </div>
+        </div>
+
+        <!-- Edge Aggregated Telemetry Batches -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">
+                    <span>📊</span>
+                    <span>Edge Aggregated Telemetry Batches</span>
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-secondary);">Sliding window summaries received from dynamic cluster coordinators</span>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Cluster Group</th>
+                            <th>Cluster Coordinator</th>
+                            <th>Sample Count</th>
+                            <th>Avg Temp (&deg;C)</th>
+                            <th>Min / Max Temp</th>
+                            <th>Avg Humidity</th>
+                            <th>Active Nodes</th>
+                            <th>Causal Vector Clock</th>
+                        </tr>
+                    </thead>
+                    <tbody id="aggregatedReadingsTableBody">
+                        <tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">Waiting for edge aggregation batches...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- AWS Cloud Infrastructure Section -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+            <!-- S3 Cold Object Store -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">
+                            <span>🪣 AWS S3 Cold Telemetry Object Store</span>
+                        </div>
+                        <span style="font-size: 0.72rem; color: var(--text-secondary);">Bucket: s3://forestwatch-telemetry-archive &bull; Region: us-east-1</span>
+                    </div>
+                    <button id="btnManualS3" class="btn-action-sm" onclick="syncS3Archive()" style="background:#0284c7;color:white;border-color:#0369a1;">
+                        📤 Sync to S3
+                    </button>
+                </div>
+                <div class="table-responsive" style="max-height: 280px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Object Key</th>
+                                <th>Cluster</th>
+                                <th>Size</th>
+                                <th>Vector Clock</th>
+                                <th>ETag</th>
+                            </tr>
+                        </thead>
+                        <tbody id="s3ArchiveTableBody">
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No S3 archive objects recorded.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AWS Lambda Invocations -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">
+                            <span>⚡ AWS Lambda Serverless Alert Invocations</span>
+                        </div>
+                        <span style="font-size: 0.72rem; color: var(--text-secondary);">Function: ForestWatchAlertDispatcher &bull; Python 3.12</span>
+                    </div>
+                    <button id="btnTriggerLambda" class="btn-action-sm" onclick="triggerLambda()" style="background:#d97706;color:white;border-color:#b45309;">
+                        ⚡ Invoke Lambda
+                    </button>
+                </div>
+                <div class="table-responsive" style="max-height: 280px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Trigger Event</th>
+                                <th>Cluster</th>
+                                <th>Latency</th>
+                                <th>Status</th>
+                                <th>Request ID</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lambdaInvocationTableBody">
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No serverless alert events triggered yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Layer 7 Load Balancing -->
+        <div class="section-card" style="border: 1px solid #a7f3d0;">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">
+                        <span>⚖️ Layer 7 Reverse Proxy & Kubernetes Pod Replicas</span>
+                        <span class="badge badge-success" id="lbHealthBadge">HEALTHY (2/2 Pods)</span>
+                    </div>
+                    <span style="font-size: 0.72rem; color: var(--text-secondary);">Round-Robin Layer 7 distribution across backend replicas</span>
+                </div>
+                <button id="btnDispatchLb" class="btn-action-sm" onclick="dispatchLb()" style="background:var(--forest-700);color:white;border-color:var(--forest-800);">
+                    🔄 Route via Load Balancer
+                </button>
+            </div>
+            <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                    <span>Total Routed Requests: <strong id="lbTotalRouted" style="font-family: 'JetBrains Mono', monospace;">0</strong></span>
+                    <span>Distribution: Pod Alpha: <strong id="podAlphaPercent">50%</strong> | Pod Beta: <strong id="podBetaPercent">50%</strong></span>
+                </div>
+                <div style="display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: #e2e8f0;">
+                    <div id="barPodAlpha" style="width: 50%; background: #059669; transition: width 0.3s;"></div>
+                    <div id="barPodBeta" style="width: 50%; background: #0284c7; transition: width 0.3s;"></div>
+                </div>
+                <div id="lbLastDispatchNotice" style="font-size: 0.75rem; padding: 0.5rem; background: #f8fafc; border-radius: 6px; border: 1px solid var(--border-color); color: var(--text-secondary);">
+                    Click <strong>[ Route via Load Balancer ]</strong> to test traffic distribution across Kubernetes pods.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentUserRole = 'VIEWER';
+
+        function getCookie(name) {
+            const val = `; ${document.cookie}`;
+            const parts = val.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        function formatVectorClock(vc) {
+            if (!vc) return '[S1:0, S2:0, S3:0, S4:0]';
+            let arr = [];
+            if (Array.isArray(vc)) {
+                arr = vc;
+            } else if (typeof vc === 'string') {
+                const cleaned = vc.replace(/[\[\]\s]/g, '');
+                const m = cleaned.split(',');
+                if (m.length === 4) arr = m.map(x => parseInt(x, 10) || 0); else return vc;
+            } else {
+                return String(vc);
+            }
+            return `[S1:${arr[0] || 0}, S2:${arr[1] || 0}, S3:${arr[2] || 0}, S4:${arr[3] || 0}]`;
+        }
+
+        async function fetchAggregatedReadings() {
+            try {
+                const res = await fetch('/api/aggregated-readings');
+                if (!res.ok) return;
+                const list = await res.json();
+                const tbody = document.getElementById('aggregatedReadingsTableBody');
+                document.getElementById('totalBatchesVal').innerText = list ? list.length : 0;
+
+                if (!tbody) return;
+                if (!list || list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">Waiting for edge aggregation batches...</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = list.map(item => {
+                    const time = new Date(item.timestamp).toLocaleTimeString();
+                    return `
+                        <tr>
+                            <td><span style="font-family:'JetBrains Mono',monospace;">${time}</span></td>
+                            <td><span class="badge badge-info">${item.clusterId}</span></td>
+                            <td><strong>${item.clusterHeadId}</strong></td>
+                            <td><span class="code-pill">${item.sampleCount} samples</span></td>
+                            <td><strong>${item.avgTemperature.toFixed(1)}&deg;C</strong></td>
+                            <td>${item.minTemperature.toFixed(1)}&deg;C / ${item.maxTemperature.toFixed(1)}&deg;C</td>
+                            <td>${item.avgHumidity.toFixed(1)}%</td>
+                            <td>${item.activeSensorsCount} nodes</td>
+                            <td><span class="code-pill">${formatVectorClock(item.vectorClock)}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error fetching aggregated readings:', err);
+            }
+        }
+
+        async function fetchAwsStatus() {
+            try {
+                const res = await fetch('/api/aws/status');
+                if (!res.ok) return;
+                const aws = await res.json();
+
+                document.getElementById('s3CountVal').innerText = aws.s3TotalObjects || 0;
+                document.getElementById('lambdaCountVal').innerText = aws.lambdaTotalRuns || 0;
+
+                // S3 table
+                const s3Tbody = document.getElementById('s3ArchiveTableBody');
+                if (s3Tbody && aws.recentS3Archives) {
+                    if (aws.recentS3Archives.length === 0) {
+                        s3Tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No S3 archive objects recorded.</td></tr>';
+                    } else {
+                        s3Tbody.innerHTML = aws.recentS3Archives.slice(0, 10).map(a => {
+                            const time = new Date(a.timestamp).toLocaleTimeString();
+                            return `
+                                <tr>
+                                    <td><span style="font-family:'JetBrains Mono',monospace;">${time}</span></td>
+                                    <td><span class="code-pill">${a.objectKey}</span></td>
+                                    <td><span class="badge badge-info">${a.clusterId}</span></td>
+                                    <td>${a.sizeBytes} B</td>
+                                    <td><span class="code-pill">${formatVectorClock(a.vectorClock)}</span></td>
+                                    <td><span class="code-pill">${a.etag || '--'}</span></td>
+                                </tr>
+                            `;
+                        }).join('');
+                    }
+                }
+
+                // Lambda table
+                const lTbody = document.getElementById('lambdaInvocationTableBody');
+                if (lTbody && aws.recentLambdaInvocations) {
+                    if (aws.recentLambdaInvocations.length === 0) {
+                        lTbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No serverless alert events triggered yet.</td></tr>';
+                    } else {
+                        lTbody.innerHTML = aws.recentLambdaInvocations.slice(0, 10).map(inv => {
+                            const time = new Date(inv.timestamp).toLocaleTimeString();
+                            return `
+                                <tr>
+                                    <td><span style="font-family:'JetBrains Mono',monospace;">${time}</span></td>
+                                    <td><strong style="color:#d97706;">${inv.triggerEvent}</strong></td>
+                                    <td><span class="badge badge-info">${inv.clusterId}</span></td>
+                                    <td><span class="code-pill">${inv.executionTimeMs} ms</span></td>
+                                    <td><span class="badge badge-success">${inv.status}</span></td>
+                                    <td><span class="code-pill">${inv.requestId || '--'}</span></td>
+                                </tr>
+                            `;
+                        }).join('');
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching AWS status:', err);
+            }
+        }
+
+        async function fetchLbStats() {
+            try {
+                const res = await fetch('/api/load-balancer/stats');
+                if (!res.ok) return;
+                const lb = await res.json();
+
+                document.getElementById('lbRoutedVal').innerText = lb.totalRoutedRequests || 0;
+                document.getElementById('lbTotalRouted').innerText = lb.totalRoutedRequests || 0;
+
+                const aCount = lb.podAlphaRequests || 0;
+                const bCount = lb.podBetaRequests || 0;
+                const sum = aCount + bCount;
+                const aPct = sum > 0 ? Math.round((aCount / sum) * 100) : 50;
+                const bPct = sum > 0 ? (100 - aPct) : 50;
+
+                document.getElementById('podAlphaPercent').innerText = aPct + '% (' + aCount + ')';
+                document.getElementById('podBetaPercent').innerText = bPct + '% (' + bCount + ')';
+                document.getElementById('barPodAlpha').style.width = aPct + '%';
+                document.getElementById('barPodBeta').style.width = bPct + '%';
+            } catch (err) {
+                console.error('Error fetching LB stats:', err);
+            }
+        }
+
+        async function syncS3Archive() {
+            const csrfToken = getCookie('FW_CENTRAL_XSRF') || getCookie('XSRF-TOKEN');
+            try {
+                const res = await fetch('/api/aws/s3-archive', {
+                    method: 'POST',
+                    headers: { 'X-XSRF-TOKEN': csrfToken || '' }
+                });
+                if (res.ok) {
+                    await fetchAwsStatus();
+                } else if (res.status === 403) {
+                    alert('Permission Denied: Viewer role cannot sync S3 archives.');
+                }
+            } catch (e) { console.error('S3 sync error:', e); }
+        }
+
+        async function triggerLambda() {
+            const csrfToken = getCookie('FW_CENTRAL_XSRF') || getCookie('XSRF-TOKEN');
+            try {
+                const res = await fetch('/api/aws/trigger-lambda', {
+                    method: 'POST',
+                    headers: { 'X-XSRF-TOKEN': csrfToken || '' }
+                });
+                if (res.ok) {
+                    await fetchAwsStatus();
+                } else if (res.status === 403) {
+                    alert('Permission Denied: Viewer role cannot trigger Lambda alerts.');
+                }
+            } catch (e) { console.error('Lambda trigger error:', e); }
+        }
+
+        async function dispatchLb() {
+            try {
+                const res = await fetch('/api/load-balancer/dispatch');
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('lbLastDispatchNotice').innerHTML =
+                        `Routed to <strong>${data.routedPod}</strong> (${data.podIp}) &bull; Request #${data.requestNumber} &bull; Latency: ${data.latencyMs}ms`;
+                    await fetchLbStats();
+                } else if (res.status === 403) {
+                    alert('Permission Denied: Viewer role cannot dispatch LB requests.');
+                }
+            } catch (e) { console.error('LB dispatch error:', e); }
+        }
+
+        async function checkCurrentUser() {
+            try {
+                const res = await fetch('/api/auth/me');
+                if (!res.ok) return;
+                const user = await res.json();
+
+                currentUserRole = user.role || 'VIEWER';
+                const nameEl = document.getElementById('userDisplayName');
+                const badgeEl = document.getElementById('userRoleBadge');
+                const navMgmt = document.getElementById('navUserMgmt');
+                const roleLabel = document.getElementById('rbacRoleLabel');
+
+                if (nameEl) nameEl.textContent = user.displayName || user.username;
+                if (badgeEl) {
+                    badgeEl.textContent = currentUserRole;
+                    badgeEl.className = 'role-tag ' + (
+                        currentUserRole === 'ADMINISTRATOR' ? 'role-admin' :
+                        currentUserRole === 'FOREST_OPERATOR' ? 'role-operator' : 'role-viewer'
+                    );
+                }
+
+                if (roleLabel) roleLabel.innerText = currentUserRole;
+
+                if (navMgmt && currentUserRole === 'ADMINISTRATOR') {
+                    navMgmt.style.display = 'inline-block';
+                }
+
+                // If viewer, disable operational buttons
+                if (currentUserRole === 'VIEWER') {
+                    const s3Btn = document.getElementById('btnManualS3');
+                    const lambdaBtn = document.getElementById('btnTriggerLambda');
+                    const lbBtn = document.getElementById('btnDispatchLb');
+                    if (s3Btn) { s3Btn.disabled = true; s3Btn.title = 'Viewer cannot sync S3'; }
+                    if (lambdaBtn) { lambdaBtn.disabled = true; lambdaBtn.title = 'Viewer cannot trigger Lambda'; }
+                    if (lbBtn) { lbBtn.disabled = true; lbBtn.title = 'Viewer cannot dispatch LB'; }
+                }
+            } catch (e) {
+                console.error('Auth verification error:', e);
+            }
+        }
+
+        checkCurrentUser();
+        fetchAggregatedReadings();
+        fetchAwsStatus();
+        fetchLbStats();
+        setInterval(fetchAggregatedReadings, 3000);
+        setInterval(fetchAwsStatus, 4000);
+        setInterval(fetchLbStats, 4000);
+    </script>
+</body>
+</html>

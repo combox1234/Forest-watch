@@ -6,7 +6,7 @@ metadata:
   labels:
     app: central-server
 spec:
-  replicas: 2 # 2 Replicas to demonstrate horizontal scaling & round-robin load balancing
+  replicas: 2
   selector:
     matchLabels:
       app: central-server
@@ -20,8 +20,16 @@ spec:
           image: central-server:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8000
+            - containerPort: 8099
+              name: http
           env:
+            - name: SERVER_PORT
+              value: "8099"
+            - name: FORESTWATCH_SECURITY_SERVICE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ds-secrets
+                  key: FORESTWATCH_SECURITY_SERVICE_KEY
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://postgres:5432/sensordb"
             - name: SPRING_DATASOURCE_USERNAME
@@ -51,23 +59,25 @@ spec:
                   key: AWS_LAMBDA_FUNCTION
           livenessProbe:
             httpGet:
-              path: /api/system-status
-              port: 8000
-            initialDelaySeconds: 20
+              path: /actuator/health
+              port: 8099
+            initialDelaySeconds: 25
             periodSeconds: 10
+            timeoutSeconds: 3
           readinessProbe:
             httpGet:
-              path: /api/system-status
-              port: 8000
-            initialDelaySeconds: 10
+              path: /actuator/health
+              port: 8099
+            initialDelaySeconds: 15
             periodSeconds: 5
+            timeoutSeconds: 3
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "150m"
+              memory: "192Mi"
+              cpu: "100m"
             limits:
-              memory: "512Mi"
-              cpu: "600m"
+              memory: "384Mi"
+              cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
@@ -77,8 +87,8 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - port: 8000
-      targetPort: 8000
+    - port: 8099
+      targetPort: 8099
       name: http
   selector:
     app: central-server

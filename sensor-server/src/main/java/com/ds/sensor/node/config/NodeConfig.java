@@ -26,7 +26,7 @@ public class NodeConfig {
     @Value("${node.peers:}")
     private String peersString;
 
-    @Value("${node.central-url:http://localhost:8000}")
+    @Value("${node.central-url:http://localhost:8099}")
     private String centralUrl;
 
     @Value("${node.is-initial-leader:false}")

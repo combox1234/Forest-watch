@@ -32,9 +32,13 @@ kubectl apply -f k8s\03-central-server.yaml
 kubectl apply -f k8s\04-sensor-nodes.yaml
 
 echo.
-echo [4/4] Deploying Layer 7 Load Balancer ^& Autoscaler (HPA)...
+echo [4/5] Deploying Layer 7 Load Balancer ^& Autoscaler (HPA)...
 kubectl apply -f k8s\05-load-balancer.yaml
 kubectl apply -f k8s\06-hpa.yaml
+
+echo.
+echo [5/5] Deploying Prometheus ^& Grafana Observability...
+kubectl apply -f k8s\07-monitoring.yaml
 
 echo.
 echo ==========================================================
@@ -52,8 +56,9 @@ echo.
 echo ==========================================================
 echo How to access:
 echo If using Docker Desktop / Minikube:
-echo   Run: kubectl port-forward svc/ds-load-balancer 8000:8000 -n ds-sensor-network
+echo   Run: kubectl port-forward svc/ds-load-balancer 8099:8099 -n ds-sensor-network
 echo Then open in browser:
-echo   http://localhost:8000
+echo   http://localhost:8099
+echo   Grafana: kubectl port-forward svc/grafana-svc 3000:3000 -n ds-sensor-network -> http://localhost:3000
 echo ==========================================================
 pause

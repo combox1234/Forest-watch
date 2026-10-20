@@ -3,504 +3,475 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Central Server Dashboard | Distributed Environmental Sensor Network</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>ForestWatch Operations Center | System Overview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #f8fafc;
+            --forest-900: #022c22;
+            --forest-800: #064e3b;
+            --forest-700: #047857;
+            --forest-600: #059669;
+            --forest-500: #10b981;
+            --forest-400: #34d399;
+            --forest-100: #d1fae5;
+            --forest-50:  #ecfdf5;
+
+            --bg-primary: #f0fdf4;
+            --bg-canvas: #f8fafc;
             --bg-card: #ffffff;
-            --bg-card-hover: #f1f5f9;
+            --bg-card-hover: #fcfdfd;
             --border-color: #e2e8f0;
+            --border-forest: #a7f3d0;
+
             --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --success: #16a34a;
-            --success-bg: #dcfce7;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+
+            --primary: #047857;
+            --primary-hover: #065f46;
+            --primary-light: #ecfdf5;
+
+            --success: #059669;
+            --success-bg: #d1fae5;
             --warning: #d97706;
             --warning-bg: #fef3c7;
             --danger: #dc2626;
             --danger-bg: #fee2e2;
+            --info: #0284c7;
+            --info-bg: #e0f2fe;
             --purple: #7c3aed;
             --purple-bg: #ede9fe;
-            --radius: 12px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+
+            --radius: 14px;
+            --radius-sm: 8px;
+            --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 12px 24px -4px rgba(6, 78, 59, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.03);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #ecfdf5 0%, #f8fafc 400px, #f8fafc 100%);
             color: var(--text-primary);
             line-height: 1.5;
-            padding: 0;
+            min-height: 100vh;
         }
 
+        /* Top Header */
         header {
-            background: #ffffff;
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #d1fae5;
+            padding: 0.85rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: var(--shadow);
+            box-shadow: 0 2px 8px rgba(6, 78, 59, 0.04);
         }
 
-        .header-brand {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
+        .header-brand { display: flex; align-items: center; gap: 0.9rem; text-decoration: none; }
         .logo-badge {
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            background: linear-gradient(135deg, var(--forest-800) 0%, var(--forest-600) 100%);
             color: #ffffff;
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
-            font-size: 1.2rem;
+            font-weight: 800;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 10px rgba(4, 120, 87, 0.25);
+            border: 1px solid #34d399;
         }
 
         .header-title h1 {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--forest-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.01em;
         }
 
         .header-title p {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: var(--text-secondary);
+            font-weight: 500;
         }
 
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.35rem 0.8rem;
-            border-radius: 9999px;
+        .nav-links { display: flex; align-items: center; gap: 0.35rem; }
+        .nav-item {
             font-size: 0.8rem;
             font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s ease;
         }
+        .nav-item:hover { background: #ecfdf5; color: var(--forest-700); }
+        .nav-item.active { background: #d1fae5; color: var(--forest-800); font-weight: 700; }
 
-        .status-pill.online {
-            background: var(--success-bg);
-            color: var(--success);
+        .header-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+        .sensor-nav-pills {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: #f1f5f9;
+            padding: 3px 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
         }
+        .sensor-nav-link {
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 3px 8px;
+            border-radius: 5px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            transition: all 0.15s ease;
+        }
+        .sensor-nav-link:hover { background: var(--forest-50); color: var(--forest-700); border-color: var(--forest-400); }
 
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.02em;
+        }
+        .status-pill.online { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
         .pulse-dot {
             width: 8px;
             height: 8px;
+            background: #10b981;
             border-radius: 50%;
-            background-color: currentColor;
-            animation: pulse 2s infinite;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulseGreen 1.6s infinite;
+        }
+        @keyframes pulseGreen {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.2); }
-            100% { opacity: 1; transform: scale(1); }
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.3rem 0.7rem;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
         }
+        .role-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; letter-spacing: 0.02em; }
+        .role-admin { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
+        .role-operator { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+        .role-viewer { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
 
+        .btn-logout {
+            background: none;
+            border: 1px solid #cbd5e1;
+            padding: 0.3rem 0.65rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-logout:hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+
+        /* Container */
         .container {
-            max-width: 1440px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 1.75rem 2rem 3rem 2rem;
+            padding: 1.5rem 2rem 4rem 2rem;
             display: flex;
             flex-direction: column;
-            gap: 1.75rem;
+            gap: 1.5rem;
         }
 
-        /* Metrics Bar */
+        /* Top Metrics Row */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1rem;
         }
-
         .metric-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
-            padding: 1.25rem;
-            box-shadow: var(--shadow);
+            padding: 1rem 1.15rem;
             display: flex;
             flex-direction: column;
-            gap: 0.4rem;
-            transition: transform 0.2s, box-shadow 0.2s;
+            gap: 0.25rem;
+            box-shadow: var(--shadow-subtle);
+            border-left: 4px solid var(--forest-600);
         }
-
-        .metric-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .metric-title {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-
-        .metric-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .metric-subtext {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
+        .metric-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; }
+        .metric-value { font-size: 1.55rem; font-weight: 800; color: var(--forest-900); font-family: 'JetBrains Mono', monospace; }
+        .metric-subtext { font-size: 0.7rem; color: var(--text-secondary); }
 
         .vector-clock-box {
-            background: #0f172a;
-            color: #38bdf8;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 1.1rem;
-            font-weight: 600;
-            letter-spacing: 1px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.3rem 0.5rem;
+            color: var(--forest-800);
             display: inline-block;
         }
 
-        /* Clusters Layout */
-        .clusters-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-        }
-
-        @media (max-width: 900px) {
-            .clusters-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .cluster-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-        }
-
-        .cluster-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.75rem;
-        }
-
-        .cluster-name {
-            font-size: 1.1rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .cluster-ch-badge {
-            background: var(--purple-bg);
-            color: var(--purple);
-            padding: 0.25rem 0.6rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            border: 1px solid #ddd6fe;
-        }
-
-        .nodes-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .node-box {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            transition: all 0.2s;
-        }
-
-        .node-box.active {
-            border-left: 4px solid var(--success);
-        }
-
-        .node-box.failed {
-            border-left: 4px solid var(--danger);
-            background: #fff5f5;
-        }
-
-        .node-box.suspected {
-            border-left: 4px solid var(--warning);
-            background: #fffbeb;
-        }
-
-        .node-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .node-id {
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-
-        .node-role-tag {
-            font-size: 0.7rem;
-            padding: 0.15rem 0.5rem;
-            border-radius: 4px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .node-role-tag.ch {
-            background: var(--purple);
-            color: #ffffff;
-        }
-
-        .node-role-tag.sensor {
-            background: #e2e8f0;
-            color: var(--text-secondary);
-        }
-
-        .node-detail {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .node-link {
-            display: inline-block;
-            margin-top: 0.5rem;
-            padding: 0.35rem 0.6rem;
-            background: #ffffff;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--primary);
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-decoration: none;
-            text-align: center;
-            transition: background 0.2s;
-        }
-
-        .node-link:hover {
-            background: #eff6ff;
-            border-color: #bfdbfe;
-        }
-
-        /* Tables & Tabs */
+        /* Topology Panel */
         .section-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-
         .section-header {
-            padding: 1rem 1.5rem;
-            background: #ffffff;
+            padding: 0.9rem 1.25rem;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: #fcfdfd;
         }
-
         .section-title {
-            font-size: 1rem;
+            font-size: 0.92rem;
             font-weight: 700;
+            color: var(--forest-900);
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .table-responsive {
-            max-height: 380px;
-            overflow-y: auto;
+        .topology-panel {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            background: #ffffff;
         }
-
-        table {
+        .topology-svg-wrap {
             width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-            text-align: left;
+            height: auto;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
+        .link-flow { stroke-dasharray: 6 3; animation: flowDash 1.2s linear infinite; }
+        .link-failover { stroke-dasharray: 8 4; animation: failoverDash 0.8s linear infinite; }
+        @keyframes flowDash { to { stroke-dashoffset: -18; } }
+        @keyframes failoverDash { to { stroke-dashoffset: -24; } }
+        @keyframes pulseLeader {
+            0%, 100% { stroke-width: 2.5; stroke: #059669; }
+            50% { stroke-width: 4; stroke: #10b981; filter: drop-shadow(0 0 4px #10b981); }
+        }
+        .pulse-leader { animation: pulseLeader 1.8s ease-in-out infinite; }
+
+        .topo-status-bar {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+        .topo-status-bar.alert { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+        .topo-status-bar.failover { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+
+        /* Overview Split Grid */
+        .overview-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+        @media (max-width: 900px) { .overview-split { grid-template-columns: 1fr; } }
+
+        /* Quick Cluster Summaries */
+        .cluster-quick-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.15rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            box-shadow: var(--shadow-subtle);
+        }
+        .cluster-quick-head { display: flex; justify-content: space-between; align-items: center; }
+        .cluster-quick-name { font-size: 0.95rem; font-weight: 800; color: var(--forest-900); }
+
+        .cluster-quick-nodes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        .mini-node-pill {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            padding: 0.65rem 0.85rem;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .mini-node-pill.active { border-left: 3px solid var(--success); }
+        .mini-node-pill.failed { border-left: 3px solid var(--danger); }
+
+        /* Table */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left; }
         th {
             background: #f8fafc;
+            padding: 0.65rem 1rem;
             color: var(--text-secondary);
             font-weight: 600;
-            padding: 0.75rem 1rem;
-            position: sticky;
-            top: 0;
             border-bottom: 1px solid var(--border-color);
-            z-index: 10;
+            white-space: nowrap;
         }
-
         td {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--border-color);
+            padding: 0.65rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
             color: var(--text-primary);
         }
+        tbody tr:hover { background: #fafcfb; }
 
-        tr:hover {
-            background: #f8fafc;
-        }
+        .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .badge-success { background: var(--success-bg); color: var(--success); }
+        .badge-warning { background: var(--warning-bg); color: #b45309; }
+        .badge-danger { background: var(--danger-bg); color: var(--danger); }
+        .badge-info { background: var(--info-bg); color: var(--info); }
+        .badge-purple { background: var(--purple-bg); color: var(--purple); }
 
         .code-pill {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             background: #f1f5f9;
-            padding: 0.2rem 0.45rem;
+            padding: 2px 6px;
             border-radius: 4px;
-            color: #0f172a;
+            color: var(--text-secondary);
+            border: 1px solid #e2e8f0;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 600;
+        .view-all-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--forest-700);
+            text-decoration: none;
+            transition: color 0.15s ease;
         }
-
-        .badge-info { background: #e0f2fe; color: #0369a1; }
-        .badge-warning { background: var(--warning-bg); color: var(--warning); }
-        .badge-danger { background: var(--danger-bg); color: var(--danger); }
-        .badge-success { background: var(--success-bg); color: var(--success); }
-        .badge-purple { background: var(--purple-bg); color: var(--purple); }
-
-        /* Two columns grid for logs */
-        .logs-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-
-        @media (max-width: 900px) {
-            .logs-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .visual-section{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
-        @media(max-width:1100px){.visual-section{grid-template-columns:1fr}}
-        .topology-panel{padding:1rem;display:flex;flex-direction:column;align-items:center;gap:.75rem}
-        .topology-svg-wrap{width:100%;max-width:520px;height:auto}
-        @keyframes flowDash{to{stroke-dashoffset:-20}}
-        @keyframes pulseLeader{0%,100%{stroke-width:2.5}50%{stroke-width:4.2}}
-        .link-flow{stroke-dasharray:6 4;animation:flowDash 1.2s linear infinite}
-        .link-failover{stroke-dasharray:6 3;animation:flowDash .7s linear infinite;filter:drop-shadow(0 0 4px #2563eb)}
-        .pulse-leader{animation:pulseLeader 1.8s ease-in-out infinite}
-        .topo-status-bar{width:100%;padding:.55rem .85rem;border-radius:8px;font-size:.75rem;font-weight:500;display:flex;align-items:center;gap:.4rem;transition:all .3s;background:#f8fafc;border:1px solid var(--border-color);color:var(--text-secondary)}
-        .topo-status-bar.alert{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
-        .topo-status-bar.failover{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
-        .telemetry-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:1rem}
-        .telemetry-card{background:var(--bg-primary);border:1px solid var(--border-color);border-radius:10px;padding:1rem;display:flex;flex-direction:column;gap:.65rem;transition:all .25s;position:relative;overflow:hidden}
-        .telemetry-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;transition:background .4s}
-        .telemetry-card.s-active::before{background:var(--success)}
-        .telemetry-card.s-suspected::before{background:var(--warning)}
-        .telemetry-card.s-failed{background:#fff8f8;border-color:#fecaca}
-        .telemetry-card.s-failed::before{background:var(--danger)}
-        .tc-head{display:flex;justify-content:space-between;align-items:center}
-        .tc-node-id{font-weight:700;font-size:1rem}
-        .tc-badge{font-size:.65rem;font-weight:700;padding:.2rem .45rem;border-radius:4px;text-transform:uppercase}
-        .tc-badge.active{background:var(--success-bg);color:var(--success)}
-        .tc-badge.suspected{background:var(--warning-bg);color:var(--warning)}
-        .tc-badge.failed{background:var(--danger-bg);color:var(--danger)}
-        .tc-role{font-size:.7rem;color:var(--text-muted)}
-        .tc-role.ch{color:var(--purple);font-weight:600}
-        .tc-gauges{display:flex;flex-direction:column;gap:.42rem}
-        .gauge-row{display:flex;flex-direction:column;gap:.12rem}
-        .gauge-lbl{display:flex;justify-content:space-between;font-size:.72rem;color:var(--text-secondary)}
-        .gauge-bg{height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden}
-        .gauge-fill{height:100%;border-radius:99px;transition:width .6s ease}
-        .gauge-temp{background:linear-gradient(90deg,#3b82f6,#ef4444)}
-        .gauge-humid{background:linear-gradient(90deg,#06b6d4,#2563eb)}
-        .gauge-bat{background:linear-gradient(90deg,#ef4444,#16a34a)}
-        .tc-motion{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;font-weight:600;padding:.2rem .5rem;border-radius:4px;width:fit-content}
-        .tc-motion.detected{background:#fef3c7;color:#d97706}
-        .tc-motion.clear{background:#f0fdf4;color:#16a34a}
-        .tc-hb{font-size:.7rem;color:var(--text-muted)}
+        .view-all-link:hover { color: var(--forest-900); text-decoration: underline; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="header-brand">
-            <div class="logo-badge">DS</div>
+        <a href="/" class="header-brand">
+            <div class="logo-badge">🌲</div>
             <div class="header-title">
-                <h1>Distributed Environmental Sensor Network</h1>
-                <p>Central Coordinator & Global State Monitor (:8000)</p>
+                <h1>ForestWatch Operations Center</h1>
+                <p>Distributed Wildfire & Environmental Early Warning Network &bull; Central Controller (:8099)</p>
             </div>
-        </div>
+        </a>
+
+        <!-- Navigation Links -->
+        <nav class="nav-links">
+            <a href="/" class="nav-item active">Overview</a>
+            <a href="/monitoring" class="nav-item">Live Monitoring</a>
+            <a href="/sensors" class="nav-item">Sensors</a>
+            <a href="/alerts" class="nav-item">Alerts</a>
+            <a href="/reports" class="nav-item">Reports</a>
+            <a href="/users" class="nav-item" id="navUserMgmt" style="display: none;">User Management</a>
+        </nav>
+
         <div class="header-actions">
+            <div class="sensor-nav-pills">
+                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-right: 2px;">Nodes:</span>
+                <a href="http://localhost:8101" class="sensor-nav-link" title="Open Node S1 Console">S1</a>
+                <a href="http://localhost:8102" class="sensor-nav-link" title="Open Node S2 Console">S2</a>
+                <a href="http://localhost:8103" class="sensor-nav-link" title="Open Node S3 Console">S3</a>
+                <a href="http://localhost:8104" class="sensor-nav-link" title="Open Node S4 Console">S4</a>
+            </div>
+
             <div class="status-pill online">
                 <div class="pulse-dot"></div>
-                <span>CENTRAL ACTIVE</span>
+                <span>OPERATIONAL (:8099)</span>
             </div>
-            <span style="font-size: 0.8rem; color: var(--text-secondary);" id="clockDisplay">--:--:--</span>
+
+            <!-- Profile & Role Badge -->
+            <div class="user-badge" id="userBadge">
+                <span id="userDisplayName">User</span>
+                <span class="role-tag role-viewer" id="userRoleBadge">VIEWER</span>
+            </div>
+
+            <!-- Sign Out -->
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="btn-logout" title="Sign out of ForestWatch">Sign Out</button>
+            </form>
         </div>
     </header>
 
     <div class="container">
 
-        <!-- Metrics Row -->
+        <!-- Top Metrics Row -->
         <div class="metrics-grid">
             <div class="metric-card">
-                <span class="metric-title">Sensors Topology</span>
+                <span class="metric-title">Sensor Nodes</span>
                 <span class="metric-value" id="activeSensorsDisplay">4 / 4</span>
-                <span class="metric-subtext">Active / Total Nodes</span>
+                <span class="metric-subtext">Active / Total Field Nodes</span>
             </div>
             <div class="metric-card">
-                <span class="metric-title">Active Clusters</span>
+                <span class="metric-title">Monitoring Clusters</span>
                 <span class="metric-value" id="clustersDisplay">2 / 2</span>
-                <span class="metric-subtext">C1 (Canopy) & C2 (Basin)</span>
+                <span class="metric-subtext">Canopy (C1) & River Basin (C2)</span>
             </div>
             <div class="metric-card">
-                <span class="metric-title">Cluster Heads</span>
+                <span class="metric-title">Cluster Coordinators</span>
                 <span class="metric-value" id="chDisplay">2 Active</span>
                 <span class="metric-subtext">Dynamic Bully Leaders</span>
             </div>
             <div class="metric-card">
                 <span class="metric-title">Edge Batches</span>
                 <span class="metric-value" id="batchesDisplay">0</span>
-                <span class="metric-subtext">Aggregated Readings Received</span>
+                <span class="metric-subtext">Aggregated Batches</span>
             </div>
             <div class="metric-card">
                 <span class="metric-title">Deduplicated Alerts</span>
@@ -508,524 +479,179 @@
                 <span class="metric-subtext">Mutex Coordinated Alerts</span>
             </div>
             <div class="metric-card">
-                <span class="metric-title">AWS S3 Archives</span>
+                <span class="metric-title">Cloud S3 Archives</span>
                 <span class="metric-value" id="s3MetricDisplay" style="color: #0284c7;">0</span>
-                <span class="metric-subtext">Distributed Object Store</span>
+                <span class="metric-subtext">Durable Object Store</span>
             </div>
             <div class="metric-card">
-                <span class="metric-title">AWS Lambda Runs</span>
+                <span class="metric-title">Serverless Runs</span>
                 <span class="metric-value" id="lambdaMetricDisplay" style="color: #d97706;">0</span>
-                <span class="metric-subtext">Serverless Alert Dispatcher</span>
+                <span class="metric-subtext">Emergency Dispatchers</span>
             </div>
-            <div class="metric-card" style="grid-column: span 1;">
+            <div class="metric-card">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span class="metric-title">Global Causal Frontier</span>
-                    <button id="btnResetVcTop" title="Reset all vector clocks to [0,0,0,0]" style="background: #f1f5f9; border: 1px solid var(--border-color); color: var(--text-secondary); border-radius: 4px; font-size: 0.68rem; padding: 1px 6px; cursor: pointer; font-weight: 500;">↺ Reset</button>
+                    <button id="btnResetVcTop" onclick="resetVectorClocks()" title="Reset all vector clocks to [0,0,0,0]" style="background: #f1f5f9; border: 1px solid var(--border-color); color: var(--text-secondary); border-radius: 4px; font-size: 0.68rem; padding: 2px 7px; cursor: pointer; font-weight: 600;">↺ Reset</button>
                 </div>
-                <div class="vector-clock-box" id="globalVcDisplay" style="font-size: 0.92rem; letter-spacing: 0.5px; padding: 0.35rem 0.6rem;">[S1:0, S2:0, S3:0, S4:0]</div>
-                <span class="metric-subtext">Logical Vector Clock [S1, S2, S3, S4]</span>
+                <div class="vector-clock-box" id="globalVcDisplay">[S1:0, S2:0, S3:0, S4:0]</div>
+                <span class="metric-subtext">Vector Clock [S1, S2, S3, S4]</span>
             </div>
         </div>
 
-
-        <!-- GRAPHICAL: Topology Map + Telemetry Cards -->
-        <div class="visual-section">
-            <div class="section-card">
-                <div class="section-header">
-                    <div class="section-title">Live Network Topology Map</div>
-                    <span style="font-size:.75rem;color:var(--text-secondary)">Node status and cluster links</span>
-                </div>
-                <div class="topology-panel">
-                    <svg id="topoSvg" viewBox="0 0 500 310" class="topology-svg-wrap" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <pattern id="tgrid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0L0 0 0 20" fill="none" stroke="#e2e8f0" stroke-width="0.5"/></pattern>
-                            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-                            <filter id="redGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-                        </defs>
-                        <rect width="500" height="310" fill="url(#tgrid)" rx="10" opacity="0.6"/>
-
-                        <!-- Cluster 1 Box -->
-                        <rect id="box-c1" x="12" y="92" width="226" height="178" rx="8" fill="#f8fafc" stroke="#d1d5db" stroke-width="1.2" opacity="0.9"/>
-                        <text id="title-c1" x="125" y="110" text-anchor="middle" fill="#475569" font-size="8" font-family="Inter,sans-serif" font-weight="700">C1: Alpha Forest Canopy</text>
-                        <text id="badge-c1" x="125" y="122" text-anchor="middle" fill="#16a34a" font-size="7" font-family="Inter,sans-serif" font-weight="600">● Normal — Head: S2</text>
-                        <text id="lbl-failover-c1" x="125" y="134" text-anchor="middle" fill="#2563eb" font-size="6.8" font-family="Inter,sans-serif" font-weight="700" style="display:none">⚡ FAILOVER REROUTED TO S1</text>
-
-                        <!-- Cluster 2 Box -->
-                        <rect id="box-c2" x="262" y="92" width="226" height="178" rx="8" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1.2" opacity="0.9"/>
-                        <text id="title-c2" x="375" y="110" text-anchor="middle" fill="#0369a1" font-size="8" font-family="Inter,sans-serif" font-weight="700">C2: Beta River Basin</text>
-                        <text id="badge-c2" x="375" y="122" text-anchor="middle" fill="#16a34a" font-size="7" font-family="Inter,sans-serif" font-weight="600">● Normal — Head: S4</text>
-                        <text id="lbl-failover-c2" x="375" y="134" text-anchor="middle" fill="#2563eb" font-size="6.8" font-family="Inter,sans-serif" font-weight="700" style="display:none">⚡ FAILOVER REROUTED TO S3</text>
-
-                        <!-- Connection Links Cluster 1 -->
-                        <line id="link-c-s2"  x1="235" y1="56" x2="155" y2="152" stroke="#16a34a" stroke-width="2.5" class="link-flow" opacity="0.9"/>
-                        <line id="link-c-s1"  x1="228" y1="60" x2="72"  y2="218" stroke="#2563eb" stroke-width="2.8" class="link-failover" style="display:none" opacity="0"/>
-                        <line id="link-s2-s1" x1="135" y1="184" x2="76"  y2="220" stroke="#16a34a" stroke-width="1.8" class="link-flow" opacity="0.8"/>
-
-                        <!-- Connection Links Cluster 2 -->
-                        <line id="link-c-s4"  x1="265" y1="56" x2="345" y2="152" stroke="#16a34a" stroke-width="2.5" class="link-flow" opacity="0.9"/>
-                        <line id="link-c-s3"  x1="272" y1="60" x2="428" y2="218" stroke="#2563eb" stroke-width="2.8" class="link-failover" style="display:none" opacity="0"/>
-                        <line id="link-s4-s3" x1="365" y1="184" x2="424" y2="220" stroke="#16a34a" stroke-width="1.8" class="link-flow" opacity="0.8"/>
-
-                        <!-- Central Server Node -->
-                        <circle cx="250" cy="48" r="32" fill="#1e293b" opacity="0.08" filter="url(#glow)"/>
-                        <circle cx="250" cy="48" r="23" fill="#1e293b"/>
-                        <circle cx="250" cy="48" r="27" fill="none" stroke="#2563eb" stroke-width="2.5"/>
-                        <text x="250" y="44" text-anchor="middle" fill="#fff" font-size="7.5" font-family="Inter,sans-serif" font-weight="700">CENTRAL</text>
-                        <text x="250" y="55" text-anchor="middle" fill="#93c5fd" font-size="6.5" font-family="JetBrains Mono,monospace">:8000</text>
-
-                        <!-- Node S2 (C1 Leader) -->
-                        <circle cx="150" cy="168" r="22" fill="#f0fdf4" id="tFill-S2"/>
-                        <circle cx="150" cy="168" r="26" fill="none" stroke="#16a34a" stroke-width="2.5" id="tRing-S2"/>
-                        <g id="tLeader-S2"><rect x="126" y="132" width="48" height="11" rx="3" fill="#7c3aed"/><text x="150" y="140.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">👑 LEADER</text></g>
-                        <g id="tCrash-S2" style="display:none"><rect x="123" y="132" width="54" height="11" rx="3" fill="#dc2626"/><text x="150" y="140.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">⚡ CRASHED</text></g>
-                        <text x="150" y="172" text-anchor="middle" fill="#0f172a" font-size="9.5" font-family="Inter,sans-serif" font-weight="700">S2</text>
-                        <text x="150" y="182" text-anchor="middle" fill="#475569" font-size="6.5" font-family="JetBrains Mono,monospace">:8102</text>
-                        <text id="tSub-S2" x="150" y="200" text-anchor="middle" fill="#7c3aed" font-size="6" font-family="Inter,sans-serif" font-weight="600">LEADER</text>
-
-                        <!-- Node S1 (C1 Member) -->
-                        <circle cx="62" cy="235" r="21" fill="#f0fdf4" id="tFill-S1"/>
-                        <circle cx="62" cy="235" r="25" fill="none" stroke="#16a34a" stroke-width="2" id="tRing-S1"/>
-                        <g id="tLeader-S1" style="display:none"><rect x="38" y="199" width="48" height="11" rx="3" fill="#7c3aed"/><text x="62" y="207.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">👑 LEADER</text></g>
-                        <g id="tCrash-S1" style="display:none"><rect x="35" y="199" width="54" height="11" rx="3" fill="#dc2626"/><text x="62" y="207.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">⚡ CRASHED</text></g>
-                        <text x="62" y="239" text-anchor="middle" fill="#0f172a" font-size="9.5" font-family="Inter,sans-serif" font-weight="700">S1</text>
-                        <text x="62" y="249" text-anchor="middle" fill="#475569" font-size="6.5" font-family="JetBrains Mono,monospace">:8101</text>
-                        <text id="tSub-S1" x="62" y="266" text-anchor="middle" fill="#475569" font-size="6" font-family="Inter,sans-serif" font-weight="600">MEMBER</text>
-
-                        <!-- Node S4 (C2 Leader) -->
-                        <circle cx="350" cy="168" r="22" fill="#f0fdf4" id="tFill-S4"/>
-                        <circle cx="350" cy="168" r="26" fill="none" stroke="#16a34a" stroke-width="2.5" id="tRing-S4"/>
-                        <g id="tLeader-S4"><rect x="326" y="132" width="48" height="11" rx="3" fill="#7c3aed"/><text x="350" y="140.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">👑 LEADER</text></g>
-                        <g id="tCrash-S4" style="display:none"><rect x="323" y="132" width="54" height="11" rx="3" fill="#dc2626"/><text x="350" y="140.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">⚡ CRASHED</text></g>
-                        <text x="350" y="172" text-anchor="middle" fill="#0f172a" font-size="9.5" font-family="Inter,sans-serif" font-weight="700">S4</text>
-                        <text x="350" y="182" text-anchor="middle" fill="#475569" font-size="6.5" font-family="JetBrains Mono,monospace">:8104</text>
-                        <text id="tSub-S4" x="350" y="200" text-anchor="middle" fill="#7c3aed" font-size="6" font-family="Inter,sans-serif" font-weight="600">LEADER</text>
-
-                        <!-- Node S3 (C2 Member) -->
-                        <circle cx="438" cy="235" r="21" fill="#f0fdf4" id="tFill-S3"/>
-                        <circle cx="438" cy="235" r="25" fill="none" stroke="#16a34a" stroke-width="2" id="tRing-S3"/>
-                        <g id="tLeader-S3" style="display:none"><rect x="414" y="199" width="48" height="11" rx="3" fill="#7c3aed"/><text x="438" y="207.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">👑 LEADER</text></g>
-                        <g id="tCrash-S3" style="display:none"><rect x="411" y="199" width="54" height="11" rx="3" fill="#dc2626"/><text x="438" y="207.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">⚡ CRASHED</text></g>
-                        <text x="438" y="239" text-anchor="middle" fill="#0f172a" font-size="9.5" font-family="Inter,sans-serif" font-weight="700">S3</text>
-                        <text x="438" y="249" text-anchor="middle" fill="#475569" font-size="6.5" font-family="JetBrains Mono,monospace">:8103</text>
-                        <text id="tSub-S3" x="438" y="266" text-anchor="middle" fill="#475569" font-size="6" font-family="Inter,sans-serif" font-weight="600">MEMBER</text>
-
-                        <!-- Legend -->
-                        <circle cx="20"  cy="295" r="4.5" fill="#16a34a"/><text x="29"  y="298" fill="#475569" font-size="6.5" font-family="Inter,sans-serif">Active</text>
-                        <circle cx="70"  cy="295" r="4.5" fill="#d97706"/><text x="79"  y="298" fill="#475569" font-size="6.5" font-family="Inter,sans-serif">Suspected</text>
-                        <circle cx="135" cy="295" r="4.5" fill="#dc2626"/><text x="144" y="298" fill="#475569" font-size="6.5" font-family="Inter,sans-serif">Crashed / Failed</text>
-                        <rect x="210" y="290" width="7" height="7" rx="2" fill="#7c3aed"/><text x="221" y="298" fill="#475569" font-size="6.5" font-family="Inter,sans-serif">Cluster Head</text>
-                        <line x1="280" y1="295" x2="300" y2="295" stroke="#2563eb" stroke-width="2" stroke-dasharray="4 2"/><text x="305" y="298" fill="#2563eb" font-size="6.5" font-family="Inter,sans-serif" font-weight="600">Failover Link</text>
-                    </svg>
-                    <div id="topoStatusBanner" class="topo-status-bar">
-                        <span>🟢</span> <span><strong>Topology Healthy:</strong> All 4 nodes communicating normally.</span>
-                    </div>
-                </div>
-            </div>
-            <div class="section-card">
-                <div class="section-header">
-                    <div class="section-title">Live Sensor Telemetry</div>
-                    <span style="font-size:.75rem;color:var(--text-secondary)">Temp - Humidity - Battery - Motion</span>
-                </div>
-                <div class="telemetry-grid">
-                    <div class="telemetry-card s-active" id="tc-S1">
-                        <div class="tc-head"><span class="tc-node-id">Node S1</span><span class="tc-badge active" id="tcBadge-S1">ACTIVE</span></div>
-                        <span class="tc-role" id="tcRole-S1">Sensor - C1 - :8101</span>
-                        <div class="tc-gauges">
-                            <div class="gauge-row"><div class="gauge-lbl"><span>Temp</span><span id="tcTemp-S1">24.0C</span></div><div class="gauge-bg"><div class="gauge-fill gauge-temp" id="tcTempBar-S1" style="width:40%"></div></div></div>
-                            <div class="gauge-row"><div class="gauge-lbl"><span>Humidity</span><span id="tcHumid-S1">55.0%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-humid" id="tcHumidBar-S1" style="width:55%"></div></div></div>
-                            <div class="gauge-row"><div class="gauge-lbl"><span>Battery</span><span id="tcBat-S1">98%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-bat" id="tcBatBar-S1" style="width:98%"></div></div></div>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem;padding:3px 6px;background:#f1f5f9;border-radius:4px;"><span style="color:var(--text-secondary);font-weight:600;">VC:</span><span id="tcVc-S1" class="code-pill" style="font-size:0.68rem;">[S1:0, S2:0, S3:0, S4:0]</span></div>
-                        <span class="tc-motion clear" id="tcMotion-S1">No Motion</span>
-                        <span class="tc-hb" id="tcHb-S1">HB: &lt; 1s ago</span>
-                        <a href="/sensor1/" target="_blank" style="margin-top:4px;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;padding:4px 8px;border-radius:6px;background:#e0f2fe;color:#0369a1;text-decoration:none;border:1px solid #bae6fd;">🖥️ Open S1 Console &rarr;</a>
-                    </div>
-                    <div class="telemetry-card s-active" id="tc-S2">
-                        <div class="tc-head"><span class="tc-node-id">Node S2</span><span class="tc-badge active" id="tcBadge-S2">ACTIVE</span></div>
-                        <span class="tc-role ch" id="tcRole-S2">CLUSTER HEAD - C1 - :8102</span>
-                        <div class="tc-gauges">
-                            <div class="gauge-row"><div class="gauge-lbl"><span>Temp</span><span id="tcTemp-S2">24.0C</span></div><div class="gauge-bg"><div class="gauge-fill gauge-temp" id="tcTempBar-S2" style="width:40%"></div></div></div>
-                            <div class="gauge-row"><div class="gauge-lbl"><span>Humidity</span><span id="tcHumid-S2">55.0%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-humid" id="tcHumidBar-S2" style="width:55%"></div></div></div>
-                            <div class="gauge-row"><div class="gauge-lbl"><span>Battery</span><span id="tcBat-S2">98%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-bat" id="tcBatBar-S2" style="width:98%"></div></div></div>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem;padding:3px 6px;background:#f1f5f9;border-radius:4px;"><span style="color:var(--text-secondary);font-weight:600;">VC:</span><span id="tcVc-S2" class="code-pill" style="font-size:0.68rem;">[S1:0, S2:0, S3:0, S4:0]</span></div>
-                        <span class="tc-motion clear" id="tcMotion-S2">No Motion</span>
-                        <span class="tc-hb" id="tcHb-S2">HB: &lt; 1s ago</span>
-                        <a href="/sensor2/" target="_blank" style="margin-top:4px;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;padding:4px 8px;border-radius:6px;background:#f5f3ff;color:#6d28d9;text-decoration:none;border:1px solid #ddd6fe;">👑 Open S2 Console &rarr;</a>
-                    </div>
-                    <div class="telemetry-card s-active" id="tc-S3">
-                        <div class="tc-head"><span class="tc-node-id">Node S3</span><span class="tc-badge active" id="tcBadge-S3">ACTIVE</span></div>
-                        <span class="tc-role" id="tcRole-S3">Sensor - C2 - :8103</span>
-                        <div class="tc-gauges">
-                            <div class="gauge-row"><div class="gauge-lbl"><span>Temp</span><span id="tcTemp-S3">24.0C</span></div><div class="gauge-bg"><div class="gauge-fill gauge-temp" id="tcTempBar-S3" style="width:40%"></div></div></div>
-                            <div class="gauge-row"><div class="gauge-lbl"><span>Humidity</span><span id="tcHumid-S3">55.0%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-humid" id="tcHumidBar-S3" style="width:55%"></div></div></div>
-                            <div class="gauge-row"><div class="gauge-lbl"><span>Battery</span><span id="tcBat-S3">98%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-bat" id="tcBatBar-S3" style="width:98%"></div></div></div>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem;padding:3px 6px;background:#f1f5f9;border-radius:4px;"><span style="color:var(--text-secondary);font-weight:600;">VC:</span><span id="tcVc-S3" class="code-pill" style="font-size:0.68rem;">[S1:0, S2:0, S3:0, S4:0]</span></div>
-                        <span class="tc-motion clear" id="tcMotion-S3">No Motion</span>
-                        <span class="tc-hb" id="tcHb-S3">HB: &lt; 1s ago</span>
-                        <a href="/sensor3/" target="_blank" style="margin-top:4px;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;padding:4px 8px;border-radius:6px;background:#e0f2fe;color:#0369a1;text-decoration:none;border:1px solid #bae6fd;">🖥️ Open S3 Console &rarr;</a>
-                    </div>
-                    <div class="telemetry-card s-active" id="tc-S4">
-                        <div class="tc-head"><span class="tc-node-id">Node S4</span><span class="tc-badge active" id="tcBadge-S4">ACTIVE</span></div>
-                        <span class="tc-role ch" id="tcRole-S4">CLUSTER HEAD - C2 - :8104</span>
-                        <div class="tc-gauges">
-                            <div class="gauge-row"><div class="gauge-lbl"><span>Temp</span><span id="tcTemp-S4">24.0C</span></div><div class="gauge-bg"><div class="gauge-fill gauge-temp" id="tcTempBar-S4" style="width:40%"></div></div></div>
-                            <div class="gauge-row"><div class="gauge-lbl"><span>Humidity</span><span id="tcHumid-S4">55.0%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-humid" id="tcHumidBar-S4" style="width:55%"></div></div></div>
-                            <div class="gauge-row"><div class="gauge-lbl"><span>Battery</span><span id="tcBat-S4">98%</span></div><div class="gauge-bg"><div class="gauge-fill gauge-bat" id="tcBatBar-S4" style="width:98%"></div></div></div>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem;padding:3px 6px;background:#f1f5f9;border-radius:4px;"><span style="color:var(--text-secondary);font-weight:600;">VC:</span><span id="tcVc-S4" class="code-pill" style="font-size:0.68rem;">[S1:0, S2:0, S3:0, S4:0]</span></div>
-                        <span class="tc-motion clear" id="tcMotion-S4">No Motion</span>
-                        <span class="tc-hb" id="tcHb-S4">HB: &lt; 1s ago</span>
-                        <a href="/sensor4/" target="_blank" style="margin-top:4px;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;padding:4px 8px;border-radius:6px;background:#f5f3ff;color:#6d28d9;text-decoration:none;border:1px solid #ddd6fe;">👑 Open S4 Console &rarr;</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Clusters & Nodes Row -->
-        <div class="clusters-grid">
-            <!-- Cluster 1 -->
-            <div class="cluster-card" id="cluster1Card">
-                <div class="cluster-header">
-                    <div>
-                        <div class="cluster-name">
-                            <span>🌲 Cluster 1: Alpha Forest Canopy</span>
-                        </div>
-                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Logical Group C1 &bull; Bully Priority: S2 &gt; S1</span>
-                    </div>
-                    <span class="cluster-ch-badge" id="c1HeadBadge">Head: S2 (:8102)</span>
-                </div>
-                <div class="nodes-grid">
-                    <!-- S1 -->
-                    <div class="node-box active" id="nodeBox-S1">
-                        <div class="node-header">
-                            <span class="node-id">Node S1</span>
-                            <span class="node-role-tag sensor" id="roleTag-S1">SENSOR</span>
-                        </div>
-                        <div class="node-detail"><span>Port:</span> <strong>8101</strong></div>
-                        <div class="node-detail"><span>Status:</span> <span id="status-S1" class="badge badge-success">ACTIVE</span></div>
-                        <div class="node-detail"><span>Heartbeat:</span> <span id="hb-S1">&lt; 1s ago</span></div>
-                        <a href="http://localhost:8101" target="_blank" class="node-link">Open S1 Console &rarr;</a>
-                    </div>
-                    <!-- S2 -->
-                    <div class="node-box active" id="nodeBox-S2">
-                        <div class="node-header">
-                            <span class="node-id">Node S2</span>
-                            <span class="node-role-tag ch" id="roleTag-S2">CLUSTER_HEAD</span>
-                        </div>
-                        <div class="node-detail"><span>Port:</span> <strong>8102</strong></div>
-                        <div class="node-detail"><span>Status:</span> <span id="status-S2" class="badge badge-success">ACTIVE</span></div>
-                        <div class="node-detail"><span>Heartbeat:</span> <span id="hb-S2">&lt; 1s ago</span></div>
-                        <a href="http://localhost:8102" target="_blank" class="node-link">Open S2 Console &rarr;</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Cluster 2 -->
-            <div class="cluster-card" id="cluster2Card">
-                <div class="cluster-header">
-                    <div>
-                        <div class="cluster-name">
-                            <span>🌊 Cluster 2: Beta River Basin</span>
-                        </div>
-                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Logical Group C2 &bull; Bully Priority: S4 &gt; S3</span>
-                    </div>
-                    <span class="cluster-ch-badge" id="c2HeadBadge">Head: S4 (:8104)</span>
-                </div>
-                <div class="nodes-grid">
-                    <!-- S3 -->
-                    <div class="node-box active" id="nodeBox-S3">
-                        <div class="node-header">
-                            <span class="node-id">Node S3</span>
-                            <span class="node-role-tag sensor" id="roleTag-S3">SENSOR</span>
-                        </div>
-                        <div class="node-detail"><span>Port:</span> <strong>8103</strong></div>
-                        <div class="node-detail"><span>Status:</span> <span id="status-S3" class="badge badge-success">ACTIVE</span></div>
-                        <div class="node-detail"><span>Heartbeat:</span> <span id="hb-S3">&lt; 1s ago</span></div>
-                        <a href="http://localhost:8103" target="_blank" class="node-link">Open S3 Console &rarr;</a>
-                    </div>
-                    <!-- S4 -->
-                    <div class="node-box active" id="nodeBox-S4">
-                        <div class="node-header">
-                            <span class="node-id">Node S4</span>
-                            <span class="node-role-tag ch" id="roleTag-S4">CLUSTER_HEAD</span>
-                        </div>
-                        <div class="node-detail"><span>Port:</span> <strong>8104</strong></div>
-                        <div class="node-detail"><span>Status:</span> <span id="status-S4" class="badge badge-success">ACTIVE</span></div>
-                        <div class="node-detail"><span>Heartbeat:</span> <span id="hb-S4">&lt; 1s ago</span></div>
-                        <a href="http://localhost:8104" target="_blank" class="node-link">Open S4 Console &rarr;</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Edge Aggregated Readings Section -->
+        <!-- Field Network Topology Map -->
         <div class="section-card">
             <div class="section-header">
                 <div class="section-title">
-                    <span>📊 Edge Aggregated Reports (Bandwidth-Optimized)</span>
+                    <span>🗺️</span>
+                    <span>Field Network Topology & Causal Link Map</span>
                 </div>
-                <span style="font-size: 0.75rem; color: var(--text-secondary);">Received periodically from Dynamic Cluster Heads</span>
+                <a href="/monitoring" class="view-all-link">Live Telemetry & Streams &rarr;</a>
             </div>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>Cluster</th>
-                            <th>Reporting CH</th>
-                            <th>Sample Count</th>
-                            <th>Avg Temp (&deg;C)</th>
-                            <th>Min / Max Temp</th>
-                            <th>Avg Humidity</th>
-                            <th>Active Nodes</th>
-                            <th>Vector Clock</th>
-                        </tr>
-                    </thead>
-                    <tbody id="aggregatedReadingsTableBody">
-                        <tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Waiting for edge aggregation dispatches...</td></tr>
-                    </tbody>
-                </table>
+            <div class="topology-panel">
+                <svg id="topoSvg" viewBox="0 0 500 310" class="topology-svg-wrap" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="tgrid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0L0 0 0 20" fill="none" stroke="#e2e8f0" stroke-width="0.5"/></pattern>
+                        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                    </defs>
+                    <rect width="500" height="310" fill="url(#tgrid)" rx="10" opacity="0.6"/>
+
+                    <!-- Cluster 1 Box (Canopy) -->
+                    <rect id="box-c1" x="12" y="92" width="226" height="178" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" opacity="0.9"/>
+                    <text id="title-c1" x="125" y="110" text-anchor="middle" fill="#065f46" font-size="8.5" font-family="Inter,sans-serif" font-weight="700">Cluster 1: Alpha Forest Canopy</text>
+                    <text id="badge-c1" x="125" y="122" text-anchor="middle" fill="#059669" font-size="7" font-family="Inter,sans-serif" font-weight="600">● Normal — Head: S2</text>
+                    <text id="lbl-failover-c1" x="125" y="134" text-anchor="middle" fill="#0284c7" font-size="6.8" font-family="Inter,sans-serif" font-weight="700" style="display:none">⚡ FAILOVER REROUTED TO S1</text>
+
+                    <!-- Cluster 2 Box (River Basin) -->
+                    <rect id="box-c2" x="262" y="92" width="226" height="178" rx="8" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1.2" opacity="0.9"/>
+                    <text id="title-c2" x="375" y="110" text-anchor="middle" fill="#0369a1" font-size="8.5" font-family="Inter,sans-serif" font-weight="700">Cluster 2: Beta River Basin</text>
+                    <text id="badge-c2" x="375" y="122" text-anchor="middle" fill="#059669" font-size="7" font-family="Inter,sans-serif" font-weight="600">● Normal — Head: S4</text>
+                    <text id="lbl-failover-c2" x="375" y="134" text-anchor="middle" fill="#0284c7" font-size="6.8" font-family="Inter,sans-serif" font-weight="700" style="display:none">⚡ FAILOVER REROUTED TO S3</text>
+
+                    <!-- Connection Links Cluster 1 -->
+                    <line id="link-c-s2"  x1="235" y1="56" x2="155" y2="152" stroke="#059669" stroke-width="2.5" class="link-flow" opacity="0.9"/>
+                    <line id="link-c-s1"  x1="228" y1="60" x2="72"  y2="218" stroke="#0284c7" stroke-width="2.8" class="link-failover" style="display:none" opacity="0"/>
+                    <line id="link-s2-s1" x1="135" y1="184" x2="76"  y2="220" stroke="#059669" stroke-width="1.8" class="link-flow" opacity="0.8"/>
+
+                    <!-- Connection Links Cluster 2 -->
+                    <line id="link-c-s4"  x1="265" y1="56" x2="345" y2="152" stroke="#059669" stroke-width="2.5" class="link-flow" opacity="0.9"/>
+                    <line id="link-c-s3"  x1="272" y1="60" x2="428" y2="218" stroke="#0284c7" stroke-width="2.8" class="link-failover" style="display:none" opacity="0"/>
+                    <line id="link-s4-s3" x1="365" y1="184" x2="424" y2="220" stroke="#059669" stroke-width="1.8" class="link-flow" opacity="0.8"/>
+
+                    <!-- Central Server Node -->
+                    <circle cx="250" cy="48" r="32" fill="#064e3b" opacity="0.1" filter="url(#glow)"/>
+                    <circle cx="250" cy="48" r="23" fill="#064e3b"/>
+                    <circle cx="250" cy="48" r="27" fill="none" stroke="#10b981" stroke-width="2.5"/>
+                    <text x="250" y="44" text-anchor="middle" fill="#fff" font-size="7.5" font-family="Inter,sans-serif" font-weight="800">CENTRAL</text>
+                    <text x="250" y="55" text-anchor="middle" fill="#a7f3d0" font-size="6.5" font-family="JetBrains Mono,monospace">:8099</text>
+
+                    <!-- Node S2 (C1 Leader) -->
+                    <circle cx="150" cy="168" r="22" fill="#f0fdf4" id="tFill-S2"/>
+                    <circle cx="150" cy="168" r="26" fill="none" stroke="#059669" stroke-width="2.5" id="tRing-S2"/>
+                    <g id="tLeader-S2"><rect x="126" y="132" width="48" height="11" rx="3" fill="#7c3aed"/><text x="150" y="140.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">👑 LEADER</text></g>
+                    <g id="tCrash-S2" style="display:none"><rect x="123" y="132" width="54" height="11" rx="3" fill="#dc2626"/><text x="150" y="140.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">⚡ CRASHED</text></g>
+                    <text x="150" y="172" text-anchor="middle" fill="#0f172a" font-size="9.5" font-family="Inter,sans-serif" font-weight="700">S2</text>
+                    <text x="150" y="182" text-anchor="middle" fill="#475569" font-size="6.5" font-family="JetBrains Mono,monospace">:8102</text>
+                    <text id="tSub-S2" x="150" y="200" text-anchor="middle" fill="#7c3aed" font-size="6" font-family="Inter,sans-serif" font-weight="600">LEADER</text>
+
+                    <!-- Node S1 (C1 Member) -->
+                    <circle cx="62" cy="235" r="21" fill="#f0fdf4" id="tFill-S1"/>
+                    <circle cx="62" cy="235" r="25" fill="none" stroke="#059669" stroke-width="2" id="tRing-S1"/>
+                    <g id="tLeader-S1" style="display:none"><rect x="38" y="199" width="48" height="11" rx="3" fill="#7c3aed"/><text x="62" y="207.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">👑 LEADER</text></g>
+                    <g id="tCrash-S1" style="display:none"><rect x="35" y="199" width="54" height="11" rx="3" fill="#dc2626"/><text x="62" y="207.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">⚡ CRASHED</text></g>
+                    <text x="62" y="239" text-anchor="middle" fill="#0f172a" font-size="9.5" font-family="Inter,sans-serif" font-weight="700">S1</text>
+                    <text x="62" y="249" text-anchor="middle" fill="#475569" font-size="6.5" font-family="JetBrains Mono,monospace">:8101</text>
+                    <text id="tSub-S1" x="62" y="266" text-anchor="middle" fill="#475569" font-size="6" font-family="Inter,sans-serif" font-weight="600">MEMBER</text>
+
+                    <!-- Node S4 (C2 Leader) -->
+                    <circle cx="350" cy="168" r="22" fill="#f0fdf4" id="tFill-S4"/>
+                    <circle cx="350" cy="168" r="26" fill="none" stroke="#059669" stroke-width="2.5" id="tRing-S4"/>
+                    <g id="tLeader-S4"><rect x="326" y="132" width="48" height="11" rx="3" fill="#7c3aed"/><text x="350" y="140.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">👑 LEADER</text></g>
+                    <g id="tCrash-S4" style="display:none"><rect x="323" y="132" width="54" height="11" rx="3" fill="#dc2626"/><text x="350" y="140.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">⚡ CRASHED</text></g>
+                    <text x="350" y="172" text-anchor="middle" fill="#0f172a" font-size="9.5" font-family="Inter,sans-serif" font-weight="700">S4</text>
+                    <text x="350" y="182" text-anchor="middle" fill="#475569" font-size="6.5" font-family="JetBrains Mono,monospace">:8104</text>
+                    <text id="tSub-S4" x="350" y="200" text-anchor="middle" fill="#7c3aed" font-size="6" font-family="Inter,sans-serif" font-weight="600">LEADER</text>
+
+                    <!-- Node S3 (C2 Member) -->
+                    <circle cx="438" cy="235" r="21" fill="#f0fdf4" id="tFill-S3"/>
+                    <circle cx="438" cy="235" r="25" fill="none" stroke="#059669" stroke-width="2" id="tRing-S3"/>
+                    <g id="tLeader-S3" style="display:none"><rect x="414" y="199" width="48" height="11" rx="3" fill="#7c3aed"/><text x="438" y="207.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">👑 LEADER</text></g>
+                    <g id="tCrash-S3" style="display:none"><rect x="411" y="199" width="54" height="11" rx="3" fill="#dc2626"/><text x="438" y="207.5" text-anchor="middle" fill="#fff" font-size="6.5" font-family="Inter,sans-serif" font-weight="700">⚡ CRASHED</text></g>
+                    <text x="438" y="239" text-anchor="middle" fill="#0f172a" font-size="9.5" font-family="Inter,sans-serif" font-weight="700">S3</text>
+                    <text x="438" y="249" text-anchor="middle" fill="#475569" font-size="6.5" font-family="JetBrains Mono,monospace">:8103</text>
+                    <text id="tSub-S3" x="438" y="266" text-anchor="middle" fill="#475569" font-size="6" font-family="Inter,sans-serif" font-weight="600">MEMBER</text>
+
+                    <!-- Legend -->
+                    <circle cx="20"  cy="295" r="4.5" fill="#059669"/><text x="29"  y="298" fill="#475569" font-size="6.5" font-family="Inter,sans-serif">Active</text>
+                    <circle cx="70"  cy="295" r="4.5" fill="#d97706"/><text x="79"  y="298" fill="#475569" font-size="6.5" font-family="Inter,sans-serif">Suspected</text>
+                    <circle cx="135" cy="295" r="4.5" fill="#dc2626"/><text x="144" y="298" fill="#475569" font-size="6.5" font-family="Inter,sans-serif">Offline / Crashed</text>
+                    <rect x="210" y="290" width="7" height="7" rx="2" fill="#7c3aed"/><text x="221" y="298" fill="#475569" font-size="6.5" font-family="Inter,sans-serif">Cluster Coordinator</text>
+                    <line x1="290" y1="295" x2="310" y2="295" stroke="#0284c7" stroke-width="2" stroke-dasharray="4 2"/><text x="315" y="298" fill="#0284c7" font-size="6.5" font-family="Inter,sans-serif" font-weight="600">Failover Route</text>
+                </svg>
+                <div id="topoStatusBanner" class="topo-status-bar">
+                    <span>🟢</span> <span><strong>Topology Healthy:</strong> All 4 field nodes communicating normally. C1 Head: S2 &bull; C2 Head: S4.</span>
+                </div>
             </div>
         </div>
 
-        <!-- Real-Time Communication Log -->
-        <div class="section-card">
-            <div class="section-header">
-                <div class="section-title">
-                    <span>📡 Live Network Communication Monitor</span>
+        <!-- Overview Split: Quick Clusters + Recent Alerts -->
+        <div class="overview-split">
+            <!-- Quick Clusters Card -->
+            <div class="cluster-quick-card">
+                <div class="cluster-quick-head">
+                    <span class="cluster-quick-name">🌲 Field Cluster Topology Status</span>
+                    <a href="/sensors" class="view-all-link">Manage Sensor Fleet &rarr;</a>
                 </div>
-                <span style="font-size: 0.75rem; color: var(--text-secondary);">Real HTTP inter-process messages</span>
-            </div>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Time</th>
-                            <th>Sender</th>
-                            <th>Receiver</th>
-                            <th>Cluster</th>
-                            <th>Type</th>
-                            <th>Vector Clock [S1,S2,S3,S4]</th>
-                            <th>Payload Summary</th>
-                        </tr>
-                    </thead>
-                    <tbody id="communicationLogsTableBody">
-                        <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Listening for network messages...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Alerts & Bully Elections Grid -->
-        <div class="logs-grid">
-            <!-- Mutex Deduplicated Alerts -->
-            <div class="section-card">
-                <div class="section-header">
-                    <div class="section-title">
-                        <span>🚨 Deduplicated Alerts (Mutual Exclusion)</span>
+                <div class="cluster-quick-nodes">
+                    <!-- Cluster 1 Mini -->
+                    <div class="mini-node-pill active" id="miniC1">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong style="color: var(--forest-900); font-size: 0.82rem;">Cluster C1 (Canopy)</strong>
+                            <span class="badge badge-purple" id="c1QuickHead">Head: S2</span>
+                        </div>
+                        <span style="font-size: 0.72rem; color: var(--text-secondary);">Nodes: S1 (:8101), S2 (:8102)</span>
+                        <div style="display: flex; gap: 4px; margin-top: 4px;">
+                            <a href="http://localhost:8101" class="sensor-nav-link" style="padding: 1px 6px;">Open S1</a>
+                            <a href="http://localhost:8102" class="sensor-nav-link" style="padding: 1px 6px;">Open S2</a>
+                        </div>
                     </div>
+                    <!-- Cluster 2 Mini -->
+                    <div class="mini-node-pill active" id="miniC2">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong style="color: var(--forest-900); font-size: 0.82rem;">Cluster C2 (River Basin)</strong>
+                            <span class="badge badge-purple" id="c2QuickHead">Head: S4</span>
+                        </div>
+                        <span style="font-size: 0.72rem; color: var(--text-secondary);">Nodes: S3 (:8103), S4 (:8104)</span>
+                        <div style="display: flex; gap: 4px; margin-top: 4px;">
+                            <a href="http://localhost:8103" class="sensor-nav-link" style="padding: 1px 6px;">Open S3</a>
+                            <a href="http://localhost:8104" class="sensor-nav-link" style="padding: 1px 6px;">Open S4</a>
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); background: #f8fafc; padding: 0.5rem; border-radius: 6px;">
+                    Bully Leader Election dynamically resolves cluster heads based on node priority. Failover links automatically re-route telemetry upon heart-beat timeout.
+                </div>
+            </div>
+
+            <!-- Recent Alerts Preview Card -->
+            <div class="cluster-quick-card">
+                <div class="cluster-quick-head">
+                    <span class="cluster-quick-name">🚨 Recent Emergency Incidents</span>
+                    <a href="/alerts" class="view-all-link">Full Alert Incident Center &rarr;</a>
                 </div>
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
                                 <th>Time</th>
-                                <th>Type</th>
+                                <th>Alert Type</th>
                                 <th>Cluster</th>
-                                <th>Source Nodes</th>
-                                <th>Vector Clock</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody id="alertsTableBody">
-                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No critical alerts recorded.</td></tr>
+                        <tbody id="recentAlertsTableBody">
+                            <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No emergency alerts recorded.</td></tr>
                         </tbody>
                     </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- CONTAINER ORCHESTRATION & LAYER 7 LOAD BALANCING -->
-        <div class="section-card" style="border: 2px solid #3b82f6; background: linear-gradient(180deg, #eff6ff 0%, #ffffff 80px);">
-            <div class="section-header" style="background: transparent; border-bottom: 1px solid #bfdbfe; flex-wrap: wrap; gap: 0.75rem;">
-                <div>
-                    <div class="section-title">
-                        <span style="font-size: 1.25rem;">☸️</span>
-                        <span>Container Orchestration & Layer 7 Load Balancing</span>
-                        <span class="badge" style="background: #2563eb; color: white;">K8s LoadBalancer Active</span>
-                    </div>
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.3rem;">
-                        <strong>Role:</strong> Manages multi-replica container pods, automated Kubernetes liveness & readiness health probes, and Layer 7 reverse proxy traffic distribution for zero-downtime high availability.
-                    </p>
-                </div>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <button id="btnDispatchLb" class="node-link" style="cursor: pointer; background: #2563eb; color: white; border: none; padding: 0.45rem 0.9rem; border-radius: 6px; font-weight: 600;">🔄 Send Request via Load Balancer</button>
-                </div>
-            </div>
-            <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem;">
-                <div class="logs-grid">
-                    <!-- Load Balancer Status Card -->
-                    <div class="section-card" style="box-shadow: none; border: 1px solid var(--border-color);">
-                        <div class="section-header">
-                            <div>
-                                <div class="section-title">
-                                    <span>⚖️ Layer 7 Load Balancer (Round-Robin)</span>
-                                </div>
-                                <span style="font-size: 0.72rem; color: var(--text-secondary);">Target Service: ds-load-balancer &bull; Port: 80 / 8000</span>
-                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Role: Distributes client requests across healthy backend pods using Round-Robin</div>
-                            </div>
-                            <span class="badge badge-success" id="lbHealthBadge">HEALTHY (2/2 Pods)</span>
-                        </div>
-                        <div style="padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                                <span>Total Routed Requests: <strong id="lbTotalRouted" style="font-family: 'JetBrains Mono', monospace;">0</strong></span>
-                                <span>Algorithm: <strong class="badge badge-info">Round-Robin</strong></span>
-                            </div>
-                            <!-- Distribution bar -->
-                            <div style="display: flex; flex-direction: column; gap: 0.3rem;">
-                                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
-                                    <span>Pod Alpha (10.244.1.18): <strong id="podAlphaPercent">50%</strong></span>
-                                    <span>Pod Beta (10.244.2.24): <strong id="podBetaPercent">50%</strong></span>
-                                </div>
-                                <div style="display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: #e2e8f0;">
-                                    <div id="barPodAlpha" style="width: 50%; background: #2563eb; transition: width 0.3s;"></div>
-                                    <div id="barPodBeta" style="width: 50%; background: #06b6d4; transition: width 0.3s;"></div>
-                                </div>
-                            </div>
-                            <div id="lbLastDispatchNotice" style="font-size: 0.75rem; padding: 0.5rem; background: #f8fafc; border-radius: 6px; border: 1px solid var(--border-color); color: var(--text-secondary);">
-                                Click <strong>[ Send Request via Load Balancer ]</strong> to test traffic distribution across Kubernetes pods.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Kubernetes Pods Table -->
-                    <div class="section-card" style="box-shadow: none; border: 1px solid var(--border-color);">
-                        <div class="section-header">
-                            <div>
-                                <div class="section-title">
-                                    <span>📦 Kubernetes Pod Replicas & Probes</span>
-                                </div>
-                                <span style="font-size: 0.72rem; color: var(--text-secondary);">Namespace: ds-sensor-network &bull; HPA: 2-5 Replicas</span>
-                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Role: Isolated container replicas monitored with automated liveness and readiness health checks</div>
-                            </div>
-                            <span class="badge badge-purple" id="k8sPodCountBadge">2 Replicas</span>
-                        </div>
-                        <div class="table-responsive" style="max-height: 280px;">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Pod Identifier</th>
-                                        <th>IP Address</th>
-                                        <th>Probes</th>
-                                        <th>Requests</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="k8sPodsTableBody">
-                                    <tr>
-                                        <td><strong>central-server-pod-alpha</strong></td>
-                                        <td><span class="code-pill">10.244.1.18</span></td>
-                                        <td><span class="badge badge-success" style="white-space: nowrap;">Liveness: 200</span></td>
-                                        <td><strong id="countPodAlpha">0</strong></td>
-                                        <td><span class="badge badge-success">RUNNING</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>central-server-pod-beta</strong></td>
-                                        <td><span class="code-pill">10.244.2.24</span></td>
-                                        <td><span class="badge badge-success" style="white-space: nowrap;">Readiness: 200</span></td>
-                                        <td><strong id="countPodBeta">0</strong></td>
-                                        <td><span class="badge badge-success">RUNNING</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- AWS CLOUD INFRASTRUCTURE & SERVERLESS ARCHIVING -->
-        <div class="section-card" style="border: 2px solid #38bdf8; background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 80px);">
-            <div class="section-header" style="background: transparent; border-bottom: 1px solid #bae6fd; flex-wrap: wrap; gap: 0.75rem;">
-                <div>
-                    <div class="section-title">
-                        <span style="font-size: 1.25rem;">☁️</span>
-                        <span>AWS Cloud Infrastructure & Serverless Archiving</span>
-                        <span class="badge" style="background: #0284c7; color: white;">AWS Cloud Active</span>
-                    </div>
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.3rem;">
-                        <strong>Role:</strong> Extends the distributed edge network to public cloud services: durable cold telemetry archiving in Amazon S3 and event-driven serverless emergency alerts via AWS Lambda.
-                    </p>
-                </div>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <button id="btnManualS3" class="node-link" style="cursor: pointer; background: #0284c7; color: white; border: none; padding: 0.45rem 0.9rem; border-radius: 6px; font-weight: 600;">📤 Sync Archive to AWS S3</button>
-                    <button id="btnTriggerLambda" class="node-link" style="cursor: pointer; background: #d97706; color: white; border: none; padding: 0.45rem 0.9rem; border-radius: 6px; font-weight: 600;">⚡ Invoke Lambda Alert</button>
-                </div>
-            </div>
-            <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem;">
-                <div class="logs-grid">
-                    <!-- S3 Panel -->
-                    <div class="section-card" style="box-shadow: none; border: 1px solid var(--border-color);">
-                        <div class="section-header">
-                            <div>
-                                <div class="section-title">
-                                    <span>🪣 AWS S3 Distributed Object Store</span>
-                                </div>
-                                <span style="font-size: 0.72rem; color: var(--text-secondary);" id="s3BucketInfo">Bucket: s3://ds-environmental-telemetry-archive &bull; Region: us-east-1</span>
-                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Role: Durable cold object storage for aggregated telemetry batches tagged with causal vector clocks</div>
-                            </div>
-                            <span class="badge badge-info" id="s3CountBadge">0 Objects</span>
-                        </div>
-                        <div class="table-responsive" style="max-height: 280px;">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Time</th>
-                                        <th>Object Key</th>
-                                        <th>Cluster</th>
-                                        <th>Size</th>
-                                        <th>Vector Clock</th>
-                                        <th>ETag</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="s3ArchiveTableBody">
-                                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Waiting for telemetry batches to archive to S3...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Lambda Panel -->
-                    <div class="section-card" style="box-shadow: none; border: 1px solid var(--border-color);">
-                        <div class="section-header">
-                            <div>
-                                <div class="section-title">
-                                    <span>⚡ AWS Lambda Serverless Invocations</span>
-                                </div>
-                                <span style="font-size: 0.72rem; color: var(--text-secondary);" id="lambdaFunctionInfo">Function: EmergencyAlertDispatcher &bull; Python 3.12</span>
-                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Role: Event-driven serverless functions executed on-demand for critical wildfire and temperature thresholds</div>
-                            </div>
-                            <span class="badge badge-warning" id="lambdaCountBadge">0 Runs</span>
-                        </div>
-                        <div class="table-responsive" style="max-height: 280px;">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Time</th>
-                                        <th>Trigger Event</th>
-                                        <th>Cluster</th>
-                                        <th>Latency</th>
-                                        <th>Status</th>
-                                        <th>Request ID</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="lambdaInvocationTableBody">
-                                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No serverless alert events triggered yet.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1033,22 +659,34 @@
     </div>
 
     <script>
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('clockDisplay').innerText = now.toLocaleTimeString();
+        function getCookie(name) {
+            const val = `; ${document.cookie}`;
+            const parts = val.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
         }
-        setInterval(updateClock, 1000);
-        updateClock();
+
+        function formatVectorClock(vc) {
+            if (!vc) return '[S1:0, S2:0, S3:0, S4:0]';
+            let arr = [];
+            if (Array.isArray(vc)) {
+                arr = vc;
+            } else if (typeof vc === 'string') {
+                const cleaned = vc.replace(/[\[\]\s]/g, '');
+                const m = cleaned.split(',');
+                if (m.length === 4) arr = m.map(x => parseInt(x, 10) || 0); else return vc;
+            } else {
+                return String(vc);
+            }
+            return `[S1:${arr[0] || 0}, S2:${arr[1] || 0}, S3:${arr[2] || 0}, S4:${arr[3] || 0}]`;
+        }
 
         function updateTopology(nodes, clusters) {
             if (!nodes || nodes.length === 0) return;
-
             const nodeMap = {};
             nodes.forEach(n => { nodeMap[n.nodeId] = n; });
-
             const s1 = nodeMap['S1'], s2 = nodeMap['S2'], s3 = nodeMap['S3'], s4 = nodeMap['S4'];
 
-            // 1. Update node rings, fills, leader badges, crash badges, subtexts
             nodes.forEach(n => {
                 const id = n.nodeId;
                 const status = (n.status || 'ACTIVE').toUpperCase();
@@ -1072,268 +710,88 @@
                         ring.setAttribute('stroke-width', '2.5');
                         ring.classList.remove('pulse-leader');
                     } else {
-                        ring.setAttribute('stroke', '#16a34a');
+                        ring.setAttribute('stroke', '#059669');
                         ring.setAttribute('stroke-width', isCh ? '3' : '2');
                         if (isCh) ring.classList.add('pulse-leader'); else ring.classList.remove('pulse-leader');
                     }
                 }
 
-                if (fill) {
-                    fill.setAttribute('fill', isFailed ? '#fee2e2' : isSuspected ? '#fffbeb' : '#f0fdf4');
-                }
-
-                if (leaderBadge) {
-                    leaderBadge.style.display = (isCh && !isFailed) ? 'inline' : 'none';
-                }
-
-                if (crashBadge) {
-                    crashBadge.style.display = isFailed ? 'inline' : 'none';
-                }
-
+                if (fill) fill.setAttribute('fill', isFailed ? '#fee2e2' : isSuspected ? '#fffbeb' : '#f0fdf4');
+                if (leaderBadge) leaderBadge.style.display = (isCh && !isFailed) ? 'inline' : 'none';
+                if (crashBadge) crashBadge.style.display = isFailed ? 'inline' : 'none';
                 if (sub) {
-                    if (isFailed) {
-                        sub.setAttribute('fill', '#dc2626');
-                        sub.textContent = 'CRASHED';
-                    } else if (isSuspected) {
-                        sub.setAttribute('fill', '#d97706');
-                        sub.textContent = 'TIMEOUT';
-                    } else {
-                        sub.setAttribute('fill', isCh ? '#7c3aed' : '#475569');
-                        sub.textContent = isCh ? 'LEADER' : 'MEMBER';
-                    }
+                    if (isFailed) { sub.setAttribute('fill', '#dc2626'); sub.textContent = 'CRASHED'; }
+                    else if (isSuspected) { sub.setAttribute('fill', '#d97706'); sub.textContent = 'TIMEOUT'; }
+                    else { sub.setAttribute('fill', isCh ? '#7c3aed' : '#475569'); sub.textContent = isCh ? 'LEADER' : 'MEMBER'; }
                 }
             });
 
-            // 2. Cluster 1 Adaptive Routing (S2 default CH, S1 failover CH)
+            // C1 failover
             const linkCS2 = document.getElementById('link-c-s2');
             const linkCS1 = document.getElementById('link-c-s1');
             const linkS2S1 = document.getElementById('link-s2-s1');
             const boxC1 = document.getElementById('box-c1');
             const badgeC1 = document.getElementById('badge-c1');
             const lblFailoverC1 = document.getElementById('lbl-failover-c1');
-
-            const s2Failed = (s2 && s2.status === 'FAILED');
-            const s1Failed = (s1 && s1.status === 'FAILED');
-            const s1IsCH = (s1 && s1.role === 'CLUSTER_HEAD' && !s1Failed);
+            const s2Failed = (s2 && s2.status === 'FAILED'), s1Failed = (s1 && s1.status === 'FAILED'), s1IsCH = (s1 && s1.role === 'CLUSTER_HEAD' && !s1Failed);
 
             if (s2Failed && s1IsCH) {
-                // FAILOVER TO S1: S2 crashed, S1 elected new Leader!
-                if (linkCS2) {
-                    linkCS2.setAttribute('stroke', '#dc2626');
-                    linkCS2.setAttribute('stroke-width', '1.5');
-                    linkCS2.setAttribute('opacity', '0.35');
-                    linkCS2.classList.remove('link-flow');
-                }
-                if (linkCS1) {
-                    linkCS1.style.display = 'inline';
-                    linkCS1.setAttribute('stroke', '#2563eb');
-                    linkCS1.setAttribute('stroke-width', '2.8');
-                    linkCS1.setAttribute('opacity', '1');
-                    linkCS1.classList.add('link-failover');
-                }
-                if (linkS2S1) {
-                    linkS2S1.setAttribute('stroke', '#dc2626');
-                    linkS2S1.setAttribute('stroke-width', '1.8');
-                    linkS2S1.setAttribute('opacity', '0.5');
-                    linkS2S1.classList.remove('link-flow');
-                }
+                if (linkCS2) { linkCS2.setAttribute('stroke', '#dc2626'); linkCS2.setAttribute('opacity', '0.35'); linkCS2.classList.remove('link-flow'); }
+                if (linkCS1) { linkCS1.style.display = 'inline'; linkCS1.setAttribute('stroke', '#0284c7'); linkCS1.classList.add('link-failover'); }
+                if (linkS2S1) { linkS2S1.setAttribute('stroke', '#dc2626'); linkS2S1.classList.remove('link-flow'); }
                 if (lblFailoverC1) lblFailoverC1.style.display = 'inline';
-                if (boxC1) {
-                    boxC1.setAttribute('stroke', '#d97706');
-                    boxC1.setAttribute('stroke-dasharray', '4 3');
-                    boxC1.setAttribute('fill', '#fffdf5');
-                }
-                if (badgeC1) {
-                    badgeC1.setAttribute('fill', '#d97706');
-                    badgeC1.textContent = '⚡ FAILOVER: S1 ACTING LEADER';
-                }
-            } else if (s2Failed && s1Failed) {
-                if (linkCS2) { linkCS2.setAttribute('stroke', '#dc2626'); linkCS2.setAttribute('opacity', '0.25'); linkCS2.classList.remove('link-flow'); }
-                if (linkCS1) { linkCS1.style.display = 'none'; }
-                if (linkS2S1) { linkS2S1.setAttribute('stroke', '#dc2626'); linkS2S1.setAttribute('opacity', '0.25'); }
-                if (lblFailoverC1) lblFailoverC1.style.display = 'none';
-                if (boxC1) { boxC1.setAttribute('stroke', '#dc2626'); boxC1.setAttribute('stroke-dasharray', '4 4'); boxC1.setAttribute('fill', '#fef2f2'); }
-                if (badgeC1) { badgeC1.setAttribute('fill', '#dc2626'); badgeC1.textContent = '✖ CLUSTER OFFLINE'; }
+                if (boxC1) { boxC1.setAttribute('stroke', '#d97706'); boxC1.setAttribute('stroke-dasharray', '4 3'); }
+                if (badgeC1) { badgeC1.setAttribute('fill', '#d97706'); badgeC1.textContent = '⚡ FAILOVER: S1 ACTING COORDINATOR'; }
             } else {
-                if (linkCS2) {
-                    linkCS2.setAttribute('stroke', s2 && s2.status === 'SUSPECTED' ? '#d97706' : '#16a34a');
-                    linkCS2.setAttribute('stroke-width', '2.5');
-                    linkCS2.setAttribute('opacity', '0.9');
-                    linkCS2.classList.add('link-flow');
-                }
-                if (linkCS1) {
-                    linkCS1.style.display = 'none';
-                    linkCS1.classList.remove('link-failover');
-                }
-                if (linkS2S1) {
-                    linkS2S1.setAttribute('stroke', s1Failed ? '#dc2626' : (s1 && s1.status === 'SUSPECTED' ? '#d97706' : '#16a34a'));
-                    linkS2S1.setAttribute('stroke-width', '1.8');
-                    linkS2S1.setAttribute('opacity', s1Failed ? '0.35' : '0.8');
-                    if (s1Failed) linkS2S1.classList.remove('link-flow'); else linkS2S1.classList.add('link-flow');
-                }
+                if (linkCS2) { linkCS2.setAttribute('stroke', s2 && s2.status === 'SUSPECTED' ? '#d97706' : '#059669'); linkCS2.classList.add('link-flow'); }
+                if (linkCS1) { linkCS1.style.display = 'none'; linkCS1.classList.remove('link-failover'); }
+                if (linkS2S1) { linkS2S1.setAttribute('stroke', s1Failed ? '#dc2626' : (s1 && s1.status === 'SUSPECTED' ? '#d97706' : '#059669')); }
                 if (lblFailoverC1) lblFailoverC1.style.display = 'none';
-                if (boxC1) {
-                    boxC1.setAttribute('stroke', s1Failed ? '#f59e0b' : '#d1d5db');
-                    boxC1.removeAttribute('stroke-dasharray');
-                    boxC1.setAttribute('fill', '#f8fafc');
-                }
-                if (badgeC1) {
-                    badgeC1.setAttribute('fill', s1Failed ? '#d97706' : '#16a34a');
-                    badgeC1.textContent = s1Failed ? '⚠️ S1 DOWN (S2 ACTIVE)' : '● Normal — Head: S2';
-                }
+                if (boxC1) { boxC1.setAttribute('stroke', s1Failed ? '#f59e0b' : '#cbd5e1'); boxC1.removeAttribute('stroke-dasharray'); }
+                if (badgeC1) { badgeC1.setAttribute('fill', s1Failed ? '#d97706' : '#059669'); badgeC1.textContent = s1Failed ? '⚠️ S1 DOWN (S2 ACTIVE)' : '● Normal — Head: S2'; }
             }
 
-            // 3. Cluster 2 Adaptive Routing (S4 default CH, S3 failover CH)
+            // C2 failover
             const linkCS4 = document.getElementById('link-c-s4');
             const linkCS3 = document.getElementById('link-c-s3');
             const linkS4S3 = document.getElementById('link-s4-s3');
             const boxC2 = document.getElementById('box-c2');
             const badgeC2 = document.getElementById('badge-c2');
             const lblFailoverC2 = document.getElementById('lbl-failover-c2');
-
-            const s4Failed = (s4 && s4.status === 'FAILED');
-            const s3Failed = (s3 && s3.status === 'FAILED');
-            const s3IsCH = (s3 && s3.role === 'CLUSTER_HEAD' && !s3Failed);
+            const s4Failed = (s4 && s4.status === 'FAILED'), s3Failed = (s3 && s3.status === 'FAILED'), s3IsCH = (s3 && s3.role === 'CLUSTER_HEAD' && !s3Failed);
 
             if (s4Failed && s3IsCH) {
-                if (linkCS4) {
-                    linkCS4.setAttribute('stroke', '#dc2626');
-                    linkCS4.setAttribute('stroke-width', '1.5');
-                    linkCS4.setAttribute('opacity', '0.35');
-                    linkCS4.classList.remove('link-flow');
-                }
-                if (linkCS3) {
-                    linkCS3.style.display = 'inline';
-                    linkCS3.setAttribute('stroke', '#2563eb');
-                    linkCS3.setAttribute('stroke-width', '2.8');
-                    linkCS3.setAttribute('opacity', '1');
-                    linkCS3.classList.add('link-failover');
-                }
-                if (linkS4S3) {
-                    linkS4S3.setAttribute('stroke', '#dc2626');
-                    linkS4S3.setAttribute('stroke-width', '1.8');
-                    linkS4S3.setAttribute('opacity', '0.5');
-                    linkS4S3.classList.remove('link-flow');
-                }
+                if (linkCS4) { linkCS4.setAttribute('stroke', '#dc2626'); linkCS4.setAttribute('opacity', '0.35'); linkCS4.classList.remove('link-flow'); }
+                if (linkCS3) { linkCS3.style.display = 'inline'; linkCS3.setAttribute('stroke', '#0284c7'); linkCS3.classList.add('link-failover'); }
+                if (linkS4S3) { linkS4S3.setAttribute('stroke', '#dc2626'); linkS4S3.classList.remove('link-flow'); }
                 if (lblFailoverC2) lblFailoverC2.style.display = 'inline';
-                if (boxC2) {
-                    boxC2.setAttribute('stroke', '#d97706');
-                    boxC2.setAttribute('stroke-dasharray', '4 3');
-                    boxC2.setAttribute('fill', '#fffdf5');
-                }
-                if (badgeC2) {
-                    badgeC2.setAttribute('fill', '#d97706');
-                    badgeC2.textContent = '⚡ FAILOVER: S3 ACTING LEADER';
-                }
-            } else if (s4Failed && s3Failed) {
-                if (linkCS4) { linkCS4.setAttribute('stroke', '#dc2626'); linkCS4.setAttribute('opacity', '0.25'); linkCS4.classList.remove('link-flow'); }
-                if (linkCS3) { linkCS3.style.display = 'none'; }
-                if (linkS4S3) { linkS4S3.setAttribute('stroke', '#dc2626'); linkS4S3.setAttribute('opacity', '0.25'); }
-                if (lblFailoverC2) lblFailoverC2.style.display = 'none';
-                if (boxC2) { boxC2.setAttribute('stroke', '#dc2626'); boxC2.setAttribute('stroke-dasharray', '4 4'); boxC2.setAttribute('fill', '#fef2f2'); }
-                if (badgeC2) { badgeC2.setAttribute('fill', '#dc2626'); badgeC2.textContent = '✖ CLUSTER OFFLINE'; }
+                if (boxC2) { boxC2.setAttribute('stroke', '#d97706'); boxC2.setAttribute('stroke-dasharray', '4 3'); }
+                if (badgeC2) { badgeC2.setAttribute('fill', '#d97706'); badgeC2.textContent = '⚡ FAILOVER: S3 ACTING COORDINATOR'; }
             } else {
-                if (linkCS4) {
-                    linkCS4.setAttribute('stroke', s4 && s4.status === 'SUSPECTED' ? '#d97706' : '#16a34a');
-                    linkCS4.setAttribute('stroke-width', '2.5');
-                    linkCS4.setAttribute('opacity', '0.9');
-                    linkCS4.classList.add('link-flow');
-                }
-                if (linkCS3) {
-                    linkCS3.style.display = 'none';
-                    linkCS3.classList.remove('link-failover');
-                }
-                if (linkS4S3) {
-                    linkS4S3.setAttribute('stroke', s3Failed ? '#dc2626' : (s3 && s3.status === 'SUSPECTED' ? '#d97706' : '#16a34a'));
-                    linkS4S3.setAttribute('stroke-width', '1.8');
-                    linkS4S3.setAttribute('opacity', s3Failed ? '0.35' : '0.8');
-                    if (s3Failed) linkS4S3.classList.remove('link-flow'); else linkS4S3.classList.add('link-flow');
-                }
+                if (linkCS4) { linkCS4.setAttribute('stroke', s4 && s4.status === 'SUSPECTED' ? '#d97706' : '#059669'); linkCS4.classList.add('link-flow'); }
+                if (linkCS3) { linkCS3.style.display = 'none'; linkCS3.classList.remove('link-failover'); }
+                if (linkS4S3) { linkS4S3.setAttribute('stroke', s3Failed ? '#dc2626' : (s3 && s3.status === 'SUSPECTED' ? '#d97706' : '#059669')); }
                 if (lblFailoverC2) lblFailoverC2.style.display = 'none';
-                if (boxC2) {
-                    boxC2.setAttribute('stroke', s3Failed ? '#f59e0b' : '#bae6fd');
-                    boxC2.removeAttribute('stroke-dasharray');
-                    boxC2.setAttribute('fill', '#f0f9ff');
-                }
-                if (badgeC2) {
-                    badgeC2.setAttribute('fill', s3Failed ? '#d97706' : '#0369a1');
-                    badgeC2.textContent = s3Failed ? '⚠️ S3 DOWN (S4 ACTIVE)' : '● Normal — Head: S4';
-                }
+                if (boxC2) { boxC2.setAttribute('stroke', s3Failed ? '#f59e0b' : '#bae6fd'); boxC2.removeAttribute('stroke-dasharray'); }
+                if (badgeC2) { badgeC2.setAttribute('fill', s3Failed ? '#d97706' : '#0369a1'); badgeC2.textContent = s3Failed ? '⚠️ S3 DOWN (S4 ACTIVE)' : '● Normal — Head: S4'; }
             }
 
-            // 4. Live Adaptive Status Banner
             const banner = document.getElementById('topoStatusBanner');
             if (banner) {
                 if (s2Failed && s1IsCH) {
                     banner.className = 'topo-status-bar failover';
-                    banner.innerHTML = '<span>⚡</span> <span><strong>FAILOVER ACTIVE (Cluster 1):</strong> Node S2 CRASHED. Bully Election elected S1 (:8101) as Cluster Head. Central Server rerouted upstream connection.</span>';
+                    banner.innerHTML = '<span>⚡</span> <span><strong>FAILOVER ACTIVE (Cluster 1):</strong> Node S2 OFFLINE. Bully algorithm elected S1 as Cluster Coordinator.</span>';
                 } else if (s4Failed && s3IsCH) {
                     banner.className = 'topo-status-bar failover';
-                    banner.innerHTML = '<span>⚡</span> <span><strong>FAILOVER ACTIVE (Cluster 2):</strong> Node S4 CRASHED. Bully Election elected S3 (:8103) as Cluster Head. Central Server rerouted upstream connection.</span>';
+                    banner.innerHTML = '<span>⚡</span> <span><strong>FAILOVER ACTIVE (Cluster 2):</strong> Node S4 OFFLINE. Bully algorithm elected S3 as Cluster Coordinator.</span>';
                 } else if (s2Failed || s4Failed || s1Failed || s3Failed) {
                     banner.className = 'topo-status-bar alert';
-                    const failedList = [s1, s2, s3, s4].filter(n => n && n.status === 'FAILED').map(n => n.nodeId).join(', ');
-                    banner.innerHTML = '<span>⚠️</span> <span><strong>FAULT DETECTED:</strong> Node(s) [' + failedList + '] offline. Failure detection and Bully election failover active.</span>';
+                    banner.innerHTML = '<span>⚠️</span> <span><strong>FAULT DETECTED:</strong> Node failure detected. Dynamic failover active.</span>';
                 } else {
                     banner.className = 'topo-status-bar';
-                    banner.innerHTML = '<span>🟢</span> <span><strong>Topology Healthy:</strong> All 4 sensor nodes communicating normally. C1 Head: S2 (:8102) | C2 Head: S4 (:8104).</span>';
+                    banner.innerHTML = '<span>🟢</span> <span><strong>Topology Healthy:</strong> All 4 field nodes communicating normally. C1 Head: S2 &bull; C2 Head: S4.</span>';
                 }
             }
-        }
-
-        function updateTelemetryCard(n){
-            var id=n.nodeId, status=(n.status||'ACTIVE').toLowerCase();
-            var card=document.getElementById('tc-'+id);if(!card)return;
-            card.className='telemetry-card s-'+status;
-            var badge=document.getElementById('tcBadge-'+id);
-            if(badge){badge.className='tc-badge '+status;badge.innerText=n.status==='FAILED'?'CRASHED / OFFLINE':n.status}
-            var role=document.getElementById('tcRole-'+id);
-            if(role){var isCh=n.role==='CLUSTER_HEAD';role.className=isCh?'tc-role ch':'tc-role';role.innerText=(isCh?'👑 CLUSTER HEAD':'Sensor')+' - '+(n.clusterId||'')+' - :'+(n.port||'')}
-            var temp=n.temperature!=null?n.temperature:24.0;
-            var te=document.getElementById('tcTemp-'+id),tb=document.getElementById('tcTempBar-'+id);
-            if(te)te.innerText=n.status==='FAILED'?'--':temp.toFixed(1)+'°C';if(tb)tb.style.width=n.status==='FAILED'?'0%':Math.min(100,Math.max(0,(temp/60)*100)).toFixed(0)+'%';
-            var humid=n.humidity!=null?n.humidity:55.0;
-            var he=document.getElementById('tcHumid-'+id),hb2=document.getElementById('tcHumidBar-'+id);
-            if(he)he.innerText=n.status==='FAILED'?'--':humid.toFixed(1)+'%';if(hb2)hb2.style.width=n.status==='FAILED'?'0%':Math.min(100,humid).toFixed(0)+'%';
-            var bat=n.battery!=null?n.battery:98.0;
-            var be=document.getElementById('tcBat-'+id),bb=document.getElementById('tcBatBar-'+id);
-            if(be)be.innerText=n.status==='FAILED'?'0%':bat.toFixed(0)+'%';if(bb)bb.style.width=n.status==='FAILED'?'0%':Math.min(100,bat).toFixed(0)+'%';
-            var me=document.getElementById('tcMotion-'+id);
-            if(me){if(n.status==='FAILED'){me.className='tc-motion';me.style.background='#fee2e2';me.style.color='#dc2626';me.innerText='Sensor Offline'}else if(n.motion){me.className='tc-motion detected';me.innerText='🚨 Motion Detected!'}else{me.className='tc-motion clear';me.innerText='No Motion'}}
-            var hbEl=document.getElementById('tcHb-'+id);
-            if(hbEl){
-                if(n.status==='FAILED'){
-                    hbEl.innerText='CRITICAL: Heartbeat Lost';
-                    hbEl.style.color='#dc2626';
-                    hbEl.style.fontWeight='600';
-                } else {
-                    var sec=Math.max(0,Math.floor((Date.now()-n.lastHeartbeat)/1000));
-                    hbEl.innerText='HB: '+(sec===0?'< 1s ago':sec+'s ago');
-                    hbEl.style.color='var(--text-muted)';
-                    hbEl.style.fontWeight='normal';
-                }
-            }
-            var vce = document.getElementById('tcVc-' + id);
-            if (vce) vce.innerText = formatVectorClock(n.vectorClock);
-        }
-
-        function formatVectorClock(vc) {
-            if (!vc) return '[S1:0, S2:0, S3:0, S4:0]';
-            let arr = [];
-            if (Array.isArray(vc)) {
-                arr = vc;
-            } else if (typeof vc === 'string') {
-                const cleaned = vc.replace(/[\[\]\s]/g, '');
-                const m = cleaned.split(',');
-                if (m.length === 4) {
-                    arr = m.map(x => parseInt(x, 10) || 0);
-                } else {
-                    return vc;
-                }
-            } else {
-                return String(vc);
-            }
-            return `[S1:${arr[0] || 0}, S2:${arr[1] || 0}, S3:${arr[2] || 0}, S4:${arr[3] || 0}]`;
         }
 
         async function fetchSystemStatus() {
@@ -1342,358 +800,133 @@
                 if (!res.ok) return;
                 const data = await res.json();
 
-                // Top metrics
                 document.getElementById('activeSensorsDisplay').innerText = `${data.activeSensors} / ${data.totalSensors}`;
                 document.getElementById('batchesDisplay').innerText = data.totalAggregatedBatches || 0;
                 document.getElementById('alertsDisplay').innerText = data.totalAlerts || 0;
                 document.getElementById('globalVcDisplay').innerText = data.globalVectorClockFormatted || formatVectorClock(data.globalVectorClock) || '[S1:0, S2:0, S3:0, S4:0]';
                 document.getElementById('chDisplay').innerText = `${data.activeClusterHeads} Active`;
 
-                // Update cluster headers
                 if (data.clusters && data.clusters.length > 0) {
                     data.clusters.forEach(c => {
                         if (c.clusterId === 'C1') {
-                            document.getElementById('c1HeadBadge').innerText = `Head: ${c.currentHeadId} (:${c.headPort})`;
+                            const qh = document.getElementById('c1QuickHead');
+                            if (qh) qh.innerText = `Head: ${c.currentHeadId} (:${c.headPort})`;
                         } else if (c.clusterId === 'C2') {
-                            document.getElementById('c2HeadBadge').innerText = `Head: ${c.currentHeadId} (:${c.headPort})`;
+                            const qh = document.getElementById('c2QuickHead');
+                            if (qh) qh.innerText = `Head: ${c.currentHeadId} (:${c.headPort})`;
                         }
                     });
                 }
 
-                // Update nodes
-                if (data.nodes && data.nodes.length > 0) {
-                    data.nodes.forEach(n => {
-                        const box = document.getElementById(`nodeBox-${n.nodeId}`);
-                        const roleTag = document.getElementById(`roleTag-${n.nodeId}`);
-                        const statusBadge = document.getElementById(`status-${n.nodeId}`);
-                        const hbSpan = document.getElementById(`hb-${n.nodeId}`);
-
-                        if (box && roleTag && statusBadge && hbSpan) {
-                            // Status class
-                            box.className = `node-box ${n.status.toLowerCase()}`;
-                            statusBadge.className = `badge ${n.status === 'ACTIVE' ? 'badge-success' : n.status === 'SUSPECTED' ? 'badge-warning' : 'badge-danger'}`;
-                            statusBadge.innerText = n.status;
-
-                            // Role
-                            roleTag.className = `node-role-tag ${n.role === 'CLUSTER_HEAD' ? 'ch' : 'sensor'}`;
-                            roleTag.innerText = n.role;
-
-                            // Last Heartbeat
-                            const sec = Math.max(0, Math.floor((Date.now() - n.lastHeartbeat) / 1000));
-                            hbSpan.innerText = sec === 0 ? '< 1s ago' : `${sec}s ago`;
-                        }
-                        updateTelemetryCard(n);
-                    });
-                    // Fully adaptive topology update
-                    updateTopology(data.nodes, data.clusters);
-                }
+                updateTopology(data.nodes, data.clusters);
             } catch (err) {
                 console.error('Error fetching system status:', err);
             }
         }
 
-        async function fetchAggregatedReadings() {
+        async function fetchAwsStatus() {
             try {
-                const res = await fetch('/api/aggregated-readings');
+                const res = await fetch('/api/aws/status');
                 if (!res.ok) return;
-                const list = await res.json();
-                const tbody = document.getElementById('aggregatedReadingsTableBody');
-                if (!list || list.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Waiting for edge aggregation dispatches...</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = list.map(item => {
-                    const time = new Date(item.timestamp).toLocaleTimeString();
-                    return `
-                        <tr>
-                            <td>${time}</td>
-                            <td><span class="badge badge-info">${item.clusterId}</span></td>
-                            <td><strong>${item.clusterHeadId}</strong></td>
-                            <td><span class="code-pill">${item.sampleCount} readings</span></td>
-                            <td><strong>${item.avgTemperature.toFixed(1)}&deg;C</strong></td>
-                            <td>${item.minTemperature.toFixed(1)}&deg;C / ${item.maxTemperature.toFixed(1)}&deg;C</td>
-                            <td>${item.avgHumidity.toFixed(1)}%</td>
-                            <td>${item.activeSensorsCount}</td>
-                            <td><span class="code-pill">${formatVectorClock(item.vectorClock)}</span></td>
-                        </tr>
-                    `;
-                }).join('');
-            } catch (err) {
-                console.error('Error fetching aggregated readings:', err);
+                const data = await res.json();
+                document.getElementById('s3MetricDisplay').innerText = data.s3TotalObjects || 0;
+                document.getElementById('lambdaMetricDisplay').innerText = data.lambdaTotalRuns || 0;
+            } catch (e) {
+                console.error('Error fetching AWS status:', e);
             }
         }
 
-        async function fetchCommunicationLogs() {
-            try {
-                const res = await fetch('/api/logs');
-                if (!res.ok) return;
-                const list = await res.json();
-                const tbody = document.getElementById('communicationLogsTableBody');
-                if (!list || list.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Listening for network messages...</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = list.slice(0, 30).map(log => {
-                    const time = new Date(log.timestamp).toLocaleTimeString();
-                    let badgeClass = 'badge-info';
-                    if (log.messageType.includes('ELECTION')) badgeClass = 'badge-purple';
-                    else if (log.messageType.includes('ALERT')) badgeClass = 'badge-danger';
-                    else if (log.messageType.includes('AGGREGAT')) badgeClass = 'badge-success';
-
-                    const receiver = (log.receiverId && log.receiverId !== 'null' && log.receiverId.trim() !== '')
-                        ? log.receiverId
-                        : (log.clusterId ? log.clusterId + ' (CLUSTER)' : 'CENTRAL');
-
-                    return `
-                        <tr>
-                            <td style="color: var(--text-secondary);">${time}</td>
-                            <td><strong>${log.senderId}</strong></td>
-                            <td><strong>${receiver}</strong></td>
-                            <td><span class="badge badge-info">${log.clusterId}</span></td>
-                            <td><span class="badge ${badgeClass}">${log.messageType}</span></td>
-                            <td><span class="code-pill">${formatVectorClock(log.vectorClock)}</span></td>
-                            <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${log.payloadSummary}</td>
-                        </tr>
-                    `;
-                }).join('');
-            } catch (err) {
-                console.error('Error fetching communication logs:', err);
-            }
-        }
-
-        async function fetchAlerts() {
+        async function fetchRecentAlerts() {
             try {
                 const res = await fetch('/api/alerts');
                 if (!res.ok) return;
                 const list = await res.json();
-                const tbody = document.getElementById('alertsTableBody');
+                const tbody = document.getElementById('recentAlertsTableBody');
+                if (!tbody) return;
+
                 if (!list || list.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No critical alerts recorded.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No emergency alerts recorded.</td></tr>';
                     return;
                 }
-                tbody.innerHTML = list.map(a => {
+
+                tbody.innerHTML = list.slice(0, 4).map(a => {
                     const time = new Date(a.timestamp).toLocaleTimeString();
-                    const sources = a.sourceNodes ? a.sourceNodes.map(s => `<span class="badge badge-purple">${s}</span>`).join(' ') : '-';
+                    const statusBadge = a.acknowledged ?
+                        '<span class="badge badge-success">RESOLVED</span>' :
+                        '<span class="badge badge-danger">PENDING</span>';
                     return `
                         <tr>
-                            <td>${time}</td>
-                            <td><span class="badge badge-danger">${a.alertType}</span></td>
+                            <td><span style="font-family:'JetBrains Mono',monospace;">${time}</span></td>
+                            <td><strong style="color:#b91c1c;">${a.alertType}</strong></td>
                             <td><span class="badge badge-info">${a.clusterId}</span></td>
-                            <td>${sources}</td>
-                            <td><span class="code-pill">${formatVectorClock(a.vectorClock)}</span></td>
+                            <td>${statusBadge}</td>
                         </tr>
                     `;
                 }).join('');
-            } catch (err) {
-                console.error('Error fetching alerts:', err);
+            } catch (e) {
+                console.error('Error fetching recent alerts:', e);
             }
         }
 
-        async function fetchElections() {
+        async function resetVectorClocks() {
+            const csrfToken = getCookie('FW_CENTRAL_XSRF') || getCookie('XSRF-TOKEN');
             try {
-                const res = await fetch('/api/elections');
-                if (!res.ok) return;
-                const list = await res.json();
-                const tbody = document.getElementById('electionsTableBody');
-                if (!list || list.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No election failover events yet.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = list.map(e => {
-                    const time = new Date(e.timestamp).toLocaleTimeString();
-                    return `
-                        <tr>
-                            <td>${time}</td>
-                            <td><span class="badge badge-info">${e.clusterId}</span></td>
-                            <td><span class="badge badge-purple">${e.eventType}</span></td>
-                            <td><strong>${e.electedLeaderId}</strong></td>
-                            <td style="color: var(--text-secondary);">${e.details}</td>
-                        </tr>
-                    `;
-                }).join('');
-            } catch (err) {
-                console.error('Error fetching elections:', err);
-            }
-        }
-
-        async function fetchAwsS3Archives() {
-            try {
-                const res = await fetch('/api/aws/s3-archives');
-                if (!res.ok) return;
-                const list = await res.json();
-                const tbody = document.getElementById('s3ArchiveTableBody');
-                document.getElementById('s3CountBadge').innerText = `${list.length} Objects`;
-                document.getElementById('s3MetricDisplay').innerText = list.length;
-                if (!list || list.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Waiting for telemetry batches to archive to S3...</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = list.slice(0, 15).map(item => {
-                    const time = new Date(item.timestamp).toLocaleTimeString();
-                    return `
-                        <tr>
-                            <td>${time}</td>
-                            <td style="max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #0284c7;" title="${item.objectKey}">${item.objectKey}</td>
-                            <td><span class="badge badge-info">${item.clusterId}</span></td>
-                            <td><span class="code-pill">${item.sizeBytes} B</span></td>
-                            <td><span class="code-pill">${formatVectorClock(item.vectorClock)}</span></td>
-                            <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-muted);">${item.etag ? item.etag.substring(0, 8) + '...' : '-'}</td>
-                        </tr>
-                    `;
-                }).join('');
-            } catch (err) {
-                console.error('Error fetching S3 archives:', err);
-            }
-        }
-
-        async function fetchAwsLambdaInvocations() {
-            try {
-                const res = await fetch('/api/aws/lambda-invocations');
-                if (!res.ok) return;
-                const list = await res.json();
-                const tbody = document.getElementById('lambdaInvocationTableBody');
-                document.getElementById('lambdaCountBadge').innerText = `${list.length} Runs`;
-                document.getElementById('lambdaMetricDisplay').innerText = list.length;
-                if (!list || list.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No serverless alert events triggered yet.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = list.slice(0, 15).map(item => {
-                    const time = new Date(item.timestamp).toLocaleTimeString();
-                    return `
-                        <tr>
-                            <td>${time}</td>
-                            <td><span class="badge badge-warning">${item.triggerEvent}</span></td>
-                            <td><span class="badge badge-info">${item.clusterId}</span></td>
-                            <td><strong>${item.durationMs} ms</strong></td>
-                            <td><span class="badge badge-success">${item.statusCode} OK</span></td>
-                            <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-muted);">${item.requestId ? item.requestId.substring(0, 8) + '...' : '-'}</td>
-                        </tr>
-                    `;
-                }).join('');
-            } catch (err) {
-                console.error('Error fetching Lambda invocations:', err);
-            }
-        }
-
-        document.getElementById('btnManualS3').addEventListener('click', async () => {
-            try {
-                const btn = document.getElementById('btnManualS3');
-                btn.innerText = 'Syncing...';
-                await fetch('/api/aws/s3-archive', {
+                const res = await fetch('/api/vector-clock/reset', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ clusterId: 'C1', clusterHeadId: 'S2' })
+                    headers: { 'X-XSRF-TOKEN': csrfToken || '' }
                 });
-                setTimeout(() => {
-                    btn.innerText = '📤 Sync Archive to AWS S3';
-                    fetchAwsS3Archives();
-                }, 500);
-            } catch (e) {
-                console.error(e);
-            }
-        });
-
-        document.getElementById('btnTriggerLambda').addEventListener('click', async () => {
-            try {
-                const btn = document.getElementById('btnTriggerLambda');
-                btn.innerText = 'Invoking...';
-                await fetch('/api/aws/trigger-lambda', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        alertType: 'WILDFIRE_EMERGENCY',
-                        clusterId: 'C2',
-                        sourceNode: 'S4',
-                        vectorClock: '[0, 0, 1, 3]'
-                    })
-                });
-                setTimeout(() => {
-                    btn.innerText = '⚡ Invoke Lambda Alert';
-                    fetchAwsLambdaInvocations();
-                }, 500);
-            } catch (e) {
-                console.error(e);
-            }
-        });
-
-        async function fetchLoadBalancerStats() {
-            try {
-                const res = await fetch('/api/load-balancer/stats');
-                if (!res.ok) return;
-                const data = await res.json();
-                document.getElementById('lbTotalRouted').innerText = data.totalRequestsRouted || 0;
-                const dist = data.distribution || {};
-                const alpha = dist['central-server-pod-alpha'] || 0;
-                const beta = dist['central-server-pod-beta'] || 0;
-                document.getElementById('countPodAlpha').innerText = alpha;
-                document.getElementById('countPodBeta').innerText = beta;
-
-                const total = Math.max(1, alpha + beta);
-                const pAlpha = Math.round((alpha / total) * 100);
-                const pBeta = 100 - pAlpha;
-                document.getElementById('podAlphaPercent').innerText = `${pAlpha}%`;
-                document.getElementById('podBetaPercent').innerText = `${pBeta}%`;
-                document.getElementById('barPodAlpha').style.width = `${pAlpha}%`;
-                document.getElementById('barPodBeta').style.width = `${pBeta}%`;
-            } catch (err) {
-                console.error('Error fetching load balancer stats:', err);
-            }
-        }
-
-        document.getElementById('btnDispatchLb').addEventListener('click', async () => {
-            try {
-                const btn = document.getElementById('btnDispatchLb');
-                btn.innerText = 'Routing...';
-                const res = await fetch('/api/load-balancer/dispatch');
-                const data = await res.json();
-                btn.innerText = '🔄 Send Request via Load Balancer';
-
-                const notice = document.getElementById('lbLastDispatchNotice');
-                notice.innerHTML = `✅ <strong>Request #${data.requestSequence}</strong> routed via <strong>${data.routingAlgorithm}</strong> to Pod: <span class="badge badge-purple">${data.handlingPod}</span> (IP: ${data.podIp}) &bull; Status: <span class="badge badge-success">${data.status}</span>`;
-                fetchLoadBalancerStats();
-            } catch (e) {
-                console.error(e);
-            }
-        });
-
-        const resetVcBtn = document.getElementById('btnResetVcTop');
-        if (resetVcBtn) {
-            resetVcBtn.addEventListener('click', async () => {
-                try {
-                    resetVcBtn.innerText = '↺ Resetting...';
-                    await fetch('/api/vector-clock/reset', { method: 'POST' });
-                    // Direct browser ping to all 4 sensors to guarantee immediate reset
-                    const ports = [8101, 8102, 8103, 8104];
-                    for (const p of ports) {
-                        try {
-                            fetch(`http://${window.location.hostname}:${p}/api/vector-clock/reset`, { method: 'POST' }).catch(() => {});
-                        } catch (e) {}
-                    }
-                    setTimeout(() => {
-                        resetVcBtn.innerText = '↺ Reset';
-                        refreshAll();
-                    }, 600);
-                } catch (e) {
-                    console.error('Error resetting vector clocks:', e);
-                    resetVcBtn.innerText = '↺ Reset';
+                if (res.ok) {
+                    await fetchSystemStatus();
+                } else if (res.status === 403) {
+                    alert('Permission Denied: Viewer role cannot reset vector clocks.');
                 }
-            });
+            } catch (e) {
+                console.error('Reset error:', e);
+            }
         }
 
-        function refreshAll() {
-            fetchSystemStatus();
-            fetchAggregatedReadings();
-            fetchCommunicationLogs();
-            fetchAlerts();
-            fetchElections();
-            fetchAwsS3Archives();
-            fetchAwsLambdaInvocations();
-            fetchLoadBalancerStats();
+        async function checkCurrentUser() {
+            try {
+                const res = await fetch('/api/auth/me');
+                if (!res.ok) return;
+                const user = await res.json();
+
+                const nameEl = document.getElementById('userDisplayName');
+                const badgeEl = document.getElementById('userRoleBadge');
+                const navMgmt = document.getElementById('navUserMgmt');
+                const btnReset = document.getElementById('btnResetVcTop');
+
+                if (nameEl) nameEl.textContent = user.displayName || user.username;
+                if (badgeEl) {
+                    badgeEl.textContent = user.role;
+                    badgeEl.className = 'role-tag ' + (
+                        user.role === 'ADMINISTRATOR' ? 'role-admin' :
+                        user.role === 'FOREST_OPERATOR' ? 'role-operator' : 'role-viewer'
+                    );
+                }
+
+                if (navMgmt && user.role === 'ADMINISTRATOR') {
+                    navMgmt.style.display = 'inline-block';
+                }
+
+                if (btnReset && user.role === 'VIEWER') {
+                    btnReset.disabled = true;
+                    btnReset.style.opacity = '0.5';
+                    btnReset.style.cursor = 'not-allowed';
+                    btnReset.title = 'Viewer role cannot reset clocks';
+                }
+            } catch (e) {
+                console.error('Auth verification error:', e);
+            }
         }
 
-        refreshAll();
-        setInterval(refreshAll, 2000);
+        checkCurrentUser();
+        fetchSystemStatus();
+        fetchAwsStatus();
+        fetchRecentAlerts();
+        setInterval(fetchSystemStatus, 2000);
+        setInterval(fetchAwsStatus, 4000);
+        setInterval(fetchRecentAlerts, 3000);
     </script>
 </body>
 </html>
