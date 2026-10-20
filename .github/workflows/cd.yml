@@ -1,0 +1,206 @@
+name: ForestWatch Continuous Delivery (CD)
+
+on:
+  workflow_run:
+    workflows: ["ForestWatch CI/CD Pipeline"]
+    branches: ["main"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      target_commit:
+        description: 'Specific Commit SHA to deploy (defaults to latest main)'
+        required: false
+        default: 'main'
+
+# Prevent concurrent deployments to production to protect state and SQLite persistence
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy-production:
+    name: Deploy to AWS EC2 (Production)
+    runs-on: ubuntu-latest
+    # Gate deployment: Only run on workflow_dispatch OR when CI on main branch succeeds
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    # Environment approval protection:
+    # Declaring 'environment: production' registers this job with GitHub Environment protection.
+    # CRITICAL: To enforce human sign-off before AWS deployment, configure Required Reviewers in:
+    # GitHub Repository Settings -> Environments -> production -> Deployment protection rules -> Required reviewers.
+    environment:
+      name: production
+      url: http://${{ vars.EC2_PUBLIC_IP || 'aws-ec2' }}/
+    permissions:
+      id-token: write   # Required for AWS OIDC authentication
+      contents: read    # Required to inspect repository commit
+      actions: read     # Required to query workflow runs via GitHub API
+
+    steps:
+      - name: Validate Deployment Prerequisites
+        env:
+          ROLE_ARN: ${{ vars.AWS_DEPLOYMENT_ROLE_ARN }}
+          INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+          AWS_REGION: ${{ vars.AWS_REGION || 'ap-south-1' }}
+        run: |
+          echo "=========================================================="
+          echo "🚀 Initiating ForestWatch Continuous Delivery (CD)"
+          echo "=========================================================="
+          if [ -z "${ROLE_ARN}" ]; then
+            echo "❌ Error: Required repository variable 'AWS_DEPLOYMENT_ROLE_ARN' is not configured."
+            echo "Please configure OIDC IAM deployment role in GitHub Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          if [ -z "${INSTANCE_ID}" ]; then
+            echo "❌ Error: Required repository variable 'EC2_INSTANCE_ID' is not configured."
+            echo "Please set target EC2 instance ID in GitHub Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          echo "✅ Repository variables verified."
+          echo "   Target Region: ${AWS_REGION}"
+          echo "   Target Instance ID: ${INSTANCE_ID}"
+
+      - name: Validate & Resolve Target Deployment Commit
+        id: resolve_commit
+        env:
+          INPUT_COMMIT: ${{ inputs.target_commit }}
+          WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            COMMIT="${INPUT_COMMIT:-main}"
+          else
+            COMMIT="${WORKFLOW_SHA}"
+          fi
+
+          # Strict validation: Accept only literal "main" or a 7-40 character hexadecimal Git SHA
+          if [[ ! "${COMMIT}" =~ ^(main|[0-9a-fA-F]{7,40})$ ]]; then
+            echo "❌ Error: Invalid target_commit format: '${COMMIT}'."
+            echo "Security rejection: Input must be a valid 7-40 character hexadecimal Git commit SHA or the literal 'main'."
+            exit 1
+          fi
+
+          TARGET_REPO="${REPO:-combox1234/Forest-watch}"
+
+          # Verify that the target resolves to an actual commit in the repository using the GitHub API
+          echo "🔍 Resolving commit '${COMMIT}' in ${TARGET_REPO}..."
+          RESOLVED_SHA=$(gh api "repos/${TARGET_REPO}/commits/${COMMIT}" --jq '.sha' 2>/dev/null || true)
+
+          if [[ ! "${RESOLVED_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "❌ Security Error: Target '${COMMIT}' could not be resolved to a valid commit in ${TARGET_REPO}."
+            exit 1
+          fi
+          echo "✅ Target commit successfully resolved to ${RESOLVED_SHA}."
+
+          # For manual workflow_dispatch deployments, verify CI passed on main branch
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "🔒 Verifying successful CI run for commit ${RESOLVED_SHA} on branch 'main'..."
+            CI_RUNS=$(gh api "repos/${TARGET_REPO}/actions/workflows/ci.yml/runs?head_sha=${RESOLVED_SHA}&status=completed" \
+              --jq '[.workflow_runs[] | select(.conclusion == "success" and .head_branch == "main")] | length' 2>/dev/null || echo "0")
+
+            if [ "${CI_RUNS:-0}" -lt 1 ] 2>/dev/null; then
+              echo "❌ Security Error: Commit ${RESOLVED_SHA} does not have a successful CI run for branch 'main'."
+              echo "Manual workflow_dispatch deployments cannot bypass CI. Verify 'ForestWatch CI/CD Pipeline' succeeded on 'main'."
+              exit 1
+            fi
+            echo "✅ Verified ${CI_RUNS} successful CI run(s) on branch 'main' for commit ${RESOLVED_SHA}."
+          fi
+
+          echo "target_commit=${RESOLVED_SHA}" >> "$GITHUB_OUTPUT"
+          echo "📌 Verified and Sanitized Deployment Commit Target: ${RESOLVED_SHA}"
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOYMENT_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'ap-south-1' }}
+          audience: sts.amazonaws.com
+
+      - name: Dispatch Deployment via AWS Systems Manager Run Command
+        id: ssm_deploy
+        env:
+          INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+          COMMIT_SHA: ${{ steps.resolve_commit.outputs.target_commit }}
+        run: |
+          echo "📡 Sending AWS-RunShellScript command to EC2 instance: ${INSTANCE_ID}"
+
+          # Secondary sanity check before SSM parameter construction
+          if [[ ! "${COMMIT_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "Security Error: Expected a canonical 40-character commit SHA."
+            exit 1
+          fi
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${INSTANCE_ID}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "ForestWatch CD Deployment for commit ${COMMIT_SHA}" \
+            --parameters "commands=[
+              \"export DEPLOY_DIR=/home/ubuntu/Forest-watch\",
+              \"cd /home/ubuntu/Forest-watch\",
+              \"bash deploy_aws.sh ${COMMIT_SHA}\"
+            ]" \
+            --output text \
+            --query "Command.CommandId")
+
+          echo "command_id=${COMMAND_ID}" >> "$GITHUB_OUTPUT"
+          echo "✅ SSM Command dispatched successfully. Command ID: ${COMMAND_ID}"
+
+      - name: Await Execution & Verify Fleet Health
+        env:
+          COMMAND_ID: ${{ steps.ssm_deploy.outputs.command_id }}
+          INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+        run: |
+          echo "⏳ Monitoring execution status for command ${COMMAND_ID}..."
+          STATUS="Pending"
+          ATTEMPTS=0
+          MAX_ATTEMPTS=30
+
+          while [ "$STATUS" = "Pending" ] || [ "$STATUS" = "InProgress" ] || [ "$STATUS" = "Delayed" ]; do
+            sleep 10
+            ATTEMPTS=$((ATTEMPTS+1))
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "${COMMAND_ID}" \
+              --instance-id "${INSTANCE_ID}" \
+              --output text \
+              --query "Status" 2>/dev/null || echo "InProgress")
+
+            echo "   Status (check ${ATTEMPTS}/${MAX_ATTEMPTS}): ${STATUS}"
+
+            if [ ${ATTEMPTS} -ge ${MAX_ATTEMPTS} ]; then
+              echo "❌ Error: Deployment execution timed out after 300 seconds."
+              exit 1
+            fi
+          done
+
+          # Fetch execution standard output and standard error
+          OUTPUT=$(aws ssm get-command-invocation \
+            --command-id "${COMMAND_ID}" \
+            --instance-id "${INSTANCE_ID}" \
+            --output text \
+            --query "StandardOutputContent")
+
+          ERROR_OUTPUT=$(aws ssm get-command-invocation \
+            --command-id "${COMMAND_ID}" \
+            --instance-id "${INSTANCE_ID}" \
+            --output text \
+            --query "StandardErrorContent")
+
+          echo "=========================================================="
+          echo "📋 REMOTE INSTANCE DEPLOYMENT OUTPUT"
+          echo "=========================================================="
+          echo "${OUTPUT}"
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "=========================================================="
+            echo "❌ REMOTE INSTANCE DEPLOYMENT ERROR LOGS"
+            echo "=========================================================="
+            echo "${ERROR_OUTPUT}"
+            echo "❌ Deployment failed with SSM status: ${STATUS}"
+            exit 1
+          fi
+
+          echo "=========================================================="
+          echo "🎉 CONTINUOUS DELIVERY TO AWS EC2 COMPLETED SUCCESSFULLY"
+          echo "=========================================================="

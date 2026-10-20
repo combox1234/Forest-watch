@@ -24,8 +24,13 @@ public class ForestWatchUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserEntity entity = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        if (username == null || username.trim().isEmpty()) {
+            throw new UsernameNotFoundException("Username cannot be blank");
+        }
+        String cleanUsername = username.trim();
+        UserEntity entity = userRepository.findByUsername(cleanUsername)
+                .or(() -> userRepository.findByUsernameIgnoreCase(cleanUsername))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + cleanUsername));
 
         return new User(
                 entity.getUsername(),

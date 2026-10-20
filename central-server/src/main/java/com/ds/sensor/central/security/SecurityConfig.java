@@ -94,7 +94,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 // Public Assets and Pages
-                .requestMatchers("/login", "/access-denied", "/error", "/css/**", "/js/**", "/images/**", "/favicon.ico", "/h2-console/**", "/actuator/**").permitAll()
+                .requestMatchers("/login", "/access-denied", "/error", "/css/**", "/js/**", "/images/**", "/favicon.ico", "/actuator/**").permitAll()
 
                 // Internal Sensor Service Communication Endpoints
                 .requestMatchers(HttpMethod.POST,
@@ -109,6 +109,9 @@ public class SecurityConfig {
                     "/api/alert",
                     "/api/log-message"
                 ).hasAnyRole("SENSOR_SERVICE", "FOREST_OPERATOR", "ADMINISTRATOR")
+
+                // Authenticated User Own Password Management (Any authenticated role: VIEWER, FOREST_OPERATOR, ADMINISTRATOR)
+                .requestMatchers(HttpMethod.PUT, "/api/auth/password", "/api/users/me/password").authenticated()
 
                 // Administrator-Only Endpoints
                 .requestMatchers("/users/**", "/api/users/**").hasRole("ADMINISTRATOR")
@@ -180,7 +183,7 @@ public class SecurityConfig {
                     }
                 })
             )
-            // Allow H2 console frame options in development
+            // Allow same origin frame options
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 
         return http.build();

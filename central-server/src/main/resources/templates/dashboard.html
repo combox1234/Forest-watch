@@ -200,6 +200,50 @@
         }
         .btn-logout:hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
 
+        /* Modal Overlay & Card */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center; justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-card {
+            background: #ffffff;
+            border-radius: var(--radius);
+            max-width: 440px; width: 90%;
+            padding: 1.75rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+        .modal-header h3 { font-size: 1.15rem; font-weight: 800; color: var(--forest-900); }
+        .modal-close { background: none; border: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer; }
+        .form-group-modal { margin-bottom: 1rem; }
+        .form-label-modal { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.35rem; }
+        .form-input-modal {
+            width: 100%; padding: 0.65rem 0.85rem; border-radius: 6px;
+            border: 1px solid #cbd5e1; font-size: 0.85rem; font-family: inherit;
+        }
+        .form-input-modal:focus { outline: none; border-color: var(--forest-500); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem; }
+        .btn-modal-save {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: #ffffff; border: none; padding: 0.5rem 1rem; border-radius: 6px;
+            font-size: 0.82rem; font-weight: 700; cursor: pointer;
+        }
+        .toast-msg {
+            position: fixed; bottom: 2rem; right: 2rem;
+            background: #064e3b; color: #ffffff;
+            padding: 0.75rem 1.25rem; border-radius: 8px;
+            font-size: 0.85rem; font-weight: 600;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+            opacity: 0; pointer-events: none; transition: opacity 0.2s ease; z-index: 2000;
+        }
+        .toast-msg.show { opacity: 1; pointer-events: auto; }
+
         /* Container */
         .container {
             max-width: 1400px;
@@ -440,6 +484,8 @@
                 <span id="userDisplayName">User</span>
                 <span class="role-tag role-viewer" id="userRoleBadge">VIEWER</span>
             </div>
+
+            <button type="button" class="btn-logout" style="border-color: #34d399; color: var(--forest-800);" onclick="openChangeOwnPasswordModal()" title="Change your own password">🔑 Password</button>
 
             <!-- Sign Out -->
             <form th:action="@{/logout}" method="post" style="display: inline;">
@@ -927,6 +973,103 @@
         setInterval(fetchSystemStatus, 2000);
         setInterval(fetchAwsStatus, 4000);
         setInterval(fetchRecentAlerts, 3000);
+
+        function getCsrfToken() {
+            const match = document.cookie.match(new RegExp('(^| )(?:FW_CENTRAL_XSRF|XSRF-TOKEN)=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : '';
+        }
+
+        function showDashboardToast(msg, isError = false) {
+            const toast = document.getElementById('dashboardToast');
+            if (!toast) return;
+            toast.textContent = (isError ? '⚠️ ' : '✅ ') + msg;
+            toast.style.background = isError ? '#991b1b' : '#064e3b';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        function openChangeOwnPasswordModal() {
+            document.getElementById('changeOwnPasswordForm').reset();
+            document.getElementById('changeOwnPasswordModal').classList.add('open');
+            document.getElementById('ownCurrentPassword').focus();
+        }
+
+        function closeChangeOwnPasswordModal() {
+            document.getElementById('changeOwnPasswordModal').classList.remove('open');
+            document.getElementById('changeOwnPasswordForm').reset();
+        }
+
+        async function handleChangeOwnPassword(e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById('ownCurrentPassword').value;
+            const newPassword = document.getElementById('ownNewPassword').value;
+            const confirmPassword = document.getElementById('ownConfirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showDashboardToast("New passwords do not match", true);
+                return;
+            }
+            if (newPassword.length < 6) {
+                showDashboardToast("New password must be at least 6 characters long", true);
+                return;
+            }
+            if (newPassword === currentPassword) {
+                showDashboardToast("New password cannot be identical to current password", true);
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/auth/password', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-XSRF-TOKEN': getCsrfToken()
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    throw new Error(data.error || 'Failed to change password');
+                }
+
+                showDashboardToast(data.message || "Your password was changed successfully.");
+                closeChangeOwnPasswordModal();
+            } catch (err) {
+                showDashboardToast(err.message, true);
+            }
+        }
     </script>
+
+    <!-- Change Own Password Modal -->
+    <div class="modal-overlay" id="changeOwnPasswordModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Change Your Password</h3>
+                <button type="button" class="modal-close" onclick="closeChangeOwnPasswordModal()">&times;</button>
+            </div>
+            <form id="changeOwnPasswordForm" onsubmit="handleChangeOwnPassword(event)">
+                <div class="form-group-modal">
+                    <label class="form-label-modal" for="ownCurrentPassword">Current Password</label>
+                    <input type="password" id="ownCurrentPassword" class="form-input-modal" placeholder="Enter current password" required autocomplete="current-password" />
+                </div>
+                <div class="form-group-modal">
+                    <label class="form-label-modal" for="ownNewPassword">New Password</label>
+                    <input type="password" id="ownNewPassword" class="form-input-modal" placeholder="Minimum 6 characters" required minlength="6" autocomplete="new-password" />
+                </div>
+                <div class="form-group-modal">
+                    <label class="form-label-modal" for="ownConfirmPassword">Confirm New Password</label>
+                    <input type="password" id="ownConfirmPassword" class="form-input-modal" placeholder="Re-enter new password" required minlength="6" autocomplete="new-password" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-logout" onclick="closeChangeOwnPasswordModal()">Cancel</button>
+                    <button type="submit" class="btn-modal-save" id="btnSubmitChangeOwn">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-msg" id="dashboardToast">Message</div>
 </body>
 </html>

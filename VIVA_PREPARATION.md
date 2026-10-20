@@ -42,7 +42,7 @@
   - **Serverless Architecture (AWS Lambda):** Critical emergency alerts (`ANIMAL_DETECTED`, `WILDFIRE_ALERT`) invoke a serverless AWS Lambda handler (`EmergencyAlertDispatcher`) that executes within 35–80ms to broadcast notifications via Amazon SNS.
   - **Cloud Case Study & Virtualization (AWS EC2 & Docker):** Deployed on AWS EC2 using multi-container Docker Compose orchestration, fulfilling the syllabus requirements for virtualization, containerization, and AWS cloud deployment.
   - **Edge Aggregation (Algorithm 10.5):** Coordinators aggregate raw sensor data over sliding windows (avg temp, min/max temp, humidity, sample count) before forwarding upstream, reducing message volume by 75–85%.
-  - **Data Persistence:** Operational data persisted in PostgreSQL (`sensor`, `cluster`, `reading`, `alert`, `s3_archive_log`, `lambda_invocation_log`) with embedded H2 fallback for zero-setup local runs.
+  - **Data Persistence:** Operational data persisted in SQLite (`sensor`, `cluster`, `reading`, `alert`, `s3_archive_log`, `lambda_invocation_log`) with Write-Ahead Logging (`PRAGMA journal_mode=WAL`) on persistent storage (`/data/forestwatch.db`).
 
 ---
 
@@ -66,13 +66,13 @@
 ### Q6: How does our project demonstrate Unit IV Serverless Architectures on AWS?
 **Answer:** When an edge cluster triggers a mutual-exclusion emergency alert, it initiates an event-driven call to an AWS Lambda function (`EmergencyAlertDispatcher`). This function executes in a serverless microVM runtime on-demand without provisioning persistent server capacity, automatically scaling to burst alert volumes and broadcasting notifications with low latency.
 
-### Q7: Why use AWS S3 Object Storage alongside PostgreSQL relational storage?
-**Answer:** PostgreSQL provides ACID transactional guarantees and indexing for real-time node state and topology queries. In contrast, AWS S3 represents a **Distributed Object-Based Storage System** offering 99.999999999% (11 9's) durability and high-throughput write scalability for long-term historical telemetry dumps at a fraction of relational database storage cost.
+### Q7: Why use AWS S3 Object Storage alongside SQLite relational storage?
+**Answer:** SQLite provides ACID transactional guarantees, atomic writes, and relational querying for active cluster topologies, sensor registration, and recent events. In contrast, AWS S3 represents a **Distributed Object-Based Storage System** offering 99.999999999% (11 9's) durability and high-throughput write scalability for long-term historical telemetry dumps at a fraction of relational database storage cost.
 
 ### Q8: How does our project implement Kubernetes container orchestration (Unit IV)?
-**Answer:** The project defines declarative Kubernetes manifests (`k8s/00` to `k8s/06`) deploying the system across an isolated namespace (`ds-sensor-network`). It runs multiple replicas of the Central Server coordinator backed by `livenessProbe` and `readinessProbe` health checks, a PersistentVolumeClaim for PostgreSQL, and Horizontal Pod Autoscaling (HPA) to scale dynamically between 2 and 5 pods.
+**Answer:** The project defines declarative Kubernetes manifests (`k8s/00` to `k8s/07`) deploying the system across an isolated namespace (`ds-sensor-network`). It runs the Central Server coordinator backed by `livenessProbe` and `readinessProbe` health checks, a PersistentVolumeClaim (`sqlite-pvc`) for the SQLite database, and Horizontal Pod Autoscaling (HPA) for scalable stateless edge sensor nodes.
 
-### Q9: How does the Load Balancer distribute traffic across backend replicas?
-**Answer:** Incoming client requests hit a Layer 7 Load Balancer / Kubernetes Service (`ds-load-balancer`) configured with a **Round-Robin** routing algorithm. The load balancer alternates traffic between healthy pod replicas (`Pod Alpha` and `Pod Beta`). If a pod crashes or fails its readiness probe, the load balancer automatically withdraws it from the endpoint pool to prevent service disruption.
+### Q9: How does the Load Balancer distribute traffic across backend services?
+**Answer:** Incoming client requests hit an NGINX Layer 7 Reverse Proxy / Kubernetes Service (`ds-load-balancer`) on port 80. The proxy routes `/` requests to the Central Coordinator while routing `/sensor1/` through `/sensor4/` directly to the corresponding edge sensor nodes. If a node fails its health probe, the endpoint controller automatically withdraws it from the pool.
 
 

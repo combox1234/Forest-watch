@@ -26,10 +26,10 @@ netstat -ano | findstr /C:":8099 " | findstr "LISTENING" >nul
 if %ERRORLEVEL% equ 0 (
     echo [INFO] Central Server is already running on port 8099. Skipping launch.
 ) else (
-    echo [1/5] Launching Central Server (Spring Boot on Port 8099)...
-    start "Central Server (:8099)" cmd /k "java -jar central-server\target\central-server-1.0.0.jar --server.port=8099"
+    echo [1/5] Launching Central Server on Port 8099...
+    start "Central Server - Port 8099" cmd /k "java -jar central-server\target\central-server-1.0.0.jar --server.port=8099"
     echo Waiting 5 seconds for Central Server to boot...
-    timeout /t 5 /nobreak > nul
+    ping -n 6 127.0.0.1 >nul
 )
 
 REM [2/5] Sensor S1 (:8101)
@@ -37,8 +37,8 @@ netstat -ano | findstr /C:":8101 " | findstr "LISTENING" >nul
 if %ERRORLEVEL% equ 0 (
     echo [INFO] Sensor Node S1 is already running on port 8101. Skipping launch.
 ) else (
-    echo [2/5] Launching Cluster 1 - Sensor Node S1 (:8101)...
-    start "Sensor Node S1 (:8101) - Cluster C1" cmd /k "java -jar sensor-server\target\sensor-server-1.0.0.jar --spring.config.additional-location=sensor-config/sensor1.properties"
+    echo [2/5] Launching Cluster 1 - Sensor Node S1 on Port 8101...
+    start "Sensor Node S1 - Port 8101" cmd /k "java -jar sensor-server\target\sensor-server-1.0.0.jar --spring.config.additional-location=sensor-config/sensor1.properties"
 )
 
 REM [3/5] Sensor S2 (:8102)
@@ -46,8 +46,8 @@ netstat -ano | findstr /C:":8102 " | findstr "LISTENING" >nul
 if %ERRORLEVEL% equ 0 (
     echo [INFO] Sensor Node S2 is already running on port 8102. Skipping launch.
 ) else (
-    echo [3/5] Launching Cluster 1 - Sensor Node S2 (:8102 - Initial CH)...
-    start "Sensor Node S2 (:8102) - Cluster C1 CH" cmd /k "java -jar sensor-server\target\sensor-server-1.0.0.jar --spring.config.additional-location=sensor-config/sensor2.properties"
+    echo [3/5] Launching Cluster 1 - Sensor Node S2 on Port 8102...
+    start "Sensor Node S2 - Port 8102" cmd /k "java -jar sensor-server\target\sensor-server-1.0.0.jar --spring.config.additional-location=sensor-config/sensor2.properties"
 )
 
 REM [4/5] Sensor S3 (:8103)
@@ -55,8 +55,8 @@ netstat -ano | findstr /C:":8103 " | findstr "LISTENING" >nul
 if %ERRORLEVEL% equ 0 (
     echo [INFO] Sensor Node S3 is already running on port 8103. Skipping launch.
 ) else (
-    echo [4/5] Launching Cluster 2 - Sensor Node S3 (:8103)...
-    start "Sensor Node S3 (:8103) - Cluster C2" cmd /k "java -jar sensor-server\target\sensor-server-1.0.0.jar --spring.config.additional-location=sensor-config/sensor3.properties"
+    echo [4/5] Launching Cluster 2 - Sensor Node S3 on Port 8103...
+    start "Sensor Node S3 - Port 8103" cmd /k "java -jar sensor-server\target\sensor-server-1.0.0.jar --spring.config.additional-location=sensor-config/sensor3.properties"
 )
 
 REM [5/5] Sensor S4 (:8104)
@@ -64,8 +64,8 @@ netstat -ano | findstr /C:":8104 " | findstr "LISTENING" >nul
 if %ERRORLEVEL% equ 0 (
     echo [INFO] Sensor Node S4 is already running on port 8104. Skipping launch.
 ) else (
-    echo [5/5] Launching Cluster 2 - Sensor Node S4 (:8104 - Initial CH)...
-    start "Sensor Node S4 (:8104) - Cluster C2 CH" cmd /k "java -jar sensor-server\target\sensor-server-1.0.0.jar --spring.config.additional-location=sensor-config/sensor4.properties"
+    echo [5/5] Launching Cluster 2 - Sensor Node S4 on Port 8104...
+    start "Sensor Node S4 - Port 8104" cmd /k "java -jar sensor-server\target\sensor-server-1.0.0.jar --spring.config.additional-location=sensor-config/sensor4.properties"
 )
 
 echo.
@@ -79,7 +79,7 @@ echo   - Cluster 2 Node S3:   http://localhost:8103
 echo   - Cluster 2 Node S4:   http://localhost:8104 (Cluster Head)
 echo ===============================================================================
 echo Opening browser consoles...
-timeout /t 3 /nobreak > nul
+ping -n 4 127.0.0.1 >nul
 
 start http://localhost:8099
 start http://localhost:8101

@@ -51,7 +51,12 @@ public class SensorSecurityConfig {
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         String encodedPass = passwordEncoder.encode(defaultDemoPassword);
 
-        UserDetails priya = User.withUsername("priya.admin")
+        UserDetails parthAdmin = User.withUsername("parth.admin")
+                .password(encodedPass)
+                .roles("ADMINISTRATOR", "FOREST_OPERATOR", "VIEWER")
+                .build();
+
+        UserDetails parthPatil = User.withUsername("parth.patil")
                 .password(encodedPass)
                 .roles("ADMINISTRATOR", "FOREST_OPERATOR", "VIEWER")
                 .build();
@@ -76,7 +81,7 @@ public class SensorSecurityConfig {
                 .roles("VIEWER")
                 .build();
 
-        return new InMemoryUserDetailsManager(priya, arjun, ananya, rahul, kavya);
+        return new InMemoryUserDetailsManager(parthAdmin, parthPatil, arjun, ananya, rahul, kavya);
     }
 
     @Bean

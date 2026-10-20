@@ -1,19 +1,31 @@
+# ==============================================================================
+# Horizontal Pod Autoscaler (HPA)
+#
+# IMPORTANT SQLITE ARCHITECTURAL CONSTRAINT:
+# SQLite uses a single file-level locking mechanism (PRAGMA journal_mode=WAL)
+# that only supports ONE active writer process at a time. Therefore, central-server
+# must remain strictly at replicas: 1 to prevent database file corruption across
+# multiple Pods sharing a network-attached PVC.
+#
+# Horizontal autoscaling is safely applied here to stateless edge sensor workloads
+# (such as sensor-1) which handle ingress telemetry without local database files.
+# ==============================================================================
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: central-server-hpa
+  name: sensor-workload-hpa
   namespace: ds-sensor-network
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: central-server
-  minReplicas: 2
-  maxReplicas: 5
+    name: sensor-1
+  minReplicas: 1
+  maxReplicas: 4
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 60
+          averageUtilization: 70

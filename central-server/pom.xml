@@ -13,7 +13,7 @@
     <artifactId>central-server</artifactId>
     <packaging>jar</packaging>
     <name>central-server</name>
-    <description>Central Server with Spring Boot, JPA, H2/PostgreSQL, REST, and Central Dashboard</description>
+    <description>Central Server with Spring Boot, JPA, SQLite, REST, and Central Dashboard</description>
 
     <dependencies>
         <dependency>
@@ -37,18 +37,14 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- H2 In-Memory Database -->
+        <!-- SQLite JDBC Driver & Hibernate Dialect -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
         </dependency>
-
-        <!-- PostgreSQL Driver -->
         <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-community-dialects</artifactId>
         </dependency>
 
         <!-- Spring Boot Security & Thymeleaf Integration -->

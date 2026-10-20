@@ -193,8 +193,8 @@ public class SensorApiController {
         String username = authentication.getName();
         String displayName = username;
         String role = "VIEWER";
-        if ("priya.admin".equals(username)) {
-            displayName = "Priya Sharma";
+        if ("parth.admin".equals(username) || "parth.patil".equals(username) || "priya.admin".equals(username)) {
+            displayName = "Parth Patil";
             role = "ADMINISTRATOR";
         } else if ("arjun.operator".equals(username)) {
             displayName = "Arjun Patil";

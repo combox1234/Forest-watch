@@ -1,0 +1,17 @@
+# ==============================================================================
+# ForestWatch Terraform Configuration Variables Template
+# Copy this file to 'terraform.tfvars' and supply your trusted admin IP.
+# ==============================================================================
+
+aws_region                 = "ap-south-1"
+instance_type              = "t3.small"
+key_name                   = "forestwatch-key"
+environment                = "production"
+
+# REQUIRED: Supply your operator public IP as a /32 CIDR (e.g. "203.0.113.25/32")
+# Query your public IP via: curl https://checkip.amazonaws.com
+admin_cidr                 = "203.0.113.25/32"
+
+# Optional: Set to true only if direct ingress to Prometheus (:9090) and Grafana (:3000)
+# from admin_cidr is desired. Recommended: keep false and use SSH tunnel.
+enable_monitoring_ingress  = false

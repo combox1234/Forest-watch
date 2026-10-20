@@ -3,11 +3,14 @@
   hosts: forestwatch
   become: yes
   vars:
-    project_repo: "https://github.com/combox1234/Forestwatch.git"
+    project_repo: "https://github.com/combox1234/Forest-watch.git"
     app_dir: "/home/ubuntu/forestwatch"
+    git_branch: "main"
+    deploy_monitoring: false  # Set to true to launch Prometheus, Grafana, Alertmanager & Loki
+    docker_compose_cmd: "docker compose"
 
   tasks:
-    - name: Update apt cache and install prerequisites
+    - name: Update apt cache and install base prerequisites
       apt:
         update_cache: yes
         name:
@@ -15,9 +18,49 @@
           - curl
           - ca-certificates
           - gnupg
+          - lsb-release
         state: present
 
-    - name: Enable 2GB swap space for t2.micro stability
+    - name: Configure Docker official GPG key
+      shell: |
+        install -m 0755 -d /etc/apt/keyrings
+        if [ ! -f /etc/apt/keyrings/docker.gpg ]; then
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+        fi
+      args:
+        creates: /etc/apt/keyrings/docker.gpg
+
+    - name: Add Docker official apt repository
+      shell: |
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+      args:
+        creates: /etc/apt/sources.list.d/docker.list
+
+    - name: Install Docker Engine and Docker Compose plugin
+      apt:
+        update_cache: yes
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Ensure Docker service is started and enabled
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add deployment user to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Configure 2GB swap space for instance memory stability
       shell: |
         if [ $(swapon --show | wc -l) -le 1 ]; then
           fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048
@@ -26,17 +69,57 @@
           swapon /swapfile
           echo '/swapfile none swap sw 0 0' >> /etc/fstab
         fi
+      args:
+        creates: /swapfile
 
-    - name: Clone or pull ForestWatch repository
+    - name: Clone or update ForestWatch repository
       git:
         repo: "{{ project_repo }}"
         dest: "{{ app_dir }}"
-        version: main
-        force: yes
+        version: "{{ git_branch }}"
+        update: yes
+        force: no
       become_user: ubuntu
 
-    - name: Launch ForestWatch fleet and monitoring with Docker Compose
-      shell: "docker compose up -d --build"
+    - name: Create persistent SQLite data directory with correct permissions
+      file:
+        path: "{{ app_dir }}/data"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0775'
+
+    - name: Check for existence of .env file
+      stat:
+        path: "{{ app_dir }}/.env"
+      register: env_file
+
+    - name: Generate default .env from template if missing
+      copy:
+        src: "{{ app_dir }}/.env.example"
+        dest: "{{ app_dir }}/.env"
+        remote_src: yes
+        owner: ubuntu
+        group: ubuntu
+        mode: '0600'
+      when: not env_file.stat.exists
+
+    - name: Validate Docker Compose configuration
+      shell: "{{ docker_compose_cmd }} config"
       args:
         chdir: "{{ app_dir }}"
       become_user: ubuntu
+
+    - name: Launch core ForestWatch fleet (Central + 4 Sensors + NGINX)
+      shell: "{{ docker_compose_cmd }} up -d --build"
+      args:
+        chdir: "{{ app_dir }}"
+      become_user: ubuntu
+      when: not deploy_monitoring
+
+    - name: Launch ForestWatch fleet with full monitoring stack
+      shell: "{{ docker_compose_cmd }} --profile monitoring up -d --build"
+      args:
+        chdir: "{{ app_dir }}"
+      become_user: ubuntu
+      when: deploy_monitoring

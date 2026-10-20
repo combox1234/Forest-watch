@@ -534,9 +534,11 @@
 
             <!-- Profile & Role Badge -->
             <div class="user-badge" id="userBadge">
-                <span id="userDisplayName">Priya Sharma</span>
+                <span id="userDisplayName">Parth Patil</span>
                 <span class="role-tag role-admin" id="userRoleBadge">ADMINISTRATOR</span>
             </div>
+
+            <button type="button" class="btn-action" onclick="openChangeOwnPasswordModal()" title="Change your own password">🔑 Password</button>
 
             <!-- Sign Out -->
             <form th:action="@{/logout}" method="post" style="display: inline;">
@@ -616,6 +618,61 @@
                 <div class="modal-footer">
                     <button type="button" class="btn-action" onclick="closeCreateUserModal()">Cancel</button>
                     <button type="submit" class="btn-primary" id="btnSaveUser">Create Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reset User Password Modal (Admin) -->
+    <div class="modal-overlay" id="resetPasswordModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Reset User Password</h3>
+                <button type="button" class="modal-close" onclick="closeResetPasswordModal()">&times;</button>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                Set a new password for <strong id="resetTargetUsername" style="color: var(--forest-900);"></strong>.
+            </p>
+            <form id="resetPasswordForm" onsubmit="handleResetPassword(event)">
+                <div class="form-group">
+                    <label class="form-label" for="adminNewPassword">New Password</label>
+                    <input type="password" id="adminNewPassword" class="form-input" placeholder="Minimum 6 characters" required minlength="6" autocomplete="new-password" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="adminConfirmPassword">Confirm Password</label>
+                    <input type="password" id="adminConfirmPassword" class="form-input" placeholder="Re-enter new password" required minlength="6" autocomplete="new-password" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-action" onclick="closeResetPasswordModal()">Cancel</button>
+                    <button type="submit" class="btn-primary" id="btnSubmitReset">Reset Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Own Password Modal (Current User) -->
+    <div class="modal-overlay" id="changeOwnPasswordModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Change Your Password</h3>
+                <button type="button" class="modal-close" onclick="closeChangeOwnPasswordModal()">&times;</button>
+            </div>
+            <form id="changeOwnPasswordForm" onsubmit="handleChangeOwnPassword(event)">
+                <div class="form-group">
+                    <label class="form-label" for="ownCurrentPassword">Current Password</label>
+                    <input type="password" id="ownCurrentPassword" class="form-input" placeholder="Enter current password" required autocomplete="current-password" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="ownNewPassword">New Password</label>
+                    <input type="password" id="ownNewPassword" class="form-input" placeholder="Minimum 6 characters" required minlength="6" autocomplete="new-password" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="ownConfirmPassword">Confirm New Password</label>
+                    <input type="password" id="ownConfirmPassword" class="form-input" placeholder="Re-enter new password" required minlength="6" autocomplete="new-password" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-action" onclick="closeChangeOwnPasswordModal()">Cancel</button>
+                    <button type="submit" class="btn-primary" id="btnSubmitChangeOwn">Update Password</button>
                 </div>
             </form>
         </div>
@@ -714,6 +771,7 @@
                         <td>
                             <div class="action-btns">
                                 ${toggleAction}
+                                <button class="btn-action" onclick="openResetPasswordModal('${escapeHtml(u.username)}')">Reset Password</button>
                             </div>
                         </td>
                     </tr>
@@ -825,6 +883,110 @@
 
                 showToast(`User account '${username}' is now ${enable ? 'active' : 'disabled'}.`);
                 fetchUsers();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        let resetTargetUser = '';
+
+        function openResetPasswordModal(username) {
+            resetTargetUser = username;
+            document.getElementById('resetTargetUsername').textContent = '@' + username;
+            document.getElementById('resetPasswordForm').reset();
+            document.getElementById('resetPasswordModal').classList.add('open');
+            document.getElementById('adminNewPassword').focus();
+        }
+
+        function closeResetPasswordModal() {
+            document.getElementById('resetPasswordModal').classList.remove('open');
+            document.getElementById('resetPasswordForm').reset();
+            resetTargetUser = '';
+        }
+
+        async function handleResetPassword(e) {
+            e.preventDefault();
+            const newPassword = document.getElementById('adminNewPassword').value;
+            const confirmPassword = document.getElementById('adminConfirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showToast("Passwords do not match", true);
+                return;
+            }
+            if (newPassword.length < 6) {
+                showToast("Password must be at least 6 characters long", true);
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/users/${encodeURIComponent(resetTargetUser)}/password`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-XSRF-TOKEN': getCsrfToken()
+                    },
+                    body: JSON.stringify({ newPassword })
+                });
+
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    throw new Error(data.error || 'Failed to reset password');
+                }
+
+                showToast(data.message || `Password reset successfully for @${resetTargetUser}.`);
+                closeResetPasswordModal();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        function openChangeOwnPasswordModal() {
+            document.getElementById('changeOwnPasswordForm').reset();
+            document.getElementById('changeOwnPasswordModal').classList.add('open');
+            document.getElementById('ownCurrentPassword').focus();
+        }
+
+        function closeChangeOwnPasswordModal() {
+            document.getElementById('changeOwnPasswordModal').classList.remove('open');
+            document.getElementById('changeOwnPasswordForm').reset();
+        }
+
+        async function handleChangeOwnPassword(e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById('ownCurrentPassword').value;
+            const newPassword = document.getElementById('ownNewPassword').value;
+            const confirmPassword = document.getElementById('ownConfirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showToast("New passwords do not match", true);
+                return;
+            }
+            if (newPassword.length < 6) {
+                showToast("New password must be at least 6 characters long", true);
+                return;
+            }
+            if (newPassword === currentPassword) {
+                showToast("New password cannot be identical to current password", true);
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/auth/password', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-XSRF-TOKEN': getCsrfToken()
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    throw new Error(data.error || 'Failed to change password');
+                }
+
+                showToast(data.message || "Your password was changed successfully.");
+                closeChangeOwnPasswordModal();
             } catch (err) {
                 showToast(err.message, true);
             }

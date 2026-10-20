@@ -83,79 +83,57 @@ resource "aws_route_table_association" "public_assoc" {
 # Security Group for ForestWatch Fleet & Monitoring
 resource "aws_security_group" "forestwatch_sg" {
   name        = "forestwatch-security-group"
-  description = "Security group for ForestWatch Central, Sensor Nodes, and Monitoring"
+  description = "Security group for ForestWatch NGINX reverse proxy, SSH management, and monitoring"
   vpc_id      = aws_vpc.forestwatch_vpc.id
 
+  # Administrative SSH access restricted to explicit admin CIDR (never 0.0.0.0/0)
   ingress {
-    description = "SSH Terminal Access"
+    description = "SSH Terminal Access (Restricted Admin CIDR)"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.admin_cidr]
   }
 
+  # Public HTTP ingress to NGINX load balancer / reverse proxy
   ingress {
-    description = "HTTP NGINX Load Balancer"
+    description = "HTTP NGINX Reverse Proxy and Load Balancer"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Public HTTPS ingress (when TLS certificates are provisioned)
   ingress {
-    description = "ForestWatch Central Server Dashboard"
-    from_port   = 8099
-    to_port     = 8099
+    description = "HTTPS TLS Secure Web Traffic"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    description = "Sensor Node 1 Console"
-    from_port   = 8101
-    to_port     = 8101
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+  # Optional direct monitoring ingress (restricted to admin CIDR)
+  dynamic "ingress" {
+    for_each = var.enable_monitoring_ingress ? [1] : []
+    content {
+      description = "Prometheus Metrics Server (Restricted to Admin CIDR)"
+      from_port   = 9090
+      to_port     = 9090
+      protocol    = "tcp"
+      cidr_blocks = [var.admin_cidr]
+    }
   }
 
-  ingress {
-    description = "Sensor Node 2 Console"
-    from_port   = 8102
-    to_port     = 8102
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Sensor Node 3 Console"
-    from_port   = 8103
-    to_port     = 8103
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Sensor Node 4 Console"
-    from_port   = 8104
-    to_port     = 8104
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Prometheus Metrics Server"
-    from_port   = 9090
-    to_port     = 9090
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Grafana Observability Dashboard"
-    from_port   = 3000
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+  dynamic "ingress" {
+    for_each = var.enable_monitoring_ingress ? [1] : []
+    content {
+      description = "Grafana Observability Dashboard (Restricted to Admin CIDR)"
+      from_port   = 3000
+      to_port     = 3000
+      protocol    = "tcp"
+      cidr_blocks = [var.admin_cidr]
+    }
   }
 
   egress {
