@@ -26,7 +26,7 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Run Maven Automated Tests
+      - name: Run Maven Automated Tests (SQLite Verification)
         run: mvn clean test --batch-mode
 
       - name: Package JAR Artifacts
@@ -42,19 +42,24 @@ jobs:
             **/target/surefire-reports/*.xml
           if-no-files-found: ignore
 
-  container-build:
-    name: Build & Validate Docker Containers
-    needs: test-and-build
+  validate-docker:
+    name: Validate Docker & Compose Configurations
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
+      - name: Validate Docker Compose Configuration
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
+          echo "✅ Docker Compose configuration is valid."
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Central Server Image
+      - name: Build Central Server Docker Image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -62,7 +67,7 @@ jobs:
           push: false
           tags: forestwatch/central-server:latest
 
-      - name: Build Sensor Node Image
+      - name: Build Sensor Node Docker Image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -70,9 +75,30 @@ jobs:
           push: false
           tags: forestwatch/sensor-server:latest
 
+  validate-iac:
+    name: Validate Terraform & Ansible Infrastructure Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+
+      - name: Check Terraform Formatting
+        run: terraform fmt -check aws/terraform/
+
+      - name: Install Ansible Core & Lint
+        run: |
+          pip install ansible-core
+          ansible-playbook --syntax-check -i aws/ansible/inventory.ini aws/ansible/playbook.yml
+          echo "✅ Ansible playbook syntax check passed."
+
   k8s-manifest-lint:
     name: Validate Kubernetes Manifests
-    needs: test-and-build
     runs-on: ubuntu-latest
 
     steps:

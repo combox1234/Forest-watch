@@ -1,0 +1,151 @@
+name: ForestWatch Continuous Delivery (CD)
+
+on:
+  workflow_run:
+    workflows: ["ForestWatch CI/CD Pipeline"]
+    branches: ["main"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      target_commit:
+        description: 'Specific Commit SHA to deploy (defaults to latest main)'
+        required: false
+        default: 'main'
+
+# Prevent concurrent deployments to production to protect state and SQLite persistence
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy-production:
+    name: Deploy to AWS EC2 (Production)
+    runs-on: ubuntu-latest
+    # Gate deployment: Only run on workflow_dispatch OR when CI on main branch succeeds
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    environment:
+      name: production
+      url: http://${{ vars.EC2_PUBLIC_IP || 'aws-ec2' }}/
+    permissions:
+      id-token: write   # Required for AWS OIDC authentication
+      contents: read    # Required to inspect repository commit
+
+    steps:
+      - name: Validate Deployment Prerequisites
+        run: |
+          echo "=========================================================="
+          echo "🚀 Initiating ForestWatch Continuous Delivery (CD)"
+          echo "=========================================================="
+          if [ -z "${{ vars.AWS_DEPLOYMENT_ROLE_ARN }}" ]; then
+            echo "❌ Error: Required repository variable 'AWS_DEPLOYMENT_ROLE_ARN' is not configured."
+            echo "Please configure OIDC IAM deployment role in GitHub Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          if [ -z "${{ vars.EC2_INSTANCE_ID }}" ]; then
+            echo "❌ Error: Required repository variable 'EC2_INSTANCE_ID' is not configured."
+            echo "Please set target EC2 instance ID in GitHub Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          echo "✅ Repository variables verified."
+          echo "   Target Region: ${{ vars.AWS_REGION || 'ap-south-1' }}"
+          echo "   Target Instance ID: ${{ vars.EC2_INSTANCE_ID }}"
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOYMENT_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'ap-south-1' }}
+          audience: sts.amazonaws.com
+
+      - name: Resolve Target Deployment Commit
+        id: resolve_commit
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            COMMIT="${{ inputs.target_commit }}"
+          else
+            COMMIT="${{ github.event.workflow_run.head_sha }}"
+          fi
+          echo "target_commit=${COMMIT}" >> $GITHUB_OUTPUT
+          echo "📌 Deploying Commit SHA: ${COMMIT}"
+
+      - name: Dispatch Deployment via AWS Systems Manager Run Command
+        id: ssm_deploy
+        run: |
+          INSTANCE_ID="${{ vars.EC2_INSTANCE_ID }}"
+          COMMIT_SHA="${{ steps.resolve_commit.outputs.target_commit }}"
+
+          echo "📡 Sending AWS-RunShellScript command to EC2 instance: ${INSTANCE_ID}"
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${INSTANCE_ID}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "ForestWatch CD Deployment for commit ${COMMIT_SHA}" \
+            --parameters "commands=[
+              \"export DEPLOY_DIR=/home/ubuntu/forestwatch\",
+              \"cd /home/ubuntu/forestwatch\",
+              \"bash deploy_aws.sh ${COMMIT_SHA}\"
+            ]" \
+            --output text \
+            --query "Command.CommandId")
+
+          echo "command_id=${COMMAND_ID}" >> $GITHUB_OUTPUT
+          echo "✅ SSM Command dispatched successfully. Command ID: ${COMMAND_ID}"
+
+      - name: Await Execution & Verify Fleet Health
+        run: |
+          COMMAND_ID="${{ steps.ssm_deploy.outputs.command_id }}"
+          INSTANCE_ID="${{ vars.EC2_INSTANCE_ID }}"
+
+          echo "⏳ Monitoring execution status for command ${COMMAND_ID}..."
+          STATUS="Pending"
+          ATTEMPTS=0
+          MAX_ATTEMPTS=30
+
+          while [ "$STATUS" = "Pending" ] || [ "$STATUS" = "InProgress" ] || [ "$STATUS" = "Delayed" ]; do
+            sleep 10
+            ATTEMPTS=$((ATTEMPTS+1))
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "${COMMAND_ID}" \
+              --instance-id "${INSTANCE_ID}" \
+              --output text \
+              --query "Status" 2>/dev/null || echo "InProgress")
+
+            echo "   Status (check ${ATTEMPTS}/${MAX_ATTEMPTS}): ${STATUS}"
+
+            if [ ${ATTEMPTS} -ge ${MAX_ATTEMPTS} ]; then
+              echo "❌ Error: Deployment execution timed out after 300 seconds."
+              exit 1
+            fi
+          done
+
+          # Fetch execution standard output and standard error
+          OUTPUT=$(aws ssm get-command-invocation \
+            --command-id "${COMMAND_ID}" \
+            --instance-id "${INSTANCE_ID}" \
+            --output text \
+            --query "StandardOutputContent")
+
+          ERROR_OUTPUT=$(aws ssm get-command-invocation \
+            --command-id "${COMMAND_ID}" \
+            --instance-id "${INSTANCE_ID}" \
+            --output text \
+            --query "StandardErrorContent")
+
+          echo "=========================================================="
+          echo "📋 REMOTE INSTANCE DEPLOYMENT OUTPUT"
+          echo "=========================================================="
+          echo "${OUTPUT}"
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "=========================================================="
+            echo "❌ REMOTE INSTANCE DEPLOYMENT ERROR LOGS"
+            echo "=========================================================="
+            echo "${ERROR_OUTPUT}"
+            echo "❌ Deployment failed with SSM status: ${STATUS}"
+            exit 1
+          fi
+
+          echo "=========================================================="
+          echo "🎉 CONTINUOUS DELIVERY TO AWS EC2 COMPLETED SUCCESSFULLY"
+          echo "=========================================================="

@@ -38,8 +38,12 @@ public class ForestWatchDataSeeder implements CommandLineRunner {
 
         record DemoSeed(String username, String displayName, AppRole role) {}
 
+        // Remove legacy demo user if present
+        userRepository.findByUsername("priya.admin").ifPresent(userRepository::delete);
+
         List<DemoSeed> seeds = List.of(
-                new DemoSeed("priya.admin", "Priya Sharma", AppRole.ADMINISTRATOR),
+                new DemoSeed("parth.admin", "Parth Patil", AppRole.ADMINISTRATOR),
+                new DemoSeed("parth.patil", "Parth Patil", AppRole.ADMINISTRATOR),
                 new DemoSeed("arjun.operator", "Arjun Patil", AppRole.FOREST_OPERATOR),
                 new DemoSeed("ananya.viewer", "Ananya Deshmukh", AppRole.VIEWER),
                 new DemoSeed("rahul.operator", "Rahul Verma", AppRole.FOREST_OPERATOR),

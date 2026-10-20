@@ -23,11 +23,11 @@ kubectl apply -f k8s\00-namespace.yaml
 kubectl apply -f k8s\01-config.yaml
 
 echo.
-echo [2/4] Deploying PostgreSQL Database...
-kubectl apply -f k8s\02-postgres.yaml
+echo [2/5] Creating SQLite PersistentVolumeClaim...
+kubectl apply -f k8s\02-sqlite-pvc.yaml
 
 echo.
-echo [3/4] Deploying Central Server Replicas (2 Pods) ^& Sensor Nodes...
+echo [3/5] Deploying Central Server Coordinator (Single-Writer) ^& Sensor Nodes...
 kubectl apply -f k8s\03-central-server.yaml
 kubectl apply -f k8s\04-sensor-nodes.yaml
 

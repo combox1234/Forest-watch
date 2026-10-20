@@ -94,7 +94,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 // Public Assets and Pages
-                .requestMatchers("/login", "/access-denied", "/error", "/css/**", "/js/**", "/images/**", "/favicon.ico", "/h2-console/**", "/actuator/**").permitAll()
+                .requestMatchers("/login", "/access-denied", "/error", "/css/**", "/js/**", "/images/**", "/favicon.ico", "/actuator/**").permitAll()
 
                 // Internal Sensor Service Communication Endpoints
                 .requestMatchers(HttpMethod.POST,
@@ -180,7 +180,7 @@ public class SecurityConfig {
                     }
                 })
             )
-            // Allow H2 console frame options in development
+            // Allow same origin frame options
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 
         return http.build();

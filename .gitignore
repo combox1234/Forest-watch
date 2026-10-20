@@ -32,6 +32,24 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
+# Secrets & Environment variables
+.env
+*.env
+!.env.example
+
+# SQLite Database Files
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+**/data/
+
+# Terraform local state and caches
+**/.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
 # Temporary directories
 temp_jar_update/
 .temp/

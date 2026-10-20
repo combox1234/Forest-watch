@@ -38,15 +38,14 @@ fi
 echo "📦 Applying Kubernetes Manifests..."
 kubectl apply -f k8s/00-namespace.yaml
 kubectl apply -f k8s/01-config.yaml
-kubectl apply -f k8s/02-postgres.yaml
+kubectl apply -f k8s/02-sqlite-pvc.yaml
 kubectl apply -f k8s/03-central-server.yaml
 kubectl apply -f k8s/04-sensor-nodes.yaml
 kubectl apply -f k8s/05-load-balancer.yaml
 kubectl apply -f k8s/06-hpa.yaml
 kubectl apply -f k8s/07-monitoring.yaml
 
-echo "⏳ Waiting for database and services to reach Ready state..."
-kubectl rollout status deployment/postgres -n ds-sensor-network --timeout=90s || true
+echo "⏳ Waiting for central server and services to reach Ready state..."
 kubectl rollout status deployment/central-server -n ds-sensor-network --timeout=120s || true
 
 # 4. Display Cluster Resources

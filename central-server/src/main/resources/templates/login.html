@@ -197,92 +197,6 @@
             transform: translateY(-1px);
         }
 
-        .demo-section {
-            margin-top: 1.75rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(148, 163, 184, 0.18);
-        }
-
-        .demo-title {
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: #94a3b8;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .demo-pills {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .demo-pill {
-            background: rgba(30, 41, 59, 0.7);
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            padding: 0.55rem 0.85rem;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.2s ease;
-            text-align: left;
-        }
-
-        .demo-pill:hover {
-            background: rgba(4, 120, 87, 0.25);
-            border-color: #34d399;
-            transform: translateX(3px);
-        }
-
-        .demo-user-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .demo-name {
-            font-size: 0.84rem;
-            font-weight: 700;
-            color: #f1f5f9;
-        }
-
-        .demo-username {
-            font-size: 0.72rem;
-            color: #94a3b8;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .role-tag {
-            font-size: 0.68rem;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 999px;
-            letter-spacing: 0.02em;
-        }
-
-        .role-admin {
-            background: rgba(168, 85, 247, 0.2);
-            color: #c084fc;
-            border: 1px solid rgba(168, 85, 247, 0.4);
-        }
-
-        .role-operator {
-            background: rgba(16, 185, 129, 0.2);
-            color: #6ee7b7;
-            border: 1px solid rgba(16, 185, 129, 0.4);
-        }
-
-        .role-viewer {
-            background: rgba(56, 189, 248, 0.2);
-            color: #7dd3fc;
-            border: 1px solid rgba(56, 189, 248, 0.4);
-        }
-
         .footer-note {
             text-align: center;
             font-size: 0.75rem;
@@ -323,7 +237,7 @@
 
                 <div class="form-group">
                     <label class="form-label" for="username">Username</label>
-                    <input type="text" id="username" name="username" class="form-input" placeholder="e.g. priya.admin" required autofocus autocomplete="username" />
+                    <input type="text" id="username" name="username" class="form-input" placeholder="Enter username" required autofocus autocomplete="username" />
                 </div>
 
                 <div class="form-group">
@@ -335,74 +249,11 @@
                     Sign In to Console &rarr;
                 </button>
             </form>
-
-            <!-- Demo User Selector -->
-            <div class="demo-section">
-                <div class="demo-title">
-                    <span>Faculty Demo Accounts (Indian Identifiers)</span>
-                    <span style="font-size: 0.65rem; color: #64748b; font-family: monospace;">Password: ForestWatch@2026</span>
-                </div>
-
-                <div class="demo-pills">
-                    <!-- Admin -->
-                    <div class="demo-pill" onclick="fillCredentials('priya.admin', 'ForestWatch@2026')" title="Sign in as Administrator">
-                        <div class="demo-user-info">
-                            <span class="demo-name">👑 Priya Sharma</span>
-                            <span class="demo-username">priya.admin</span>
-                        </div>
-                        <span class="role-tag role-admin">ADMINISTRATOR</span>
-                    </div>
-
-                    <!-- Forest Operator 1 -->
-                    <div class="demo-pill" onclick="fillCredentials('arjun.operator', 'ForestWatch@2026')" title="Sign in as Forest Operator">
-                        <div class="demo-user-info">
-                            <span class="demo-name">⚡ Arjun Patil</span>
-                            <span class="demo-username">arjun.operator</span>
-                        </div>
-                        <span class="role-tag role-operator">FOREST OPERATOR</span>
-                    </div>
-
-                    <!-- Viewer 1 -->
-                    <div class="demo-pill" onclick="fillCredentials('ananya.viewer', 'ForestWatch@2026')" title="Sign in as Viewer">
-                        <div class="demo-user-info">
-                            <span class="demo-name">👁️ Ananya Deshmukh</span>
-                            <span class="demo-username">ananya.viewer</span>
-                        </div>
-                        <span class="role-tag role-viewer">VIEWER</span>
-                    </div>
-
-                    <!-- Forest Operator 2 -->
-                    <div class="demo-pill" onclick="fillCredentials('rahul.operator', 'ForestWatch@2026')" title="Sign in as Forest Operator">
-                        <div class="demo-user-info">
-                            <span class="demo-name">⚡ Rahul Verma</span>
-                            <span class="demo-username">rahul.operator</span>
-                        </div>
-                        <span class="role-tag role-operator">FOREST OPERATOR</span>
-                    </div>
-
-                    <!-- Viewer 2 -->
-                    <div class="demo-pill" onclick="fillCredentials('kavya.viewer', 'ForestWatch@2026')" title="Sign in as Viewer">
-                        <div class="demo-user-info">
-                            <span class="demo-name">👁️ Kavya Iyer</span>
-                            <span class="demo-username">kavya.viewer</span>
-                        </div>
-                        <span class="role-tag role-viewer">VIEWER</span>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="footer-note">
             ForestWatch Autonomous Field Network &bull; Role-Based Access Control Active
         </div>
     </div>
-
-    <script>
-        function fillCredentials(u, p) {
-            document.getElementById('username').value = u;
-            document.getElementById('password').value = p;
-            document.getElementById('btnSubmit').focus();
-        }
-    </script>
 </body>
 </html>

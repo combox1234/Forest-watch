@@ -1,0 +1,37 @@
+// ==============================================================================
+// ForestWatch Grafana Alloy Log Collection Pipeline
+// Successor to Promtail (EOL March 2, 2026)
+// Reference: https://grafana.com/docs/alloy/latest/set-up/migrate/from-promtail/
+// ==============================================================================
+
+// 1. Discover log files on the host and application log mount paths
+local.file_match "forestwatch_logs" {
+	path_targets = [
+		{
+			__address__ = "localhost",
+			__path__    = "/var/log/*.log",
+			job         = "forestwatch-logs",
+			stream      = "system",
+		},
+		{
+			__address__ = "localhost",
+			__path__    = "/var/log/forestwatch/*.log",
+			job         = "forestwatch-logs",
+			stream      = "application",
+		},
+	]
+	sync_period = "5s"
+}
+
+// 2. Read matched log files and forward them to Loki receiver
+loki.source.file "forestwatch_log_scraper" {
+	targets    = local.file_match.forestwatch_logs.targets
+	forward_to = [loki.write.loki_service.receiver]
+}
+
+// 3. Export collected log streams to the Loki service
+loki.write "loki_service" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+}

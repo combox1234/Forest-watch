@@ -4,13 +4,11 @@ metadata:
   name: ds-config
   namespace: ds-sensor-network
 data:
-  DB_HOST: "postgres"
-  DB_PORT: "5432"
-  DB_NAME: "sensordb"
+  SQLITE_DB_PATH: "/data/forestwatch.db"
   CENTRAL_PORT: "8099"
   CENTRAL_URL: "http://central-server-svc:8099"
-  AWS_REGION: "us-east-1"
-  AWS_S3_BUCKET: "ds-environmental-telemetry-archive"
+  AWS_REGION: "ap-south-1"
+  AWS_S3_BUCKET: "forestwatch-telemetry-archive"
   AWS_LAMBDA_FUNCTION: "EmergencyAlertDispatcher"
 ---
 apiVersion: v1
@@ -20,6 +18,5 @@ metadata:
   namespace: ds-sensor-network
 type: Opaque
 stringData:
-  POSTGRES_USER: "postgres"
-  POSTGRES_PASSWORD: "postgrespassword"
-  FORESTWATCH_SECURITY_SERVICE_KEY: "forestwatch-internal-sensor-key-2026"
+  FORESTWATCH_SECURITY_SERVICE_KEY: "change-this-to-a-strong-random-key-in-production"
+  GRAFANA_ADMIN_PASSWORD: "change-this-to-a-secure-password"

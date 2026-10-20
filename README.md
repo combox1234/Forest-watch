@@ -29,7 +29,7 @@ A multi-module Maven Spring Boot distributed systems implementation featuring **
 
 ### Key Architectural Principles
 1. **5 Real Independent Operating System Processes:**
-   - **Central Server:** `http://localhost:8000` (JPA/H2/PostgreSQL, Global State, Dashboard)
+   - **Central Server:** `http://localhost:8099` (SQLite with WAL mode, Global State, Dashboard)
    - **Sensor Node 1:** `http://localhost:8101` (Cluster C1 Member)
    - **Sensor Node 2:** `http://localhost:8102` (Cluster C1 Initial Cluster Head)
    - **Sensor Node 3:** `http://localhost:8103` (Cluster C2 Member)
@@ -82,7 +82,7 @@ distributed-sensor-network/ (workspace root)
 │       │   │   ├── model/                      # JPA Entities (8 tables)
 │       │   │   └── repository/                 # Spring Data JPA Repositories
 │       │   └── resources/
-│       │       ├── application.properties      # server.port=8000, H2 & Postgres configs
+│       │       ├── application.properties      # server.port=8099, SQLite with WAL mode config
 │       │       └── templates/
 │       │           └── dashboard.html          # Interactive Central Dashboard
 │
@@ -118,7 +118,7 @@ distributed-sensor-network/ (workspace root)
 │   ├── sensor3.properties                # S3 (:8103), C2, peer=http://localhost:8104
 │   └── sensor4.properties                # S4 (:8104), C2, peer=http://localhost:8103 (Initial CH)
 │
-├── docker-compose.yml                    # Multi-container orchestration (5 servers + postgres)
+├── docker-compose.yml                    # Multi-container orchestration (5 servers + NGINX + SQLite volume)
 ├── run_all.bat                           # 1-Click launcher opening 5 distinct CMD windows + browser tabs
 └── README.md                             # Technical guide & viva preparation
 ```
@@ -270,29 +270,39 @@ Run all unit tests across the multi-module project:
 
 ## ☁️ AWS Cloud Deployment (EC2 & Docker)
 
-### Option 3: 1-Click AWS EC2 Deployment
-Deploy directly to a free-tier AWS EC2 instance (Ubuntu 22.04 / 24.04 LTS):
+### Option 3: AWS EC2 Deployment
+Deploy directly to an AWS EC2 instance (Ubuntu 24.04 LTS):
 
 1. **Launch an AWS EC2 Instance:**
-   - AMI: **Ubuntu Server 24.04 LTS**
-   - Instance Type: **t2.micro** or **t3.small** (Free Tier eligible)
+   - AMI: **Ubuntu Server 24.04 LTS** (ap-south-1 Mumbai)
+   - Instance Type: **t3.small** (recommended) or **t2.micro**
    - Security Group Rules:
-     - Port 22 (SSH)
-     - Port 8000 (Central Server & Global Dashboard)
-     - Ports 8101–8104 (Sensor Node Web Consoles)
+     - Port 22 (SSH — restricted to Admin CIDR)
+     - Port 80 (HTTP — NGINX Load Balancer & Reverse Proxy)
+     - Port 443 (HTTPS — TLS Secure Web Traffic)
 
 2. **Connect & Deploy:**
    ```bash
    ssh -i your-key.pem ubuntu@<ec2-public-ip>
-   git clone <your-repo-url> ds-sensor-network
-   cd ds-sensor-network
-   chmod +x deploy_aws.sh
-   ./deploy_aws.sh
+   git clone https://github.com/combox1234/Forest-watch.git forestwatch
+   cd forestwatch
+   cp .env.example .env
+   # Set your secrets in .env:
+   nano .env
+   docker compose up -d --build
    ```
 
 3. **Open Dashboard:**
-   - Central Coordinator & Global State Monitor: `http://<ec2-public-ip>:8000`
-   - Node Consoles: `http://<ec2-public-ip>:8101` to `:8104`
+   - Central Coordinator & Operations Console: `http://<ec2-public-ip>/` (via NGINX Port 80)
+   - Sensor Node Consoles: `http://<ec2-public-ip>/sensor1/` through `/sensor4/`
+
+4. **Optional Observability Stack (Prometheus, Grafana, Alertmanager, Loki, Grafana Alloy):**
+   ```bash
+   # Launch observability stack on demand:
+   docker compose --profile monitoring up -d
+   ```
+   - Observability services: Prometheus v2.54.1, Alertmanager v0.27.0, Grafana 11.2.0, Loki 3.1.1, and Grafana Alloy v1.4.3.
+   - Grafana Alloy replaces Promtail (EOL March 2, 2026), shipping logs to Loki without privileged Docker socket mounts.
 
 ---
 
@@ -302,10 +312,6 @@ Deploy directly to a free-tier AWS EC2 instance (Ubuntu 22.04 / 24.04 LTS):
 Deploy to Minikube, Docker Desktop Kubernetes, Kind, or AWS EKS:
 
 1. **Deploy all resources with 1 command:**
-   * **Windows:**
-     ```cmd
-     .\deploy_k8s.bat
-     ```
    * **Linux / macOS / Cloud:**
      ```bash
      chmod +x deploy_k8s.sh
@@ -313,15 +319,63 @@ Deploy to Minikube, Docker Desktop Kubernetes, Kind, or AWS EKS:
      ```
    * **Direct `kubectl`:**
      ```bash
-     kubectl apply -f k8s/
+     kubectl apply -f k8s/00-namespace.yaml
+     kubectl apply -f k8s/01-config.yaml
+     kubectl apply -f k8s/02-sqlite-pvc.yaml
+     kubectl apply -f k8s/03-central-server.yaml
+     kubectl apply -f k8s/04-sensor-nodes.yaml
+     kubectl apply -f k8s/05-load-balancer.yaml
+     kubectl apply -f k8s/06-hpa.yaml
+     kubectl apply -f k8s/07-monitoring.yaml
      ```
 
 2. **Access via Load Balancer:**
-   * Kubernetes Service `ds-load-balancer` (Layer 4/Layer 7 Load Balancer) distributes incoming traffic across multiple `central-server` pod replicas using **Round-Robin**.
+   * Kubernetes Service `ds-load-balancer` (Layer 7 NGINX Ingress / Load Balancer) distributes incoming traffic across backend pods.
+   * Central Server uses persistent storage via `sqlite-pvc` mounted at `/data/forestwatch.db`.
    * Port-forward shortcut:
      ```bash
-     kubectl port-forward svc/ds-load-balancer 8000:8000 -n ds-sensor-network
+     kubectl port-forward svc/ds-load-balancer 8099:8099 -n ds-sensor-network
      ```
-   * Dashboard URL: `http://localhost:8000`
+   * Dashboard URL: `http://localhost:8099`
+
+---
+
+## 🔄 Automated CI/CD Pipelines (GitHub Actions & AWS Systems Manager)
+
+ForestWatch implements decoupled, production-grade Continuous Integration (CI) and Continuous Delivery (CD) workflows:
+
+```
+[ Developer Push / PR ] ──> [ CI: .github/workflows/ci.yml ]
+                                │ - Java 21 Multi-Module Build
+                                │ - 21 Automated Tests (SQLite WAL, Busy Timeout, RBAC)
+                                │ - Docker Compose & Buildx Validation
+                                │ - Terraform & Ansible Linting
+                                │ - Kubernetes Kubeconform Schema Validation
+                                ▼
+                       (Merge to main branch)
+                                │
+                                ▼
+                    [ CD: .github/workflows/cd.yml ]
+                                │
+                                ├──> [ GitHub Production Environment Approval Gate ]
+                                │    (Requires explicit maintainer review & sign-off)
+                                │
+                                ├──> [ OIDC Authentication (Zero Stored Secrets) ]
+                                │    (GitHub Actions federates into AWS IAM Role)
+                                │
+                                └──> [ AWS Systems Manager Run Command ]
+                                     (Triggers deploy_aws.sh remotely on EC2)
+                                     - Clean working tree verification
+                                     - Safe commit checkout (no destructive reset)
+                                     - SQLite hot-backup pre-deployment
+                                     - Zero-data-loss container recreation
+                                     - 60s health-check validation gate
+```
+
+### Workflows Summary
+* **`.github/workflows/ci.yml` (Continuous Integration):** Triggered automatically on all pushes and pull requests to `main`. Validates compilation, unit/integration tests, Docker Compose configurations, and infrastructure code.
+* **`.github/workflows/cd.yml` (Continuous Delivery):** Gated on successful CI completion on `main` and protected by GitHub's `production` environment with Required Reviewers. Uses GitHub Actions OIDC to assume an IAM deployment role and securely runs `deploy_aws.sh` on the existing AWS EC2 instance via AWS Systems Manager Run Command.
+
+For detailed OIDC setup, Systems Manager prerequisites, and step-by-step faculty demonstration guides, refer to [`AWS_DEPLOYMENT_GUIDE.md`](file:///f:/devprod/ride-hailing-devops-clean/AWS_DEPLOYMENT_GUIDE.md).
 
 

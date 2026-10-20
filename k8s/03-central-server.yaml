@@ -6,7 +6,10 @@ metadata:
   labels:
     app: central-server
 spec:
-  replicas: 2
+  # SQLite requires a single-writer architecture; do NOT scale horizontally
+  replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: central-server
@@ -15,6 +18,10 @@ spec:
       labels:
         app: central-server
     spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: central-server
           image: central-server:1.0.0
@@ -25,23 +32,16 @@ spec:
           env:
             - name: SERVER_PORT
               value: "8099"
+            - name: SQLITE_DB_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: ds-config
+                  key: SQLITE_DB_PATH
             - name: FORESTWATCH_SECURITY_SERVICE_KEY
               valueFrom:
                 secretKeyRef:
                   name: ds-secrets
                   key: FORESTWATCH_SECURITY_SERVICE_KEY
-            - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://postgres:5432/sensordb"
-            - name: SPRING_DATASOURCE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: ds-secrets
-                  key: POSTGRES_USER
-            - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: ds-secrets
-                  key: POSTGRES_PASSWORD
             - name: AWS_REGION
               valueFrom:
                 configMapKeyRef:
@@ -57,6 +57,9 @@ spec:
                 configMapKeyRef:
                   name: ds-config
                   key: AWS_LAMBDA_FUNCTION
+          volumeMounts:
+            - name: sqlite-storage
+              mountPath: /data
           livenessProbe:
             httpGet:
               path: /actuator/health
@@ -78,6 +81,10 @@ spec:
             limits:
               memory: "384Mi"
               cpu: "500m"
+      volumes:
+        - name: sqlite-storage
+          persistentVolumeClaim:
+            claimName: sqlite-pvc
 ---
 apiVersion: v1
 kind: Service

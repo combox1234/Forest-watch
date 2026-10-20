@@ -43,8 +43,8 @@ public class ForestWatchSecurityRbacTest {
     @DisplayName("1. Password Encoding & Seeding Verification")
     public void testPasswordEncodingAndDemoUsers() {
         // Verify demo admin exists and has BCrypt hashed password
-        UserEntity admin = userRepository.findByUsername("priya.admin").orElse(null);
-        org.junit.jupiter.api.Assertions.assertNotNull(admin, "Seed user 'priya.admin' must be present");
+        UserEntity admin = userRepository.findByUsername("parth.admin").orElse(null);
+        org.junit.jupiter.api.Assertions.assertNotNull(admin, "Seed user 'parth.admin' must be present");
         assertTrue(passwordEncoder.matches("ForestWatch@2026", admin.getPassword()),
                 "BCrypt password encoder must match the default demo password");
     }
@@ -53,12 +53,12 @@ public class ForestWatchSecurityRbacTest {
     @DisplayName("2. Login Form Success and Failure Handling")
     public void testLoginSuccessAndFailure() throws Exception {
         // Valid demo user credentials
-        mockMvc.perform(formLogin().user("priya.admin").password("ForestWatch@2026"))
+        mockMvc.perform(formLogin().user("parth.admin").password("ForestWatch@2026"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/"));
 
         // Invalid credentials
-        mockMvc.perform(formLogin().user("priya.admin").password("WrongPassword999"))
+        mockMvc.perform(formLogin().user("parth.admin").password("WrongPassword999"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login?error=true"));
     }
@@ -129,10 +129,13 @@ public class ForestWatchSecurityRbacTest {
 
     @Test
     @DisplayName("8. Administrator Role is Authorized on User Management")
-    @WithMockUser(username = "priya.admin", roles = {"ADMINISTRATOR", "FOREST_OPERATOR", "VIEWER"})
+    @WithMockUser(username = "parth.admin", roles = {"ADMINISTRATOR", "FOREST_OPERATOR", "VIEWER"})
     public void testAdminAllowedOnUserManagement() throws Exception {
         mockMvc.perform(get("/api/users").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+
+        // Clean up test user if present from a previous run on persistent SQLite database
+        userRepository.findByUsername("test.newop").ifPresent(userRepository::delete);
 
         String newUserJson = objectMapper.writeValueAsString(Map.of(
                 "username", "test.newop",
@@ -154,11 +157,14 @@ public class ForestWatchSecurityRbacTest {
         mockMvc.perform(put("/api/users/test.newop/status?enabled=false").with(csrf()).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(false));
+
+        // Clean up afterwards
+        userRepository.findByUsername("test.newop").ifPresent(userRepository::delete);
     }
 
     @Test
     @DisplayName("9. CSRF Protection Enforced on State-Changing Browser Requests")
-    @WithMockUser(username = "priya.admin", roles = {"ADMINISTRATOR"})
+    @WithMockUser(username = "parth.admin", roles = {"ADMINISTRATOR"})
     public void testCsrfProtectionEnforced() throws Exception {
         // Without CSRF token, state-changing POST must be rejected with 403 Forbidden
         mockMvc.perform(post("/api/vector-clock/reset").accept(MediaType.APPLICATION_JSON))
