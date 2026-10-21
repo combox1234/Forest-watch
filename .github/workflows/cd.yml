@@ -94,3 +94,113 @@ jobs:
 
       - name: Send deployment command through SSM
         id: send
+        shell: bash
+        env:
+          DEPLOY_COMMIT: ${{ steps.target.outputs.sha }}
+        run: |
+          set -Eeuo pipefail
+
+          # Remote shell is /bin/sh. Keep this script POSIX-compatible.
+          REMOTE_SCRIPT="$(cat <<'REMOTE'
+          #!/bin/sh
+          set -eu
+
+          REPO_URL="https://github.com/combox1234/Forest-watch.git"
+          DEPLOY_DIR="/home/ubuntu/Forest-watch"
+          COMMIT="__DEPLOY_COMMIT__"
+
+          echo "ForestWatch deployment starting on $(hostname) at $(date -u)"
+          echo "Target commit: $COMMIT"
+
+          if [ ! -d "$DEPLOY_DIR/.git" ]; then
+            if [ -e "$DEPLOY_DIR" ] && [ -n "$(ls -A "$DEPLOY_DIR" 2>/dev/null || true)" ]; then
+              echo "ERROR: $DEPLOY_DIR exists but is not a Git checkout. Refusing to overwrite it."
+              exit 1
+            fi
+            mkdir -p "$(dirname "$DEPLOY_DIR")"
+            git clone "$REPO_URL" "$DEPLOY_DIR"
+          fi
+
+          cd "$DEPLOY_DIR"
+          git fetch origin main
+          git fetch origin "$COMMIT" || true
+          git cat-file -e "$COMMIT^{commit}" 2>/dev/null || {
+            echo "ERROR: Commit $COMMIT is not available in this checkout."
+            exit 1
+          }
+
+          # Ensure deployment uses the exact CI-verified commit.
+          git checkout --detach "$COMMIT"
+
+          if [ ! -f .env ]; then
+            cp .env.example .env
+            chmod 600 .env
+            echo "WARNING: Created .env from the example template."
+            echo "Set a strong FORESTWATCH_SECURITY_SERVICE_KEY in $DEPLOY_DIR/.env before production use."
+          fi
+
+          command -v docker >/dev/null 2>&1 || {
+            echo "ERROR: Docker is not installed."
+            exit 1
+          }
+          docker compose version >/dev/null 2>&1 || {
+            echo "ERROR: Docker Compose plugin is not available."
+            exit 1
+          }
+
+          # deploy_aws.sh uses Bash features; invoke it explicitly with Bash.
+          bash ./deploy_aws.sh "$COMMIT"
+          REMOTE
+          )"
+
+          REMOTE_SCRIPT="${REMOTE_SCRIPT//__DEPLOY_COMMIT__/$DEPLOY_COMMIT}"
+          PARAMETERS="$(jq -cn --arg script "$REMOTE_SCRIPT" '{commands: [$script]}')"
+
+          RESPONSE="$(aws ssm send-command \
+            --region "$AWS_REGION" \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --comment "ForestWatch deployment $DEPLOY_COMMIT" \
+            --timeout-seconds 3600 \
+            --parameters "$PARAMETERS" \
+            --output json)"
+
+          COMMAND_ID="$(jq -r '.Command.CommandId // empty' <<< "$RESPONSE")"
+          [[ -n "$COMMAND_ID" ]] || {
+            echo "::error::SSM did not return a command ID."
+            echo "$RESPONSE"
+            exit 1
+          }
+
+          echo "command_id=$COMMAND_ID" >> "$GITHUB_OUTPUT"
+          echo "SSM command ID: $COMMAND_ID"
+
+      - name: Wait for deployment result
+        shell: bash
+        env:
+          COMMAND_ID: ${{ steps.send.outputs.command_id }}
+        run: |
+          set -Eeuo pipefail
+          for ATTEMPT in $(seq 1 90); do
+            if RESULT="$(aws ssm get-command-invocation \
+              --region "$AWS_REGION" \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --output json 2>/dev/null)"; then
+              STATUS="$(jq -r '.Status // "Unknown"' <<< "$RESULT")"
+              if [[ "$STATUS" == "Success" ]]; then
+                echo "$RESULT" | jq -r '.StandardOutputContent'
+                echo "ForestWatch deployment succeeded."
+                exit 0
+              fi
+              if [[ "$STATUS" == "Failed" || "$STATUS" == "Cancelled" || "$STATUS" == "TimedOut" ]]; then
+                echo "::error::Remote deployment ended with status: $STATUS"
+                echo "$RESULT" | jq -r '"STDOUT:\n" + (.StandardOutputContent // "") + "\nSTDERR:\n" + (.StandardErrorContent // "")'
+                exit 1
+              fi
+            fi
+            echo "Deployment still running (attempt $ATTEMPT/90)..."
+            sleep 10
+          done
+          echo "::error::Timed out waiting for SSM deployment result."
+          exit 1
