@@ -48,9 +48,6 @@ jobs:
       INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID || vars.EC2_INSTANCE_ID }}
 
     steps:
-      # --------------------------------------------------
-      # 1. Validate deployment configuration
-      # --------------------------------------------------
       - name: Validate Deployment Prerequisites
         shell: bash
         env:
@@ -64,12 +61,12 @@ jobs:
           echo "========================================"
 
           if [[ -z "${AWS_ACCESS_KEY_ID:-}" ]]; then
-            echo "::error::AWS_ACCESS_KEY_ID secret is missing."
+            echo "::error::AWS_ACCESS_KEY_ID is missing."
             exit 1
           fi
 
           if [[ -z "${AWS_SECRET_ACCESS_KEY:-}" ]]; then
-            echo "::error::AWS_SECRET_ACCESS_KEY secret is missing."
+            echo "::error::AWS_SECRET_ACCESS_KEY is missing."
             exit 1
           fi
 
@@ -79,17 +76,14 @@ jobs:
           fi
 
           if [[ ! "$INSTANCE_ID" =~ ^i-[0-9a-fA-F]+$ ]]; then
-            echo "::error::EC2_INSTANCE_ID is not a valid EC2 instance ID."
+            echo "::error::Invalid EC2 instance ID."
             exit 1
           fi
 
           echo "Region: $AWS_REGION"
-          echo "Target instance: $INSTANCE_ID"
+          echo "Instance: $INSTANCE_ID"
           echo "Prerequisites validated."
 
-      # --------------------------------------------------
-      # 2. Resolve deployment commit
-      # --------------------------------------------------
       - name: Resolve and Validate Deployment Commit
         id: resolve_commit
         shell: bash
@@ -125,7 +119,7 @@ jobs:
           fi
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            echo "Checking for a successful main-branch CI run..."
+            echo "Checking successful CI execution..."
 
             CI_RUNS=$(gh api \
               "repos/${REPO}/actions/workflows/ci.yml/runs?head_sha=${RESOLVED_SHA}&status=completed&per_page=100" \
@@ -137,18 +131,14 @@ jobs:
               ] | length')
 
             if [[ "${CI_RUNS:-0}" -lt 1 ]]; then
-              echo "::error::No successful main-branch CI run found for $RESOLVED_SHA."
+              echo "::error::No successful main-branch CI run for $RESOLVED_SHA."
               exit 1
             fi
           fi
 
           echo "target_commit=$RESOLVED_SHA" >> "$GITHUB_OUTPUT"
+          echo "Validated commit: $RESOLVED_SHA"
 
-          echo "Validated deployment commit: $RESOLVED_SHA"
-
-      # --------------------------------------------------
-      # 3. Configure AWS credentials
-      # --------------------------------------------------
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -156,9 +146,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION || 'ap-south-1' }}
 
-      # --------------------------------------------------
-      # 4. Verify AWS account, EC2 and SSM
-      # --------------------------------------------------
       - name: Verify AWS Account and EC2 Instance
         shell: bash
         run: |
@@ -170,7 +157,6 @@ jobs:
 
           aws sts get-caller-identity
 
-          echo
           echo "========================================"
           echo "VERIFY EC2 INSTANCE"
           echo "========================================"
@@ -187,46 +173,65 @@ jobs:
           echo "EC2 state: $EC2_STATE"
 
           if [[ "$EC2_STATE" != "running" ]]; then
-            echo "::error::EC2 instance is not running. State: $EC2_STATE"
+            echo "::error::EC2 instance is not running."
             exit 1
           fi
 
-          echo
           echo "========================================"
           echo "VERIFY SSM REGISTRATION"
           echo "========================================"
 
-          # AWS CLI applies pagination automatically.
-          # Filter the returned records by the exact EC2 ID.
-          SSM_STATUS=$(aws ssm describe-instance-information \
+          SSM_JSON=$(aws ssm describe-instance-information \
             --region "$AWS_REGION" \
-            --output json \
-            --query "InstanceInformationList[?InstanceId=='${INSTANCE_ID}'].PingStatus | [0]" \
-            --output text)
+            --output json)
+
+          SSM_STATUS=$(printf '%s' "$SSM_JSON" |
+            python3 -c '
+          import json
+          import os
+          import sys
+
+          data = json.load(sys.stdin)
+          target = os.environ["INSTANCE_ID"]
+
+          for item in data.get("InstanceInformationList", []):
+              if item.get("InstanceId") == target:
+                  print(item.get("PingStatus", "Unknown"))
+                  sys.exit(0)
+
+          print("NotRegistered")
+          ')
 
           echo "Target instance: $INSTANCE_ID"
           echo "SSM status: $SSM_STATUS"
 
           if [[ "$SSM_STATUS" != "Online" ]]; then
-            echo "::error::Instance is not Online in SSM."
-            echo "Check the instance IAM role, region, and SSM Agent."
+            echo "::error::Target instance is not Online in SSM."
 
-            echo "All SSM-managed instances in this region:"
+            echo "SSM-managed instances in this region:"
 
-            aws ssm describe-instance-information \
-              --region "$AWS_REGION" \
-              --query 'InstanceInformationList[].{InstanceId:InstanceId,PingStatus:PingStatus,AgentVersion:AgentVersion}' \
-              --output table
+            printf '%s' "$SSM_JSON" | python3 -c '
+          import json
+          import sys
 
+          data = json.load(sys.stdin)
+
+          for item in data.get("InstanceInformationList", []):
+              print(
+                  "InstanceId={}; Status={}; AgentVersion={}".format(
+                      item.get("InstanceId", ""),
+                      item.get("PingStatus", ""),
+                      item.get("AgentVersion", "")
+                  )
+              )
+          '
+
+            echo "Verify that the configured instance ID matches the EC2 instance."
             exit 1
           fi
 
-          echo
-          echo "SUCCESS: EC2 is running and registered with SSM."
+          echo "SUCCESS: EC2 instance is running and SSM is Online."
 
-      # --------------------------------------------------
-      # 5. Dispatch deployment through SSM
-      # --------------------------------------------------
       - name: Dispatch Deployment via SSM
         id: ssm_deploy
         shell: bash
@@ -242,9 +247,6 @@ jobs:
           echo "Instance: $INSTANCE_ID"
           echo "Commit: $COMMIT_SHA"
 
-          # IMPORTANT:
-          # AWS-RunShellScript may execute commands using /bin/sh.
-          # Therefore the remote script uses POSIX-compatible syntax.
           REMOTE_SCRIPT=$(cat <<EOF
           set -eu
 
@@ -263,11 +265,14 @@ jobs:
 
           chmod +x deploy_aws.sh
 
-          echo "Running deployment for commit: $COMMIT_SHA"
+          echo "Checking deployment script syntax..."
+          bash -n deploy_aws.sh
+
+          echo "Deploying commit: $COMMIT_SHA"
 
           bash deploy_aws.sh "$COMMIT_SHA"
 
-          echo "Remote deployment script completed."
+          echo "Remote deployment completed."
           EOF
           )
 
@@ -283,17 +288,13 @@ jobs:
             --output text)
 
           if [[ -z "$COMMAND_ID" || "$COMMAND_ID" == "None" ]]; then
-            echo "::error::AWS SSM did not return a command ID."
+            echo "::error::SSM did not return a command ID."
             exit 1
           fi
 
           echo "command_id=$COMMAND_ID" >> "$GITHUB_OUTPUT"
-
           echo "SSM command submitted: $COMMAND_ID"
 
-      # --------------------------------------------------
-      # 6. Wait for remote deployment and display logs
-      # --------------------------------------------------
       - name: Wait for Deployment and Verify Status
         shell: bash
         env:
@@ -309,7 +310,6 @@ jobs:
           SLEEP_SECONDS=10
 
           for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
-
             STATUS=$(aws ssm get-command-invocation \
               --region "$AWS_REGION" \
               --command-id "$COMMAND_ID" \
@@ -333,14 +333,12 @@ jobs:
                   --query 'StandardOutputContent' \
                   --output text
 
-                echo
                 echo "SUCCESS: ForestWatch deployment completed."
                 exit 0
                 ;;
 
               Failed|Cancelled|TimedOut)
-                echo
-                echo "::error::Remote deployment ended with status: $STATUS"
+                echo "::error::Remote deployment failed: $STATUS"
 
                 aws ssm get-command-invocation \
                   --region "$AWS_REGION" \
@@ -361,12 +359,9 @@ jobs:
                 sleep "$SLEEP_SECONDS"
                 ;;
             esac
-
           done
 
           echo "::error::Timed out waiting for remote deployment."
-
-          echo "Final command details:"
 
           aws ssm get-command-invocation \
             --region "$AWS_REGION" \
