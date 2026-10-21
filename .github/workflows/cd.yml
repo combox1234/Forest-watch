@@ -18,7 +18,7 @@ jobs:
   deploy:
     name: Deploy ForestWatch to EC2 through SSM
     if: >-
-      (github.event_name == 'workflow_dispatch') ||
+      github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.head_branch == 'main')
@@ -42,36 +42,37 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
+
           if [[ -z "${INSTANCE_ID:-}" || "$INSTANCE_ID" == "None" ]]; then
-            echo "::error::Set EC2_INSTANCE_ID in GitHub repository or environment secrets."
+            echo "::error::Set EC2_INSTANCE_ID in GitHub repository or production environment secrets/variables."
             exit 1
           fi
 
           ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
-          [[ "$ACCOUNT_ID" == "$EXPECTED_AWS_ACCOUNT_ID" ]] || {
-            echo "::error::AWS credentials point to account $ACCOUNT_ID, expected $EXPECTED_AWS_ACCOUNT_ID."
+          if [[ "$ACCOUNT_ID" != "$EXPECTED_AWS_ACCOUNT_ID" ]]; then
+            echo "::error::AWS credentials point to account $ACCOUNT_ID; expected $EXPECTED_AWS_ACCOUNT_ID."
             exit 1
-          }
+          fi
 
           STATE="$(aws ec2 describe-instances \
             --region "$AWS_REGION" \
             --instance-ids "$INSTANCE_ID" \
             --query 'Reservations[0].Instances[0].State.Name' \
             --output text)"
-          [[ "$STATE" == "running" ]] || {
+          if [[ "$STATE" != "running" ]]; then
             echo "::error::EC2 instance state is $STATE, not running."
             exit 1
-          }
+          fi
 
           SSM_STATUS="$(aws ssm describe-instance-information \
             --region "$AWS_REGION" \
             --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
             --query 'InstanceInformationList[0].PingStatus' \
             --output text)"
-          [[ "$SSM_STATUS" == "Online" ]] || {
+          if [[ "$SSM_STATUS" != "Online" ]]; then
             echo "::error::EC2 SSM status is $SSM_STATUS, not Online."
             exit 1
-          }
+          fi
 
       - name: Select commit to deploy
         id: target
@@ -80,15 +81,18 @@ jobs:
           WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -Eeuo pipefail
+
           if [[ "$GITHUB_EVENT_NAME" == "workflow_run" ]]; then
             COMMIT="$WORKFLOW_RUN_SHA"
           else
             COMMIT="$GITHUB_SHA"
           fi
-          [[ "$COMMIT" =~ ^[0-9a-f]{40}$ ]] || {
+
+          if [[ ! "$COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
             echo "::error::Could not determine a valid commit SHA."
             exit 1
-          }
+          fi
+
           echo "sha=$COMMIT" >> "$GITHUB_OUTPUT"
           echo "Deploying commit: $COMMIT"
 
@@ -100,10 +104,14 @@ jobs:
         run: |
           set -Eeuo pipefail
 
-          # Remote shell is /bin/sh. Keep this script POSIX-compatible.
+          # AWS-RunShellScript invokes /bin/sh. Keep the remote script POSIX-compatible.
           REMOTE_SCRIPT="$(cat <<'REMOTE'
           #!/bin/sh
           set -eu
+
+          # SSM may not define HOME. Git global config requires a valid home.
+          export HOME=/root
+          export GIT_CONFIG_GLOBAL=/root/.gitconfig
 
           REPO_URL="https://github.com/combox1234/Forest-watch.git"
           DEPLOY_DIR="/home/ubuntu/Forest-watch"
@@ -112,6 +120,11 @@ jobs:
           echo "ForestWatch deployment starting on $(hostname) at $(date -u)"
           echo "Target commit: $COMMIT"
 
+          command -v git >/dev/null 2>&1 || {
+            echo "ERROR: Git is not installed."
+            exit 1
+          }
+
           if [ ! -d "$DEPLOY_DIR/.git" ]; then
             if [ -e "$DEPLOY_DIR" ] && [ -n "$(ls -A "$DEPLOY_DIR" 2>/dev/null || true)" ]; then
               echo "ERROR: $DEPLOY_DIR exists but is not a Git checkout. Refusing to overwrite it."
@@ -119,12 +132,11 @@ jobs:
             fi
             mkdir -p "$(dirname "$DEPLOY_DIR")"
             git clone "$REPO_URL" "$DEPLOY_DIR"
-                    fi
+          fi
+
           cd "$DEPLOY_DIR"
-          
-          # Permit the SSM deployment user to operate on this repository.
-          git config --global --add safe.directory "$DEPLOY_DIR"
-          
+          git config --file /root/.gitconfig --add safe.directory "$DEPLOY_DIR"
+
           git fetch origin main
           git fetch origin "$COMMIT" || true
           git cat-file -e "$COMMIT^{commit}" 2>/dev/null || {
@@ -132,26 +144,37 @@ jobs:
             exit 1
           }
 
-          # Ensure deployment uses the exact CI-verified commit.
+          # Deploy the exact commit associated with the successful CI run.
           git checkout --detach "$COMMIT"
 
           if [ ! -f .env ]; then
-            cp .env.example .env
-            chmod 600 .env
-            echo "WARNING: Created .env from the example template."
-            echo "Set a strong FORESTWATCH_SECURITY_SERVICE_KEY in $DEPLOY_DIR/.env before production use."
+            if [ -f .env.example ]; then
+              cp .env.example .env
+              chmod 600 .env
+              echo "WARNING: Created .env from .env.example."
+              echo "Set a strong FORESTWATCH_SECURITY_SERVICE_KEY in $DEPLOY_DIR/.env before production use."
+            else
+              echo "ERROR: .env is missing and .env.example was not found."
+              exit 1
+            fi
           fi
 
           command -v docker >/dev/null 2>&1 || {
             echo "ERROR: Docker is not installed."
             exit 1
           }
+
           docker compose version >/dev/null 2>&1 || {
             echo "ERROR: Docker Compose plugin is not available."
             exit 1
           }
 
-          # deploy_aws.sh uses Bash features; invoke it explicitly with Bash.
+          if [ ! -f ./deploy_aws.sh ]; then
+            echo "ERROR: $DEPLOY_DIR/deploy_aws.sh was not found at commit $COMMIT."
+            exit 1
+          fi
+
+          # The project deployment script uses Bash syntax.
           bash ./deploy_aws.sh "$COMMIT"
           REMOTE
           )"
@@ -169,11 +192,11 @@ jobs:
             --output json)"
 
           COMMAND_ID="$(jq -r '.Command.CommandId // empty' <<< "$RESPONSE")"
-          [[ -n "$COMMAND_ID" ]] || {
+          if [[ -z "$COMMAND_ID" ]]; then
             echo "::error::SSM did not return a command ID."
             echo "$RESPONSE"
             exit 1
-          }
+          fi
 
           echo "command_id=$COMMAND_ID" >> "$GITHUB_OUTPUT"
           echo "SSM command ID: $COMMAND_ID"
@@ -184,26 +207,32 @@ jobs:
           COMMAND_ID: ${{ steps.send.outputs.command_id }}
         run: |
           set -Eeuo pipefail
+
           for ATTEMPT in $(seq 1 90); do
             if RESULT="$(aws ssm get-command-invocation \
               --region "$AWS_REGION" \
               --command-id "$COMMAND_ID" \
               --instance-id "$INSTANCE_ID" \
               --output json 2>/dev/null)"; then
+
               STATUS="$(jq -r '.Status // "Unknown"' <<< "$RESULT")"
+
               if [[ "$STATUS" == "Success" ]]; then
-                echo "$RESULT" | jq -r '.StandardOutputContent'
+                echo "$RESULT" | jq -r '.StandardOutputContent // ""'
                 echo "ForestWatch deployment succeeded."
                 exit 0
               fi
+
               if [[ "$STATUS" == "Failed" || "$STATUS" == "Cancelled" || "$STATUS" == "TimedOut" ]]; then
                 echo "::error::Remote deployment ended with status: $STATUS"
                 echo "$RESULT" | jq -r '"STDOUT:\n" + (.StandardOutputContent // "") + "\nSTDERR:\n" + (.StandardErrorContent // "")'
                 exit 1
               fi
             fi
+
             echo "Deployment still running (attempt $ATTEMPT/90)..."
             sleep 10
           done
+
           echo "::error::Timed out waiting for SSM deployment result."
           exit 1
