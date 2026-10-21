@@ -23,7 +23,14 @@ jobs:
     name: Deploy to AWS EC2 (Production)
     runs-on: ubuntu-latest
 
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.head_branch == 'main'
+        )
+      }}
 
     environment:
       name: production
@@ -34,6 +41,9 @@ jobs:
       actions: read
 
     steps:
+      # --------------------------------------------------
+      # STEP 1: Validate deployment configuration
+      # --------------------------------------------------
       - name: Validate Deployment Prerequisites
         env:
           INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID || vars.EC2_INSTANCE_ID }}
@@ -41,24 +51,32 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          set -e
+          set -euo pipefail
 
           echo "Starting ForestWatch deployment..."
 
           if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
-            echo "ERROR: AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY secret is missing."
+            echo "::error::AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY secret is missing."
             exit 1
           fi
 
           if [ -z "$INSTANCE_ID" ]; then
-            echo "ERROR: EC2_INSTANCE_ID is missing."
+            echo "::error::EC2_INSTANCE_ID is missing."
             exit 1
           fi
 
-          echo "AWS credentials and target instance configured."
-          echo "Region: $AWS_REGION"
-          echo "Target: $INSTANCE_ID"
+          if [[ ! "$INSTANCE_ID" =~ ^i-[0-9a-fA-F]+$ ]]; then
+            echo "::error::EC2_INSTANCE_ID does not have a valid format."
+            exit 1
+          fi
 
+          echo "AWS credentials and target instance are configured."
+          echo "Region: $AWS_REGION"
+          echo "Target instance ID: $INSTANCE_ID"
+
+      # --------------------------------------------------
+      # STEP 2: Resolve and validate deployment commit
+      # --------------------------------------------------
       - name: Validate and Resolve Deployment Commit
         id: resolve_commit
         env:
@@ -68,7 +86,7 @@ jobs:
           REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          set -e
+          set -euo pipefail
 
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             COMMIT="${INPUT_COMMIT:-main}"
@@ -77,14 +95,18 @@ jobs:
           fi
 
           if [[ ! "$COMMIT" =~ ^(main|[0-9a-fA-F]{7,40})$ ]]; then
-            echo "ERROR: Invalid commit or branch input."
+            echo "::error::Invalid commit or branch input."
             exit 1
           fi
 
-          RESOLVED_SHA=$(gh api "repos/${REPO}/commits/${COMMIT}" --jq '.sha')
+          echo "Resolving deployment commit..."
+
+          RESOLVED_SHA=$(gh api \
+            "repos/${REPO}/commits/${COMMIT}" \
+            --jq '.sha')
 
           if [[ ! "$RESOLVED_SHA" =~ ^[0-9a-fA-F]{40}$ ]]; then
-            echo "ERROR: Could not resolve target commit."
+            echo "::error::Could not resolve target commit."
             exit 1
           fi
 
@@ -94,7 +116,7 @@ jobs:
               --jq '[.workflow_runs[] | select(.conclusion == "success" and .head_branch == "main")] | length')
 
             if [ "${CI_RUNS:-0}" -lt 1 ]; then
-              echo "ERROR: No successful main-branch CI run found for this commit."
+              echo "::error::No successful main-branch CI run found for this commit."
               exit 1
             fi
           fi
@@ -102,6 +124,9 @@ jobs:
           echo "target_commit=$RESOLVED_SHA" >> "$GITHUB_OUTPUT"
           echo "Deployment commit validated."
 
+      # --------------------------------------------------
+      # STEP 3: Configure AWS credentials
+      # --------------------------------------------------
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -109,50 +134,113 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION || 'ap-south-1' }}
 
+      # --------------------------------------------------
+      # STEP 4: Diagnose AWS, EC2 and SSM configuration
+      # --------------------------------------------------
       - name: Verify AWS Access
         env:
           INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID || vars.EC2_INSTANCE_ID }}
+          AWS_REGION: ${{ vars.AWS_REGION || 'ap-south-1' }}
         run: |
-          set -e
-          aws sts get-caller-identity
-          aws ssm describe-instance-information --region "${{ vars.AWS_REGION || 'ap-south-1' }}" >/dev/null
-          echo "AWS authentication successful."
+          set -euo pipefail
 
+          echo "=== AWS Identity ==="
+          aws sts get-caller-identity
+
+          echo "=== Target Instance ==="
+          echo "Region: $AWS_REGION"
+          echo "Instance ID: $INSTANCE_ID"
+
+          echo "=== EC2 Instance Status ==="
+          aws ec2 describe-instances \
+            --region "$AWS_REGION" \
+            --instance-ids "$INSTANCE_ID" \
+            --query 'Reservations[].Instances[].{ID:InstanceId,State:State.Name}' \
+            --output table
+
+          echo "=== SSM Registration ==="
+          aws ssm describe-instance-information \
+            --region "$AWS_REGION" \
+            --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
+            --query 'InstanceInformationList[].{ID:InstanceId,PingStatus:PingStatus,AgentVersion:AgentVersion}' \
+            --output table
+
+          echo "=== SSM Online Verification ==="
+
+          PING_STATUS=$(aws ssm describe-instance-information \
+            --region "$AWS_REGION" \
+            --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
+            --query 'InstanceInformationList[0].PingStatus' \
+            --output text)
+
+          if [ "$PING_STATUS" != "Online" ]; then
+            echo "::error::Target EC2 instance is not Online in Systems Manager. Status: $PING_STATUS"
+            exit 1
+          fi
+
+          echo "AWS identity, EC2 instance and SSM registration verified."
+
+      # --------------------------------------------------
+      # STEP 5: Submit deployment through SSM
+      # --------------------------------------------------
       - name: Dispatch Deployment via SSM
         id: ssm_deploy
         env:
           INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID || vars.EC2_INSTANCE_ID }}
+          AWS_REGION: ${{ vars.AWS_REGION || 'ap-south-1' }}
           COMMIT_SHA: ${{ steps.resolve_commit.outputs.target_commit }}
         run: |
-          set -e
+          set -euo pipefail
+
+          echo "Submitting ForestWatch deployment command..."
+          echo "Target instance: $INSTANCE_ID"
+          echo "Region: $AWS_REGION"
+          echo "Commit: $COMMIT_SHA"
 
           COMMAND_ID=$(aws ssm send-command \
+            --region "$AWS_REGION" \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --comment "ForestWatch deployment $COMMIT_SHA" \
-            --parameters "commands=[
-              \"set -e\",
-              \"cd /home/ubuntu/Forest-watch\",
-              \"bash deploy_aws.sh $COMMIT_SHA\"
-            ]" \
-            --query "Command.CommandId" \
+            --parameters "$(jq -cn \
+              --arg commit "$COMMIT_SHA" \
+              '{
+                commands: [
+                  "set -e",
+                  "cd /home/ubuntu/Forest-watch",
+                  ("bash deploy_aws.sh " + $commit)
+                ]
+              }')" \
+            --query 'Command.CommandId' \
             --output text)
 
-          echo "command_id=$COMMAND_ID" >> "$GITHUB_OUTPUT"
-          echo "Deployment command submitted."
+          if [ -z "$COMMAND_ID" ] || [ "$COMMAND_ID" = "None" ]; then
+            echo "::error::SSM did not return a command ID."
+            exit 1
+          fi
 
+          echo "command_id=$COMMAND_ID" >> "$GITHUB_OUTPUT"
+          echo "Deployment command submitted successfully."
+
+      # --------------------------------------------------
+      # STEP 6: Wait for deployment and report result
+      # --------------------------------------------------
       - name: Wait for Deployment and Verify Status
         env:
           COMMAND_ID: ${{ steps.ssm_deploy.outputs.command_id }}
           INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID || vars.EC2_INSTANCE_ID }}
+          AWS_REGION: ${{ vars.AWS_REGION || 'ap-south-1' }}
         run: |
-          set -e
+          set -euo pipefail
+
+          echo "Waiting for ForestWatch deployment..."
 
           for attempt in $(seq 1 30); do
             STATUS=$(aws ssm get-command-invocation \
+              --region "$AWS_REGION" \
               --command-id "$COMMAND_ID" \
               --instance-id "$INSTANCE_ID" \
-              --query "Status" \
+              --query 'Status' \
               --output text 2>/dev/null || echo "Pending")
 
             echo "Deployment status: $STATUS ($attempt/30)"
@@ -162,12 +250,22 @@ jobs:
                 echo "ForestWatch deployment completed successfully."
                 exit 0
                 ;;
+
               Failed|Cancelled|TimedOut)
+                echo "::error::ForestWatch deployment failed."
+
                 aws ssm get-command-invocation \
+                  --region "$AWS_REGION" \
                   --command-id "$COMMAND_ID" \
                   --instance-id "$INSTANCE_ID" \
-                  --query '{Status:Status,Output:StandardOutputContent,Error:StandardErrorContent}' \
-                  --output json
+                  --query '{
+                    Status:Status,
+                    StatusDetails:StatusDetails,
+                    Output:StandardOutputContent,
+                    Error:StandardErrorContent
+                  }' \
+                  --output json || true
+
                 exit 1
                 ;;
             esac
@@ -175,5 +273,5 @@ jobs:
             sleep 10
           done
 
-          echo "ERROR: Timed out waiting for deployment."
+          echo "::error::Timed out waiting for deployment."
           exit 1
