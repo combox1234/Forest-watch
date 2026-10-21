@@ -119,9 +119,12 @@ jobs:
             fi
             mkdir -p "$(dirname "$DEPLOY_DIR")"
             git clone "$REPO_URL" "$DEPLOY_DIR"
-          fi
-
+                    fi
           cd "$DEPLOY_DIR"
+          
+          # Permit the SSM deployment user to operate on this repository.
+          git config --global --add safe.directory "$DEPLOY_DIR"
+          
           git fetch origin main
           git fetch origin "$COMMIT" || true
           git cat-file -e "$COMMIT^{commit}" 2>/dev/null || {
